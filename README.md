@@ -109,9 +109,21 @@ and `pong: hello`.
 
 ```bash
 mvn compile     # compile only
-mvn test        # run unit tests
+mvn test        # unit tests (surefire) — in-process, no subprocess
 mvn package     # build the shaded jar
+mvn verify      # full cycle: unit tests + package + end-to-end ITs (failsafe)
 ```
+
+The test suite has two tiers:
+
+- **Unit tests** (`*Test.java`) drive tool handlers directly with synthetic requests.
+  Fast, in-process, no subprocess. Validate the rendered output against the same
+  `CedarValidator` the artifact library's own renderer tests use.
+- **End-to-end ITs** (`*IT.java`, e.g. `EndToEndStdioIT`) spawn the shaded jar as a
+  real subprocess, speak real JSON-RPC over real stdio, and validate the returned
+  template again from the other side of the wire. This is the regression net for
+  shading, classpath, stdio-transport, and tool-registration failures that
+  in-process tests can't catch.
 
 ## License
 

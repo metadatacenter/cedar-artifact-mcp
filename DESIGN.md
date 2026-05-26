@@ -90,5 +90,12 @@ See `CreateTemplateTool.handler` for the canonical pattern.
 4. Write a static handler `<name>Handler(exchange, request)` that pulls arguments out
    of `request.arguments()`, calls the library, and returns a `CallToolResult`.
 5. Register on the server via `.toolCall(<name>Tool(), ArtifactMcpServer::<name>Handler)`.
-6. Add a unit test that exercises the handler directly (no transport) and a small
-   round-trip test that feeds JSON-RPC through stdio.
+6. Add a unit test (`*Test.java`, run by surefire in `mvn test`) that exercises the
+   handler directly with synthetic `CallToolRequest`s. Validate the rendered JSON
+   against `CedarValidator` in the happy-path case.
+7. Add an end-to-end integration test in `EndToEndStdioIT` (run by failsafe in
+   `mvn verify`) that drives a real subprocess of the shaded jar over real stdio.
+   In-process tests don't catch shading, classpath layering, stdio-transport, or
+   tool-registration failures; the IT does. The Jackson 2.x / 3.x classpath skew
+   the scaffold hit during bootstrap is exactly the class of bug this layer is
+   for.

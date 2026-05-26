@@ -91,6 +91,24 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.5.2</version>
       </plugin>
+      <!--
+        Integration tests (*IT.java) spawn the shaded jar as a subprocess and
+        speak real JSON-RPC over stdio. They run in the verify phase, after
+        the shaded jar has been built.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>3.5.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <!-- Build an executable jar with dependencies bundled for easy MCP-client launch. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

@@ -25,6 +25,9 @@ After those three, the code is self-explanatory. Patterns to mirror:
   handler.
 - Schema-rendering tools must validate before returning — see DESIGN.md Principle 6
   and `CreateTemplateTool.handler` for the canonical pattern.
+- Every new tool gets coverage at two tiers: a unit test in `*Test.java` (driven by
+  surefire / `mvn test`) and an end-to-end case added to `EndToEndStdioIT` (driven by
+  failsafe / `mvn verify`). See DESIGN.md "Adding a new tool" step 7.
 
 ## Build conventions
 
