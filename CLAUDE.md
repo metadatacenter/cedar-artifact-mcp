@@ -23,6 +23,8 @@ After those three, the code is self-explanatory. Patterns to mirror:
 - See `pingTool()` / `pingHandler()` in `ArtifactMcpServer.java` for the minimum-viable
   pattern. Builder tools will follow the same shape, just with library calls in the
   handler.
+- Schema-rendering tools must validate before returning — see DESIGN.md Principle 6
+  and `CreateTemplateTool.handler` for the canonical pattern.
 
 ## Build conventions
 

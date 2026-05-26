@@ -7,6 +7,10 @@ import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.Version;
 import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
+import org.metadatacenter.model.validation.CedarValidator;
+import org.metadatacenter.model.validation.ModelValidator;
+import org.metadatacenter.model.validation.report.ErrorItem;
+import org.metadatacenter.model.validation.report.ValidationReport;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,6 +31,11 @@ public final class CreateTemplateTool
   // Jackson 2 ObjectNode, so we serialize it with a Jackson 2 mapper.
   private static final ObjectMapper JACKSON2 = new ObjectMapper();
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
+  // CedarValidator is the same validator the artifact library's own renderer tests use.
+  // Running it here turns "the renderer says this template built" into "the canonical
+  // validator agrees the rendered JSON is a valid CEDAR template" — a stronger contract
+  // for the LLM that consumes the result.
+  private static final ModelValidator VALIDATOR = new CedarValidator();
 
   private CreateTemplateTool() {}
 
@@ -89,6 +98,19 @@ public final class CreateTemplateTool
     }
 
     ObjectNode rendered = RENDERER.renderTemplateSchemaArtifact(template);
+
+    // Mirror the artifact library's own renderer-test invariant: every rendered template
+    // must pass CedarValidator before we hand it to the LLM. If this ever fails it means
+    // the library produced something the canonical validator rejects — a library-side
+    // regression we want to surface, not paper over.
+    try {
+      ValidationReport report = VALIDATOR.validateTemplate(rendered);
+      if (!"true".equals(report.getValidationStatus()))
+        return error("rendered template failed CedarValidator: " + formatErrors(report));
+    } catch (Exception e) {
+      return error("CedarValidator threw while validating rendered template: " + e.getMessage());
+    }
+
     String json;
     try {
       json = JACKSON2.writerWithDefaultPrettyPrinter().writeValueAsString(rendered);
@@ -100,6 +122,21 @@ public final class CreateTemplateTool
         .content(List.of(new McpSchema.TextContent(null, json)))
         .isError(false)
         .build();
+  }
+
+  private static String formatErrors(ValidationReport report)
+  {
+    StringBuilder sb = new StringBuilder();
+    int i = 0;
+    for (ErrorItem err : report.getErrors()) {
+      if (i++ > 0) sb.append("; ");
+      sb.append(err.toString());
+      if (i >= 5) {
+        sb.append("; ... (").append(report.getErrors().size() - i).append(" more)");
+        break;
+      }
+    }
+    return sb.length() == 0 ? "(no error details)" : sb.toString();
   }
 
   private static String stringArg(Map<String, Object> args, String key)

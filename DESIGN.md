@@ -66,6 +66,19 @@ constraint). Surface these as `CallToolResult` with `isError=true` and a textual
 message — do not propagate them as MCP protocol errors. The LLM can read the message
 and retry; an MCP protocol error truncates the conversation.
 
+## Principle 6 — Validate before returning
+
+Every tool that renders a CEDAR schema artifact (template, element, field, or
+instance) must run the rendered JSON through `CedarValidator` — the same validator
+the artifact library's own renderer tests use — before returning it. If validation
+fails, return an error result with the validator's diagnostics, not the invalid JSON.
+
+This is the contract the LLM relies on: a non-error result means the validator
+accepts the artifact. It also surfaces library regressions immediately rather than
+shipping subtly-wrong JSON downstream.
+
+See `CreateTemplateTool.handler` for the canonical pattern.
+
 ## Adding a new tool
 
 1. Decide which library operation the tool wraps. If the operation isn't already
