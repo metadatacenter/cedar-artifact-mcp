@@ -9,21 +9,37 @@ This file tracks what's built, what's planned, and what's deliberately out of sc
 - Stdio transport server with a diagnostic `ping` tool.
 - Shaded executable jar build (`mvn package` → `target/cedar-artifact-mcp-<v>-all.jar`).
 - Jackson 2.x / Jackson 3.x classpath conflict resolved via explicit shade filters.
+- Two-tier test stack: surefire unit tests (`*Test.java`) and failsafe end-to-end
+  ITs (`EndToEndStdioIT`) that spawn the shaded jar and speak real JSON-RPC.
+- `create_template(name, description?, version?)` — empty-shell template builder,
+  validated with `CedarValidator` before returning.
+- `template_from_yaml(yaml)` — **the headline authoring tool.** Compiles a CEDAR
+  template described in YAML to the canonical CEDAR JSON Schema; validates with
+  `CedarValidator` end-to-end.
 
-## Next — builder tools
+## Authoring strategy
 
-In rough priority order. Each tool needs schema, handler, and a test.
+YAML is the primary authoring serialization (compact, hierarchical, LLM-friendly).
+CEDAR JSON Schema is the canonical output because downstream CEDAR tooling consumes
+JSON Schema, not YAML — every authoring tool ends in JSON Schema.
 
-### Template / element / field skeletons
+## Next — transcoders
 
-- `create_template(name, description?, version?)` → returns a JSON handle for an
-  in-progress template.
-- `create_element(name, description?, version?)` → element handle.
-- `add_field(parent_handle, field_type, name, description?, required?)` — one tool with
-  a `field_type` enum discriminator covering all the field types in the library
-  (text, numeric, controlled term, link, attribute-value, etc.). Discriminator drives
-  the rest of the schema.
-- `add_element_to_parent(parent_handle, child_handle, name)`.
+- `element_from_yaml(yaml)` — element variant, same pipeline as `template_from_yaml`,
+  validating with `validateTemplateElement`.
+- `field_from_yaml(yaml)` — field variant, validating with `validateTemplateField`.
+- `to_yaml(json)` — reverse direction, for editing workflows: JSON Schema in → YAML
+  out (via the library's `JsonArtifactReader` + `YamlArtifactRenderer`).
+
+## Next — incremental builders (the escape hatch)
+
+These exist for cases YAML can't cleanly cover: interleaving with terminology MCPs,
+mutating an existing JSON template, composing from non-YAML sources. Lower priority
+than the transcoders.
+
+- `add_field(parent_json, field_type, key, name, description?, required?)` — one tool
+  with a `field_type` enum discriminator covering all 24 field types.
+- `add_element_to_parent(parent_json, child_json, key, name)`.
 
 ### Value constraints
 

@@ -17,8 +17,9 @@ See [DESIGN.md](./DESIGN.md) for the architectural principles and
 
 ## Status
 
-Scaffold. Currently exposes a single diagnostic `ping` tool for round-trip
-verification. Real builder tools are described in the roadmap.
+Three tools: `ping`, `create_template`, and the headline authoring tool
+`template_from_yaml`. The roadmap covers the element/field/instance variants and
+the JSON-Schema-to-YAML reverse direction.
 
 ## Tools
 
@@ -30,6 +31,39 @@ a client. No library interaction.
 | Input | Output |
 |---|---|
 | `{ "message": "hello" }` | `"pong: hello"` |
+
+### `create_template(name, description?, version?)`
+
+Builds an empty CEDAR template schema artifact and returns it as JSON Schema. Validates
+with `CedarValidator` before returning. Lower-level than `template_from_yaml`; useful
+when programmatically composing templates from non-YAML inputs.
+
+### `template_from_yaml(yaml)`
+
+**The headline authoring tool.** Takes a CEDAR template described in the artifact
+library's YAML format (compact, hierarchical, LLM-friendly) and returns the canonical
+CEDAR JSON Schema. The four-stage pipeline is:
+
+1. SnakeYAML parses the input text to a map.
+2. `YamlArtifactReader` reads the map into the in-memory model.
+3. `JsonArtifactRenderer` renders the model to JSON Schema.
+4. `CedarValidator` validates the JSON Schema before it leaves the tool.
+
+A non-error result is a guaranteed-valid CEDAR template. Example YAML input:
+
+```yaml
+type: template
+name: Patient demographics
+description: Minimal demographics template
+version: 0.1.0
+status: draft
+modelVersion: 1.6.0
+children:
+  - key: patient_name
+    type: text-field
+    name: Patient name
+    description: Free-text patient name
+```
 
 ## Requirements
 

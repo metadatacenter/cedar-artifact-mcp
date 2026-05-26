@@ -103,6 +103,8 @@ final class EndToEndStdioIT
       assertTrue(toolNames.contains("ping"), "ping tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("create_template"),
           "create_template tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("template_from_yaml"),
+          "template_from_yaml tool should be listed; got " + toolNames);
 
       // 4. tools/call create_template -----------------------------------------------
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":"
@@ -136,6 +138,69 @@ final class EndToEndStdioIT
       if (!"true".equals(report.getValidationStatus())) {
         StringBuilder msg = new StringBuilder(
             "CedarValidator rejected the template returned over stdio:\n");
+        for (ErrorItem err : report.getErrors()) msg.append("  - ").append(err).append('\n');
+        fail(msg.toString());
+      }
+    } finally {
+      shutdown(server, stderr);
+    }
+  }
+
+  @Test void server_compiles_yaml_template_to_validated_json_schema_over_stdio() throws Exception
+  {
+    Path jar = locateShadedJar();
+    Process server = new ProcessBuilder("java", "-jar", jar.toString())
+        .redirectErrorStream(false).start();
+    StringBuilder stderr = drainStderr(server);
+    BufferedReader stdout = new BufferedReader(
+        new InputStreamReader(server.getInputStream(), StandardCharsets.UTF_8));
+
+    try (Writer stdin = new OutputStreamWriter(server.getOutputStream(), StandardCharsets.UTF_8)) {
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":"
+          + "{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},"
+          + "\"clientInfo\":{\"name\":\"e2e\",\"version\":\"0\"}}}");
+      readResponse(stdout, stderr);
+
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
+
+      // Realistic LLM-authored YAML: a template with a text-field child. Embedded
+      // newlines are JSON-escaped because we're shipping this inside a JSON-RPC frame.
+      String yamlBody = String.join("\\n",
+          "type: template",
+          "name: Patient demographics",
+          "description: End-to-end YAML compilation test",
+          "version: 0.1.0",
+          "status: draft",
+          "modelVersion: 1.6.0",
+          "children:",
+          "  - key: patient_name",
+          "    type: text-field",
+          "    name: Patient name",
+          "    description: Free-text patient name");
+
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":"
+          + "{\"name\":\"template_from_yaml\",\"arguments\":{\"yaml\":\""
+          + yamlBody + "\"}}}");
+      JsonNode response = readResponse(stdout, stderr);
+      assertEquals(2, response.path("id").asInt());
+
+      JsonNode result = response.path("result");
+      assertFalse(result.path("isError").asBoolean(true),
+          "tool should not report error; full response: " + response);
+
+      String renderedText = result.path("content").get(0).path("text").asText();
+      JsonNode parsed = jackson.readTree(renderedText);
+
+      assertEquals("Patient demographics", parsed.path("schema:name").asText());
+      assertEquals("0.1.0", parsed.path("pav:version").asText());
+      assertTrue(parsed.path("properties").path("patient_name").isObject(),
+          "patient_name child field must appear under properties; got: "
+              + parsed.path("properties"));
+
+      ValidationReport report = cedarValidator.validateTemplate(parsed);
+      if (!"true".equals(report.getValidationStatus())) {
+        StringBuilder msg = new StringBuilder(
+            "CedarValidator rejected the YAML-compiled template returned over stdio:\n");
         for (ErrorItem err : report.getErrors()) msg.append("  - ").append(err).append('\n');
         fail(msg.toString());
       }
