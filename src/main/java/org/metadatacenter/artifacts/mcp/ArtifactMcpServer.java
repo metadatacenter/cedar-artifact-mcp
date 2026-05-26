@@ -5,6 +5,7 @@ import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
 import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
 import io.modelcontextprotocol.spec.McpSchema;
+import org.metadatacenter.artifacts.mcp.tools.CreateTemplateTool;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,11 +15,9 @@ import java.util.Map;
  * MCP server that exposes the CEDAR artifact library's builders, readers, and renderers as
  * composable tools.
  *
- * <p>This is a scaffold: it currently exposes only a {@code ping} tool for round-trip
- * verification. Real tools (template/element/field builders, value-constraint builders,
- * instance builders, readers, renderers) will follow.
- *
- * <p>See {@code DESIGN.md} for the architectural principles.
+ * <p>Tools live one-per-class under the {@code tools} package and are registered here via
+ * {@link #main(String[])}. See {@code DESIGN.md} for the architectural principles and
+ * {@code ROADMAP.md} for the planned tool inventory.
  */
 public final class ArtifactMcpServer
 {
@@ -33,6 +32,7 @@ public final class ArtifactMcpServer
         .serverInfo(SERVER_NAME, SERVER_VERSION)
         .capabilities(McpSchema.ServerCapabilities.builder().tools(true).build())
         .toolCall(pingTool(), ArtifactMcpServer::pingHandler)
+        .toolCall(CreateTemplateTool.tool(), CreateTemplateTool::handler)
         .build();
 
     // Stdio transport reads from System.in in a background thread. Keep the main thread
