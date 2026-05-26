@@ -79,32 +79,27 @@ shipping subtly-wrong JSON downstream.
 
 See `CreateTemplateTool.handler` for the canonical pattern.
 
-## Principle 7 — Lean toward what real authors write
+## Principle 7 — Stay strict; fix the input
 
-The library's YAML reader is strict: it requires `modelVersion: 1.6.0` on every
-template, element, and instance; it requires `label` values inside `values:` lists
-to be JSON strings; etc. Real-world YAML (e.g. the HuBMAP template library)
-routinely omits the boilerplate metadata and writes bare integers where the library
-expects strings.
+The library's YAML reader is the source of truth for what counts as valid CEDAR
+YAML — it requires `modelVersion: 1.6.0`, requires string-typed values where it
+expects strings, and so on. The MCP does not paper over deviations from that
+contract with defaults injection or silent type coercion. If a YAML input the LLM
+authored doesn't satisfy the reader, the failure surfaces verbatim and the author
+(LLM or human) fixes the input.
 
-Where the strictness is paying for nothing — required-but-constant fields,
-type-coercion gotchas that come from YAML's auto-typing, not from the author — the
-MCP fills the gap before invoking the reader. Specifically:
+Real-world YAML files that pre-date the current library — e.g. the HuBMAP template
+library shipped with older toolchain output — should be regenerated against the
+current library, not accommodated downstream. `GoldenYamlGenerator` is the
+canonical regeneration path: it reads the authoritative paired JSON Schemas via
+`JsonArtifactReader` and re-renders them as YAML via `YamlArtifactRenderer`
+(non-compact mode), producing what the library considers golden YAML. The
+`HubmapTemplatesIT` battery runs against those goldens, not the originals.
 
-- Inject `modelVersion: 1.6.0`, `version: 0.0.1`, `status: draft`,
-  `description: ""` at the top level if missing. Recurse into nested elements
-  for `modelVersion`.
-- Coerce numeric `label` and `prefLabel` values inside `values:` lists to strings.
-
-Policies are *narrow*: never overwrite a user-supplied value, never blanket-stringify
-the whole tree. New coercion sites are added only when a real-world failure mode is
-observed and traceable to a YAML-typing or boilerplate-omission issue. Document
-the behavior in the tool's input-schema description so the LLM knows what's getting
-defaulted.
-
-A disagreement between a user-supplied value and what the library expects (e.g.
-`modelVersion: 1.5.0`) is *not* coerced — it surfaces as a clean error so the
-author can fix it.
+The strict policy keeps the MCP a thin transcoder over the library and forces YAML
+authoring drift to surface as a library-version problem rather than a tool-leniency
+problem. The cost is that "old" YAML doesn't compile; the win is that what does
+compile is provably canonical CEDAR.
 
 ## Adding a new tool
 

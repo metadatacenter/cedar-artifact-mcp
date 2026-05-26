@@ -158,17 +158,28 @@ The test suite has two tiers, plus an opt-in real-world battery:
   template again from the other side of the wire. This is the regression net for
   shading, classpath, stdio-transport, and tool-registration failures that
   in-process tests can't catch.
-- **Real-world battery** (`HubmapTemplatesIT`) — opt-in, gated by a system property,
-  runs `template_from_yaml` against every `*.yaml` in a configured directory and
-  asserts each compiles to a `CedarValidator`-passing JSON Schema. Default
-  battery is the [HuBMAP template library](https://github.com/hubmapconsortium/dataset-metadata-spreadsheet):
+- **Real-world battery** (`HubmapTemplatesIT`) runs `template_from_yaml` against
+  44 vendored golden YAML fixtures derived from the
+  [HuBMAP template library](https://github.com/hubmapconsortium/dataset-metadata-spreadsheet)
+  and asserts each compiles to a `CedarValidator`-passing JSON Schema. The
+  fixtures under `src/test/resources/hubmap-golden/` are not the originals — they
+  are regenerated from the paired JSON Schemas via the artifact library's own
+  reader+renderer, so they are canonical CEDAR YAML by construction.
+  Failures are reported per template name. Always-on; no system property gating.
 
-  ```bash
-  mvn verify -Dhubmap.templates.dir=/path/to/HuBMAP/templates
-  ```
+### Regenerating the HuBMAP goldens
 
-  Failures are reported per template name in the surefire report, so a regression
-  in one template is identifiable without re-running the rest of the battery.
+`GoldenYamlGenerator` is a one-shot utility that reads a directory of CEDAR JSON
+Schemas, round-trips each through `JsonArtifactReader` and `YamlArtifactRenderer`,
+and writes the result as YAML. Use it when the artifact library's YAML format
+changes or when adding templates to the battery:
+
+```bash
+mvn test-compile exec:java \
+    -Dexec.classpathScope=test \
+    -Dexec.mainClass=org.metadatacenter.artifacts.mcp.GoldenYamlGenerator \
+    -Dexec.args="/path/to/source-json-dir src/test/resources/hubmap-golden"
+```
 
 ## License
 
