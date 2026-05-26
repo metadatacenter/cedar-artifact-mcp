@@ -5,7 +5,7 @@ This file tracks what's built, what's planned, and what's deliberately out of sc
 ## Done
 
 - Maven scaffold with the official MCP Java SDK (`io.modelcontextprotocol.sdk:mcp:1.1.3`)
-  and `cedar-artifact-library:2.8.0`.
+  and `cedar-artifact-library:2.8.1-SNAPSHOT` (tracking the library's `develop` branch).
 - Stdio transport server with a diagnostic `ping` tool.
 - Shaded executable jar build (`mvn package` → `target/cedar-artifact-mcp-<v>-all.jar`).
 - Jackson 2.x / Jackson 3.x classpath conflict resolved via explicit shade filters.

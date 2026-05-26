@@ -35,8 +35,11 @@ a client. No library interaction.
 
 - Java 17 or newer
 - [Maven](https://maven.apache.org/) 3.9 or newer
-- A local install of `cedar-artifact-library` 2.8.0 (in `~/.m2/repository` or a
-  reachable Maven repository) — the library is not yet on Maven Central.
+- A local install of `cedar-artifact-library` 2.8.1-SNAPSHOT (in `~/.m2/repository` or
+  a reachable Maven repository). Tracks the library's `develop` branch; the library is
+  not yet on Maven Central. Build the library locally with `mvn install` from a checkout
+  of [metadatacenter/cedar-artifact-library](https://github.com/metadatacenter/cedar-artifact-library)
+  on `develop`.
 
 ## Build
 
