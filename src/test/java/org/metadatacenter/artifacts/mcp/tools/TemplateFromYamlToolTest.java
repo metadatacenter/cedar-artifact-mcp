@@ -300,6 +300,126 @@ final class TemplateFromYamlToolTest
         rendered.path("schema:description").asText());
   }
 
+  @Test void injects_default_modelVersion_when_missing() throws Exception
+  {
+    // HuBMAP-style minimal YAML: only type + name + children, no modelVersion / version /
+    // status / description. Real-world authoring convention. Without defaults injection
+    // this fails at YamlArtifactReader's checkSchemaArtifactModelVersion.
+    String yaml =
+        "type: template\n"
+            + "name: HuBMAP-style minimal\n";
+
+    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+    assertEquals("HuBMAP-style minimal", rendered.path("schema:name").asText());
+    // The defaults should produce a valid CEDAR template:
+    ValidationReport report = cedarValidator.validateTemplate(rendered);
+    assertEquals("true", report.getValidationStatus());
+  }
+
+  @Test void injects_default_version_status_and_description() throws Exception
+  {
+    String yaml =
+        "type: template\n"
+            + "name: Defaults test\n";
+
+    ObjectNode rendered = parseJson(invoke(Map.of("yaml", yaml)));
+
+    assertEquals("0.0.1", rendered.path("pav:version").asText(),
+        "default pav:version should be 0.0.1");
+    assertEquals("bibo:draft", rendered.path("bibo:status").asText(),
+        "default bibo:status should be bibo:draft");
+    assertEquals("", rendered.path("schema:description").asText(),
+        "default schema:description should be empty string");
+  }
+
+  @Test void preserves_user_supplied_values_over_defaults() throws Exception
+  {
+    String yaml =
+        "type: template\n"
+            + "name: User-supplied wins\n"
+            + "description: Explicit user description\n"
+            + "version: 1.2.3\n";
+
+    ObjectNode rendered = parseJson(invoke(Map.of("yaml", yaml)));
+
+    assertEquals("Explicit user description", rendered.path("schema:description").asText(),
+        "user-supplied description must not be overwritten by default injection");
+    assertEquals("1.2.3", rendered.path("pav:version").asText(),
+        "user-supplied version must not be overwritten by default injection");
+  }
+
+  @Test void rejects_user_supplied_modelVersion_that_disagrees_with_library() throws Exception
+  {
+    // If the user explicitly says modelVersion: 1.5.0, we don't silently rewrite —
+    // we surface the library's mismatch error. Defaults only fill *missing* keys.
+    String yaml =
+        "type: template\n"
+            + "name: Wrong-model-version\n"
+            + "modelVersion: 1.5.0\n";
+
+    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+
+    assertTrue(result.isError(), "disagreeing modelVersion must surface as isError=true");
+    assertTrue(errorText(result).contains("model version"),
+        "error should explain the model version mismatch; got: " + errorText(result));
+  }
+
+  @Test void injects_modelVersion_into_nested_elements() throws Exception
+  {
+    // The library runs checkSchemaArtifactModelVersion for every element it descends
+    // into. Defaults injection must recurse so nested elements without modelVersion
+    // also compile cleanly.
+    String yaml =
+        "type: template\n"
+            + "name: Nested defaults\n"
+            + "children:\n"
+            + "  - key: address\n"
+            + "    type: element\n"
+            + "    name: Address\n"
+            + "    children:\n"
+            + "      - key: street\n"
+            + "        type: text-field\n"
+            + "        name: Street\n";
+
+    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+    assertTrue(rendered.path("properties").path("address").path("properties").path("street").isObject(),
+        "nested element must compile with modelVersion defaulted");
+  }
+
+  @Test void coerces_yaml_integer_label_to_string_in_radio_values() throws Exception
+  {
+    // The HuBMAP-RNAseq-family failure pattern: a radio-field with bare-integer
+    // labels. SnakeYAML auto-types `label: 0` as Integer; the library reader insists
+    // on String. Coercion turns the integer back into the literal "0" the author
+    // clearly meant.
+    String yaml =
+        "type: template\n"
+            + "name: Coerced labels\n"
+            + "children:\n"
+            + "  - key: barcode_offset\n"
+            + "    type: radio-field\n"
+            + "    name: barcode_offset\n"
+            + "    values:\n"
+            + "      - label: 0\n"
+            + "      - label: 38\n"
+            + "      - label: 76\n";
+
+    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+
+    assertFalse(result.isError(),
+        "integer labels in values list must be coerced silently; got: " + errorText(result));
+    ObjectNode rendered = parseJson(result);
+    ValidationReport report = cedarValidator.validateTemplate(rendered);
+    assertEquals("true", report.getValidationStatus(),
+        "coerced-label template must pass CedarValidator");
+  }
+
   @Test void rejects_blank_yaml()
   {
     McpSchema.CallToolResult result = invoke(Map.of("yaml", "   \n  \n"));

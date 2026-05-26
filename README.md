@@ -148,7 +148,7 @@ mvn package     # build the shaded jar
 mvn verify      # full cycle: unit tests + package + end-to-end ITs (failsafe)
 ```
 
-The test suite has two tiers:
+The test suite has two tiers, plus an opt-in real-world battery:
 
 - **Unit tests** (`*Test.java`) drive tool handlers directly with synthetic requests.
   Fast, in-process, no subprocess. Validate the rendered output against the same
@@ -158,6 +158,17 @@ The test suite has two tiers:
   template again from the other side of the wire. This is the regression net for
   shading, classpath, stdio-transport, and tool-registration failures that
   in-process tests can't catch.
+- **Real-world battery** (`HubmapTemplatesIT`) — opt-in, gated by a system property,
+  runs `template_from_yaml` against every `*.yaml` in a configured directory and
+  asserts each compiles to a `CedarValidator`-passing JSON Schema. Default
+  battery is the [HuBMAP template library](https://github.com/hubmapconsortium/dataset-metadata-spreadsheet):
+
+  ```bash
+  mvn verify -Dhubmap.templates.dir=/path/to/HuBMAP/templates
+  ```
+
+  Failures are reported per template name in the surefire report, so a regression
+  in one template is identifiable without re-running the rest of the battery.
 
 ## License
 

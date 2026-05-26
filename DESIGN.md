@@ -79,6 +79,33 @@ shipping subtly-wrong JSON downstream.
 
 See `CreateTemplateTool.handler` for the canonical pattern.
 
+## Principle 7 — Lean toward what real authors write
+
+The library's YAML reader is strict: it requires `modelVersion: 1.6.0` on every
+template, element, and instance; it requires `label` values inside `values:` lists
+to be JSON strings; etc. Real-world YAML (e.g. the HuBMAP template library)
+routinely omits the boilerplate metadata and writes bare integers where the library
+expects strings.
+
+Where the strictness is paying for nothing — required-but-constant fields,
+type-coercion gotchas that come from YAML's auto-typing, not from the author — the
+MCP fills the gap before invoking the reader. Specifically:
+
+- Inject `modelVersion: 1.6.0`, `version: 0.0.1`, `status: draft`,
+  `description: ""` at the top level if missing. Recurse into nested elements
+  for `modelVersion`.
+- Coerce numeric `label` and `prefLabel` values inside `values:` lists to strings.
+
+Policies are *narrow*: never overwrite a user-supplied value, never blanket-stringify
+the whole tree. New coercion sites are added only when a real-world failure mode is
+observed and traceable to a YAML-typing or boilerplate-omission issue. Document
+the behavior in the tool's input-schema description so the LLM knows what's getting
+defaulted.
+
+A disagreement between a user-supplied value and what the library expects (e.g.
+`modelVersion: 1.5.0`) is *not* coerced — it surfaces as a clean error so the
+author can fix it.
+
 ## Adding a new tool
 
 1. Decide which library operation the tool wraps. If the operation isn't already
