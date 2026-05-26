@@ -209,6 +209,145 @@ final class EndToEndStdioIT
     }
   }
 
+  @Test void server_handles_sequential_tool_calls_on_one_session() throws Exception
+  {
+    // Three tool calls on the same server process: ping, then create_template, then
+    // template_from_yaml. Catches the kind of bug where the first call works but a
+    // subsequent call breaks because some state leaked between requests (the kind of
+    // thing a fresh-server-per-call IT misses).
+    Path jar = locateShadedJar();
+    Process server = new ProcessBuilder("java", "-jar", jar.toString())
+        .redirectErrorStream(false).start();
+    StringBuilder stderr = drainStderr(server);
+    BufferedReader stdout = new BufferedReader(
+        new InputStreamReader(server.getInputStream(), StandardCharsets.UTF_8));
+
+    try (Writer stdin = new OutputStreamWriter(server.getOutputStream(), StandardCharsets.UTF_8)) {
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":"
+          + "{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},"
+          + "\"clientInfo\":{\"name\":\"e2e\",\"version\":\"0\"}}}");
+      readResponse(stdout, stderr);
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
+
+      // Call 1: ping
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":10,\"method\":\"tools/call\",\"params\":"
+          + "{\"name\":\"ping\",\"arguments\":{\"message\":\"first\"}}}");
+      JsonNode r1 = readResponse(stdout, stderr);
+      assertEquals(10, r1.path("id").asInt());
+      assertEquals("pong: first",
+          r1.path("result").path("content").get(0).path("text").asText());
+
+      // Call 2: create_template
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":11,\"method\":\"tools/call\",\"params\":"
+          + "{\"name\":\"create_template\",\"arguments\":{\"name\":\"Second call\"}}}");
+      JsonNode r2 = readResponse(stdout, stderr);
+      assertEquals(11, r2.path("id").asInt());
+      assertFalse(r2.path("result").path("isError").asBoolean(true),
+          "create_template on second call should succeed; got: " + r2);
+
+      // Call 3: template_from_yaml (the heavy one — exercises the full transcode
+      // pipeline after two prior calls)
+      String yamlBody = String.join("\\n",
+          "type: template",
+          "name: Third call",
+          "description: Final call in sequence",
+          "version: 0.1.0",
+          "status: draft",
+          "modelVersion: 1.6.0");
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":12,\"method\":\"tools/call\",\"params\":"
+          + "{\"name\":\"template_from_yaml\",\"arguments\":{\"yaml\":\""
+          + yamlBody + "\"}}}");
+      JsonNode r3 = readResponse(stdout, stderr);
+      assertEquals(12, r3.path("id").asInt());
+      assertFalse(r3.path("result").path("isError").asBoolean(true),
+          "template_from_yaml on third call should succeed; got: " + r3);
+
+      JsonNode parsed = jackson.readTree(
+          r3.path("result").path("content").get(0).path("text").asText());
+      assertEquals("Third call", parsed.path("schema:name").asText());
+
+      // One more ping after the heavy call to confirm the server is still healthy.
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":13,\"method\":\"tools/call\",\"params\":"
+          + "{\"name\":\"ping\",\"arguments\":{\"message\":\"still alive\"}}}");
+      JsonNode r4 = readResponse(stdout, stderr);
+      assertEquals(13, r4.path("id").asInt());
+      assertEquals("pong: still alive",
+          r4.path("result").path("content").get(0).path("text").asText());
+    } finally {
+      shutdown(server, stderr);
+    }
+  }
+
+  @Test void server_compiles_controlled_term_yaml_end_to_end() throws Exception
+  {
+    // The central CEDAR integration story over real stdio: a controlled-term field
+    // bound to a class in an ontology. The tuple (iri, acronym, label, termLabel) is
+    // exactly what bioportal-term-mcp emits — this is the end-to-end shape the
+    // downstream LLM pipeline will exercise.
+    Path jar = locateShadedJar();
+    Process server = new ProcessBuilder("java", "-jar", jar.toString())
+        .redirectErrorStream(false).start();
+    StringBuilder stderr = drainStderr(server);
+    BufferedReader stdout = new BufferedReader(
+        new InputStreamReader(server.getInputStream(), StandardCharsets.UTF_8));
+
+    try (Writer stdin = new OutputStreamWriter(server.getOutputStream(), StandardCharsets.UTF_8)) {
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":"
+          + "{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},"
+          + "\"clientInfo\":{\"name\":\"e2e\",\"version\":\"0\"}}}");
+      readResponse(stdout, stderr);
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
+
+      String yaml = String.join("\\n",
+          "type: template",
+          "name: Diagnosis template",
+          "description: Template with a controlled-term diagnosis field",
+          "version: 0.1.0",
+          "status: draft",
+          "modelVersion: 1.6.0",
+          "children:",
+          "  - key: diagnosis",
+          "    type: controlled-term-field",
+          "    name: Primary diagnosis",
+          "    description: Diagnosis from the Human Disease Ontology",
+          "    datatype: iri",
+          "    values:",
+          "      - type: class",
+          "        label: disease",
+          "        acronym: DOID",
+          "        termType: class",
+          "        termLabel: disease",
+          "        iri: http://purl.obolibrary.org/obo/DOID_4");
+
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":"
+          + "{\"name\":\"template_from_yaml\",\"arguments\":{\"yaml\":\""
+          + yaml + "\"}}}");
+      JsonNode response = readResponse(stdout, stderr);
+      assertEquals(2, response.path("id").asInt());
+
+      JsonNode result = response.path("result");
+      assertFalse(result.path("isError").asBoolean(true),
+          "controlled-term YAML must compile cleanly over stdio; got: " + response);
+
+      JsonNode parsed = jackson.readTree(result.path("content").get(0).path("text").asText());
+      assertTrue(parsed.path("properties").path("diagnosis").isObject(),
+          "diagnosis field must appear under properties; got keys: "
+              + parsed.path("properties"));
+
+      // Re-validate end-to-end: the JSON coming back over the wire must satisfy
+      // CedarValidator independently of the in-handler validation step.
+      ValidationReport report = cedarValidator.validateTemplate(parsed);
+      if (!"true".equals(report.getValidationStatus())) {
+        StringBuilder msg = new StringBuilder(
+            "CedarValidator rejected the controlled-term template returned over stdio:\n");
+        for (ErrorItem err : report.getErrors()) msg.append("  - ").append(err).append('\n');
+        fail(msg.toString());
+      }
+    } finally {
+      shutdown(server, stderr);
+    }
+  }
+
   @Test void server_returns_error_result_for_blank_name() throws Exception
   {
     Path jar = locateShadedJar();
