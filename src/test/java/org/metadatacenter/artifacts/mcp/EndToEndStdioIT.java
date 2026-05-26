@@ -284,6 +284,13 @@ final class EndToEndStdioIT
     // bound to a class in an ontology. The tuple (iri, acronym, label, termLabel) is
     // exactly what bioportal-term-mcp emits — this is the end-to-end shape the
     // downstream LLM pipeline will exercise.
+    //
+    // This case is also the MCP's "real-world canonical CEDAR YAML through stdio"
+    // regression. The exhaustive 44-template HuBMAP battery lives in
+    // cedar-artifact-library (HubmapTemplatesRoundTripTest) where it covers the
+    // library's reader/renderer/validator directly without the MCP layer; the
+    // case here proves the same shape of input routes cleanly through the
+    // shaded MCP jar over real JSON-RPC.
     Path jar = locateShadedJar();
     Process server = new ProcessBuilder("java", "-jar", jar.toString())
         .redirectErrorStream(false).start();

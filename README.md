@@ -158,28 +158,20 @@ The test suite has two tiers, plus an opt-in real-world battery:
   template again from the other side of the wire. This is the regression net for
   shading, classpath, stdio-transport, and tool-registration failures that
   in-process tests can't catch.
-- **Real-world battery** (`HubmapTemplatesIT`) runs `template_from_yaml` against
-  44 vendored golden YAML fixtures derived from the
-  [HuBMAP template library](https://github.com/hubmapconsortium/dataset-metadata-spreadsheet)
-  and asserts each compiles to a `CedarValidator`-passing JSON Schema. The
-  fixtures under `src/test/resources/hubmap-golden/` are not the originals — they
-  are regenerated from the paired JSON Schemas via the artifact library's own
-  reader+renderer, so they are canonical CEDAR YAML by construction.
-  Failures are reported per template name. Always-on; no system property gating.
+### Real-world coverage
 
-### Regenerating the HuBMAP goldens
+The MCP's `EndToEndStdioIT` includes one case
+(`server_compiles_controlled_term_yaml_end_to_end`) that drives a canonical
+CEDAR YAML template — including a controlled-term constraint — through the
+shaded jar over real stdio. That's enough at this layer to catch MCP-specific
+regressions (transport, shading, tool registration).
 
-`GoldenYamlGenerator` is a one-shot utility that reads a directory of CEDAR JSON
-Schemas, round-trips each through `JsonArtifactReader` and `YamlArtifactRenderer`,
-and writes the result as YAML. Use it when the artifact library's YAML format
-changes or when adding templates to the battery:
-
-```bash
-mvn test-compile exec:java \
-    -Dexec.classpathScope=test \
-    -Dexec.mainClass=org.metadatacenter.artifacts.mcp.GoldenYamlGenerator \
-    -Dexec.args="/path/to/source-json-dir src/test/resources/hubmap-golden"
-```
+The exhaustive real-world battery — every published HuBMAP template
+round-tripped through reader / renderer / validator — lives in
+`cedar-artifact-library` as `HubmapTemplatesRoundTripTest`. That's the right
+home for it: the test exercises the library's reader/renderer/validator without
+any MCP wrapping, and the goldens are derived from the library's own
+round-trip. See the library's `develop` branch.
 
 ## License
 

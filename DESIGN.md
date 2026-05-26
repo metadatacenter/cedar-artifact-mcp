@@ -88,18 +88,32 @@ contract with defaults injection or silent type coercion. If a YAML input the LL
 authored doesn't satisfy the reader, the failure surfaces verbatim and the author
 (LLM or human) fixes the input.
 
-Real-world YAML files that pre-date the current library — e.g. the HuBMAP template
-library shipped with older toolchain output — should be regenerated against the
-current library, not accommodated downstream. `GoldenYamlGenerator` is the
-canonical regeneration path: it reads the authoritative paired JSON Schemas via
-`JsonArtifactReader` and re-renders them as YAML via `YamlArtifactRenderer`
-(non-compact mode), producing what the library considers golden YAML. The
-`HubmapTemplatesIT` battery runs against those goldens, not the originals.
+YAML authored against an older library version should be regenerated against the
+current library, not accommodated downstream. The library ships a regeneration
+utility (`GoldenYamlGenerator`) that round-trips paired JSON Schemas through its
+own reader and renderer to produce canonical YAML; see the library's
+`HubmapTemplatesRoundTripTest` for the corresponding real-world coverage.
 
 The strict policy keeps the MCP a thin transcoder over the library and forces YAML
 authoring drift to surface as a library-version problem rather than a tool-leniency
-problem. The cost is that "old" YAML doesn't compile; the win is that what does
-compile is provably canonical CEDAR.
+problem.
+
+## Principle 8 — Test the MCP, not the library
+
+When a candidate test exercises the artifact library's reader/renderer/validator
+through five lines of MCP wrapping, write it in the library, not here. The MCP
+keeps coverage of MCP-specific concerns:
+
+- Handler behavior (input parsing, error envelope, defaults in the JSON-RPC layer).
+- Tool registration and input schemas (`tools/list` exposes them correctly).
+- Stdio transport, JSON-RPC framing, session lifecycle.
+- Shading (the executable jar wires up correctly, no classpath skew at runtime).
+
+Real-world inputs through the MCP are covered by *one* representative case in
+`EndToEndStdioIT`, sized to catch transport / shading / registration regressions
+without redundantly testing what the library tests already cover. The exhaustive
+real-world battery lives in `cedar-artifact-library` as
+`HubmapTemplatesRoundTripTest`, where it tests reader/renderer/validator directly.
 
 ## Adding a new tool
 
