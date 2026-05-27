@@ -300,20 +300,38 @@ final class TemplateFromYamlToolTest
         rendered.path("schema:description").asText());
   }
 
-  @Test void rejects_yaml_missing_required_modelVersion()
+  @Test void accepts_yaml_missing_modelVersion_and_defaults_it() throws Exception
   {
-    // The library reader requires modelVersion. This MCP no longer fills in a default
-    // — the failure surfaces as a clean isError=true so the author knows to add it.
+    // The MCP uses the library reader's compact mode, which defaults missing
+    // modelVersion to the library-canonical value. That's the round-trip story for
+    // template_to_yaml's compact output, which omits modelVersion by design.
     String yaml =
         "type: template\n"
             + "name: Missing-model-version\n";
 
     McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
 
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+    assertEquals("Missing-model-version", rendered.get("schema:name").asText());
+  }
+
+  @Test void rejects_yaml_with_wrong_modelVersion()
+  {
+    // Defaulting in compact mode covers absence only. A present-but-wrong modelVersion
+    // is still rejected, otherwise stale-version YAML would silently bind to the
+    // current schema.
+    String yaml =
+        "type: template\n"
+            + "name: Wrong-model-version\n"
+            + "modelVersion: 0.0.1\n";
+
+    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+
     assertTrue(result.isError(),
-        "yaml without modelVersion must surface as isError=true; got: " + result);
-    assertTrue(errorText(result).contains("modelVersion"),
-        "error should mention the missing modelVersion; got: " + errorText(result));
+        "wrong modelVersion must surface as isError=true; got: " + result);
+    assertTrue(errorText(result).toLowerCase().contains("model version"),
+        "error should mention model version; got: " + errorText(result));
   }
 
   @Test void rejects_blank_yaml()

@@ -80,9 +80,10 @@ returns the artifact library's YAML serialization. The `form` argument selects b
 the two forms the `YamlArtifactRenderer` supports:
 
 - `compact` (default) — the lean, LLM-friendly authoring form. Provenance fields,
-  status, and version are omitted; `modelVersion` is retained so the YAML round-trips
-  cleanly through `template_from_yaml`. Best for showing an LLM a template it should
-  edit.
+  status, version, and `modelVersion` are all omitted. `template_from_yaml` runs the
+  library reader in compact mode, which defaults an absent `modelVersion` to the
+  canonical value, so compact YAML round-trips cleanly. Best for showing an LLM a
+  template it should edit.
 - `standard` — every field the renderer can emit. Suitable for archival and round-trip
   diffing where provenance and version metadata need to survive.
 

@@ -39,7 +39,10 @@ import java.util.Map;
 public final class TemplateFromYamlTool
 {
   private static final ObjectMapper JACKSON2 = new ObjectMapper();
-  private static final YamlArtifactReader READER = new YamlArtifactReader();
+  // Compact-mode reader: accepts the compact YAML form template_to_yaml emits — same
+  // YAML the LLM sees when editing a template. Missing modelVersion is defaulted, but
+  // a wrong-valued modelVersion is still rejected.
+  private static final YamlArtifactReader READER = new YamlArtifactReader(true);
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
   private static final ModelValidator VALIDATOR = new CedarValidator();
 

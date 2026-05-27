@@ -79,14 +79,16 @@ shipping subtly-wrong JSON downstream.
 
 See `CreateTemplateTool.handler` for the canonical pattern.
 
-## Principle 7 — Stay strict; fix the input
+## Principle 7 — Reader is the contract; lean on its compact mode
 
 The library's YAML reader is the source of truth for what counts as valid CEDAR
-YAML — it requires `modelVersion: 1.6.0`, requires string-typed values where it
-expects strings, and so on. The MCP does not paper over deviations from that
-contract with defaults injection or silent type coercion. If a YAML input the LLM
-authored doesn't satisfy the reader, the failure surfaces verbatim and the author
-(LLM or human) fixes the input.
+YAML. The MCP does not add its own coercions or defaults *on top of* the reader.
+
+The MCP instantiates the reader in **compact mode** (`new YamlArtifactReader(true)`)
+so it accepts the same compact YAML form that `template_to_yaml` emits — modelVersion
+absent is treated as the canonical model version. A *present-but-wrong* modelVersion
+is still rejected by the reader: defaulting in compact mode covers absence only, not
+silent stale-version acceptance.
 
 YAML authored against an older library version should be regenerated against the
 current library, not accommodated downstream. The library ships a regeneration
@@ -94,9 +96,9 @@ utility (`GoldenYamlGenerator`) that round-trips paired JSON Schemas through its
 own reader and renderer to produce canonical YAML; see the library's
 `HubmapTemplatesRoundTripTest` for the corresponding real-world coverage.
 
-The strict policy keeps the MCP a thin transcoder over the library and forces YAML
-authoring drift to surface as a library-version problem rather than a tool-leniency
-problem.
+The shape of the contract — strict on values, lenient on absence in compact mode —
+keeps the MCP a thin transcoder over the library and lets compact YAML flow
+freely through the authoring loop.
 
 ## Principle 8 — Test the MCP, not the library
 

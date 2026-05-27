@@ -21,9 +21,10 @@ import java.util.Map;
  * serialization. The {@code form} argument selects between the two forms the
  * {@link org.metadatacenter.artifacts.model.renderer.YamlArtifactRenderer} supports:
  * <ul>
- *   <li>{@code compact} — the lean, LLM-friendly authoring form (default). Provenance
- *       fields, status, and version are omitted; {@code modelVersion} is retained so
- *       the output round-trips cleanly through {@code template_from_yaml}.</li>
+ *   <li>{@code compact} — the lean, LLM-friendly authoring form (default). Provenance,
+ *       status, version, and {@code modelVersion} are omitted. {@code template_from_yaml}
+ *       reads in compact mode and defaults the absent {@code modelVersion}, so the
+ *       output round-trips cleanly.</li>
  *   <li>{@code standard} — every field the renderer can emit, suitable for archival or
  *       diff workflows where provenance and version metadata need to survive.</li>
  * </ul>
@@ -56,8 +57,9 @@ public final class TemplateToYamlTool
         "enum", List.of(FORM_COMPACT, FORM_STANDARD),
         "description",
         "Which YAML form to render. 'compact' (default) emits the lean, LLM-friendly "
-            + "authoring form — provenance, status, and version are omitted (modelVersion "
-            + "is retained so the output round-trips through 'template_from_yaml'). "
+            + "authoring form — provenance, status, version, and modelVersion are all "
+            + "omitted. 'template_from_yaml' reads compact YAML cleanly (it defaults "
+            + "the absent modelVersion), so the round-trip works without manual repair. "
             + "'standard' emits every field the renderer can produce, suitable for "
             + "archival workflows where provenance metadata needs to survive."));
 

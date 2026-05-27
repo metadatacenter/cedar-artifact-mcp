@@ -28,7 +28,8 @@ import java.util.Map;
 public final class ElementFromYamlTool
 {
   private static final ObjectMapper JACKSON2 = new ObjectMapper();
-  private static final YamlArtifactReader READER = new YamlArtifactReader();
+  // Compact-mode reader — see TemplateFromYamlTool for rationale.
+  private static final YamlArtifactReader READER = new YamlArtifactReader(true);
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
   private static final ModelValidator VALIDATOR = new CedarValidator();
 
