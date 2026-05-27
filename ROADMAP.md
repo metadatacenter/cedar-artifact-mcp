@@ -47,7 +47,7 @@ JSON Schema, not YAML — every authoring tool ends in JSON Schema.
 
 - Value-constraint tools for controlled-term fields:
   - `add_class_constraint(field_json, class_iri, ontology_acronym, label, pref_label, value_type?)`.
-  - `add_ontology_constraint(field_json, ontology_iri, acronym, name)`.
+  - `add_ontology_constraint(field_json, ontology_iri, ontology_acronym, ontology_name)`.
   - `add_branch_constraint(field_json, branch_iri, ontology_name, ontology_acronym, branch_label, max_depth?)`.
   - `add_valueset_constraint(field_json, value_set_iri, vs_collection, name)`.
 

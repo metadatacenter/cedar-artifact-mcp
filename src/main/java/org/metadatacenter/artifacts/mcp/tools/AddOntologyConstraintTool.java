@@ -12,8 +12,8 @@ import java.util.Map;
 /**
  * MCP tool {@code add_ontology_constraint} — pins a controlled-term field to all
  * classes from a named ontology. The canonical input tuple ({@code ontology_iri},
- * {@code acronym}, {@code name}) matches what {@code bioportal-term-mcp}'s
- * {@code get_ontology} returns.
+ * {@code ontology_acronym}, {@code ontology_name}) matches what
+ * {@code bioportal-term-mcp}'s {@code get_ontology} returns.
  */
 public final class AddOntologyConstraintTool
 {
@@ -30,16 +30,16 @@ public final class AddOntologyConstraintTool
     properties.put("ontology_iri", Map.of(
         "type", "string",
         "description", "Canonical IRI for the ontology."));
-    properties.put("acronym", Map.of(
+    properties.put("ontology_acronym", Map.of(
         "type", "string",
         "description", "Ontology acronym (e.g. 'DOID')."));
-    properties.put("name", Map.of(
+    properties.put("ontology_name", Map.of(
         "type", "string",
         "description", "Human-readable ontology name (e.g. 'Human Disease Ontology')."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
-        List.of("field_json", "ontology_iri", "acronym", "name"),
+        List.of("field_json", "ontology_iri", "ontology_acronym", "ontology_name"),
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
@@ -60,12 +60,12 @@ public final class AddOntologyConstraintTool
 
     String fieldJson = stringArg(args, "field_json");
     String ontologyIri = stringArg(args, "ontology_iri");
-    String acronym = stringArg(args, "acronym");
-    String name = stringArg(args, "name");
+    String ontologyAcronym = stringArg(args, "ontology_acronym");
+    String ontologyName = stringArg(args, "ontology_name");
 
     if (isBlank(ontologyIri)) return error("ontology_iri is required and must not be blank");
-    if (isBlank(acronym)) return error("acronym is required and must not be blank");
-    if (isBlank(name)) return error("name is required and must not be blank");
+    if (isBlank(ontologyAcronym)) return error("ontology_acronym is required and must not be blank");
+    if (isBlank(ontologyName)) return error("ontology_name is required and must not be blank");
 
     URI iri;
     try {
@@ -75,7 +75,7 @@ public final class AddOntologyConstraintTool
     }
 
     return ControlledTermConstraints.apply(fieldJson, builder ->
-        builder.withOntologyValueConstraint(iri, acronym, name));
+        builder.withOntologyValueConstraint(iri, ontologyAcronym, ontologyName));
   }
 
   private static String stringArg(Map<String, Object> args, String key)

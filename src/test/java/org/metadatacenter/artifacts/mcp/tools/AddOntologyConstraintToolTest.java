@@ -35,8 +35,8 @@ final class AddOntologyConstraintToolTest
     McpSchema.CallToolResult result = invoke(Map.of(
         "field_json", fieldJson,
         "ontology_iri", "https://data.bioontology.org/ontologies/DOID",
-        "acronym", "DOID",
-        "name", "Human Disease Ontology"));
+        "ontology_acronym", "DOID",
+        "ontology_name", "Human Disease Ontology"));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
@@ -59,8 +59,8 @@ final class AddOntologyConstraintToolTest
     McpSchema.CallToolResult result = invoke(Map.of(
         "field_json", numericFieldJson,
         "ontology_iri", "https://example.com/o",
-        "acronym", "X",
-        "name", "X"));
+        "ontology_acronym", "X",
+        "ontology_name", "X"));
     assertTrue(result.isError());
   }
 

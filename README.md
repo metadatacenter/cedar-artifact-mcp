@@ -87,7 +87,7 @@ Pins a controlled-term field to a single ontology class. The canonical input tup
 matches what `bioportal-term-mcp`'s `get_class` returns. `value_type` is `"class"` by
 default (a real ontology class) or `"value"` for permissible-value entries.
 
-### `add_ontology_constraint(field_json, ontology_iri, acronym, name)`
+### `add_ontology_constraint(field_json, ontology_iri, ontology_acronym, ontology_name)`
 
 Scopes a controlled-term field's permissible values to all classes from a named
 ontology. The canonical input tuple matches `bioportal-term-mcp`'s `get_ontology`.
