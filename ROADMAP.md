@@ -45,7 +45,7 @@ than the transcoders.
 
 - `add_field(parent_json, field_type, key, name, description?, required?)` — one tool
   with a `field_type` enum discriminator covering all 24 field types.
-- `add_element_to_parent(parent_json, child_json, key, name)`.
+- `add_element(parent_json, child_json, key, name)`.
 
 ### Value constraints
 
