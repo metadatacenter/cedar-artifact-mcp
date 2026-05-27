@@ -26,15 +26,15 @@ public final class AddBranchConstraintTool
         "description",
         "CEDAR controlled-term field as JSON Schema (the kind 'create_field' with "
             + "type='controlled-term-field' or 'field_from_yaml' returns)."));
-    properties.put("branch_iri", Map.of(
-        "type", "string",
-        "description", "Canonical IRI for the branch's root class."));
     properties.put("ontology_name", Map.of(
         "type", "string",
         "description", "Human-readable ontology name (e.g. 'Human Disease Ontology')."));
     properties.put("ontology_acronym", Map.of(
         "type", "string",
         "description", "Ontology acronym (e.g. 'DOID')."));
+    properties.put("branch_iri", Map.of(
+        "type", "string",
+        "description", "Canonical IRI for the branch's root class."));
     properties.put("branch_label", Map.of(
         "type", "string",
         "description", "Human-readable label for the branch root (e.g. 'Disease')."));
@@ -47,7 +47,7 @@ public final class AddBranchConstraintTool
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
-        List.of("field_json", "branch_iri", "ontology_name", "ontology_acronym", "branch_label"),
+        List.of("field_json", "ontology_name", "ontology_acronym", "branch_iri", "branch_label"),
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()

@@ -92,7 +92,7 @@ default (a real ontology class) or `"value"` for permissible-value entries.
 Scopes a controlled-term field's permissible values to all classes from a named
 ontology. The canonical input tuple matches `bioportal-term-mcp`'s `get_ontology`.
 
-### `add_branch_constraint(field_json, branch_iri, ontology_name, ontology_acronym, branch_label, max_depth?)`
+### `add_branch_constraint(field_json, ontology_name, ontology_acronym, branch_iri, branch_label, max_depth?)`
 
 Scopes a controlled-term field to a subtree rooted at a named class. `max_depth`
 defaults to `0` (the library's convention for unbounded depth).
