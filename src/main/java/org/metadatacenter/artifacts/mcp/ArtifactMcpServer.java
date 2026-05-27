@@ -7,7 +7,9 @@ import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.mcp.tools.CreateTemplateTool;
 import org.metadatacenter.artifacts.mcp.tools.ElementFromYamlTool;
+import org.metadatacenter.artifacts.mcp.tools.ElementToYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.FieldFromYamlTool;
+import org.metadatacenter.artifacts.mcp.tools.FieldToYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.TemplateFromYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.TemplateToYamlTool;
 
@@ -41,6 +43,8 @@ public final class ArtifactMcpServer
         .toolCall(ElementFromYamlTool.tool(), ElementFromYamlTool::handler)
         .toolCall(FieldFromYamlTool.tool(), FieldFromYamlTool::handler)
         .toolCall(TemplateToYamlTool.tool(), TemplateToYamlTool::handler)
+        .toolCall(ElementToYamlTool.tool(), ElementToYamlTool::handler)
+        .toolCall(FieldToYamlTool.tool(), FieldToYamlTool::handler)
         .build();
 
     // Stdio transport reads from System.in in a background thread. Keep the main thread

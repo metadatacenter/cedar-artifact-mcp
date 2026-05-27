@@ -19,22 +19,18 @@ This file tracks what's built, what's planned, and what's deliberately out of sc
 - `element_from_yaml(yaml)` — element variant, same pipeline as `template_from_yaml`,
   validating with `validateTemplateElement`.
 - `field_from_yaml(yaml)` — field variant, validating with `validateTemplateField`.
-- `template_to_yaml(json, form)` — reverse direction. JSON Schema in → YAML out, via
-  the library's `JsonArtifactReader` + `YamlArtifactRenderer`. The `form` argument
-  selects `compact` (LLM-friendly, default) or `standard` (carries provenance and
-  version metadata). Both forms round-trip through `template_from_yaml`.
+- `template_to_yaml(json, isCompact?)` / `element_to_yaml(json, isCompact?)` /
+  `field_to_yaml(json, isCompact?)` — reverse direction. JSON Schema in → YAML out, via
+  the library's `JsonArtifactReader` + `YamlArtifactRenderer`. The `isCompact` boolean
+  defaults to `true` (LLM-friendly, omits provenance/status/version/modelVersion).
+  Set `false` for full-fidelity output that carries provenance and version metadata.
+  Both forms round-trip through the matching `*_from_yaml` tool.
 
 ## Authoring strategy
 
 YAML is the primary authoring serialization (compact, hierarchical, LLM-friendly).
 CEDAR JSON Schema is the canonical output because downstream CEDAR tooling consumes
 JSON Schema, not YAML — every authoring tool ends in JSON Schema.
-
-## Next — element_to_yaml / field_to_yaml
-
-The element and field variants of `template_to_yaml` (same `form` argument shape).
-Wait until a calling workflow needs them — the headline editing loop (JSON Schema in
-→ YAML out for an LLM to edit) is template-scoped.
 
 ## Next — incremental builders (the escape hatch)
 

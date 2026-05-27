@@ -54,10 +54,10 @@ final class TemplateToYamlToolTest
 
   @Test void compact_form_omits_what_standard_form_includes() throws Exception
   {
-    // The whole point of the form flag: compact drops fields the reader will infer or
-    // default; standard emits everything. So compact YAML must be strictly shorter (or
-    // at least not longer) than standard YAML for the same template, and standard must
-    // contain at least one provenance/status field that compact doesn't.
+    // The whole point of the isCompact flag: compact drops fields the reader will infer
+    // or default; standard emits everything. So compact YAML must be strictly shorter
+    // than standard for the same template, and standard must carry at least one
+    // provenance/status field that compact doesn't.
     String json = compileToJson(
         "type: template\n"
             + "name: Form comparison\n"
@@ -66,16 +66,15 @@ final class TemplateToYamlToolTest
             + "status: draft\n"
             + "modelVersion: 1.6.0\n");
 
-    String compactYaml = textOf(invoke(Map.of("json", json, "form", "compact")));
-    String standardYaml = textOf(invoke(Map.of("json", json, "form", "standard")));
+    String compactYaml = textOf(invoke(Map.of("json", json, "isCompact", true)));
+    String standardYaml = textOf(invoke(Map.of("json", json, "isCompact", false)));
 
     assertTrue(standardYaml.length() > compactYaml.length(),
         "standard YAML should be longer than compact YAML; "
             + "compact=" + compactYaml.length() + " standard=" + standardYaml.length()
             + "\ncompact:\n" + compactYaml + "\nstandard:\n" + standardYaml);
 
-    // status: draft is the textbook example of something that's defaulted at read time
-    // — it should appear in standard but not in compact.
+    // status: draft is the textbook example of something compact drops.
     assertTrue(standardYaml.contains("status:"),
         "standard YAML must carry the status field; got:\n" + standardYaml);
     assertFalse(compactYaml.contains("status:"),
@@ -84,11 +83,11 @@ final class TemplateToYamlToolTest
 
   @Test void compact_form_round_trips_through_template_from_yaml() throws Exception
   {
-    // template_from_yaml(template_to_yaml(template_from_yaml(yaml), form=compact))
-    // must succeed and preserve structural content — otherwise compact form isn't
-    // actually round-trippable. Compact intentionally drops provenance, status, and
-    // version metadata; those are *not* expected to survive (use form=standard if
-    // they need to). modelVersion stays in compact so the reader accepts the output.
+    // template_from_yaml(template_to_yaml(template_from_yaml(yaml), isCompact=true))
+    // must succeed and preserve structural content. Compact intentionally drops
+    // provenance, status, and version metadata; those are *not* expected to survive
+    // (use isCompact=false if they need to). The reader's compact mode defaults
+    // modelVersion so the output is accepted.
     String originalYaml =
         "type: template\n"
             + "name: Round-trip\n"
@@ -102,7 +101,7 @@ final class TemplateToYamlToolTest
             + "    name: Patient name\n";
 
     String firstJson = compileToJson(originalYaml);
-    String yaml = textOf(invoke(Map.of("json", firstJson, "form", "compact")));
+    String yaml = textOf(invoke(Map.of("json", firstJson, "isCompact", true)));
     String secondJson = compileToJson(yaml);
 
     JsonNode first = jackson.readTree(firstJson);
@@ -118,8 +117,8 @@ final class TemplateToYamlToolTest
   @Test void standard_form_round_trip_additionally_preserves_version_and_status() throws Exception
   {
     // Standard form's contract is stronger: it carries the metadata compact drops.
-    // Same round-trip, but assert pav:version survives — which proves the form flag
-    // is doing real work.
+    // Same round-trip, but assert pav:version survives — which proves the isCompact
+    // flag is doing real work.
     String originalYaml =
         "type: template\n"
             + "name: Standard round-trip\n"
@@ -129,7 +128,7 @@ final class TemplateToYamlToolTest
             + "modelVersion: 1.6.0\n";
 
     String firstJson = compileToJson(originalYaml);
-    String yaml = textOf(invoke(Map.of("json", firstJson, "form", "standard")));
+    String yaml = textOf(invoke(Map.of("json", firstJson, "isCompact", false)));
     String secondJson = compileToJson(yaml);
 
     JsonNode first = jackson.readTree(firstJson);
@@ -139,14 +138,14 @@ final class TemplateToYamlToolTest
         "standard-form round-trip must preserve pav:version");
   }
 
-  @Test void rejects_unknown_form_value()
+  @Test void rejects_non_boolean_isCompact()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
         "json", "{}",
-        "form", "tiny"));
-    assertTrue(result.isError(), "unknown form value must produce isError=true");
-    assertTrue(errorText(result).contains("form"),
-        "error should mention the bad form value; got: " + errorText(result));
+        "isCompact", "yes"));
+    assertTrue(result.isError(), "non-boolean isCompact must produce isError=true");
+    assertTrue(errorText(result).contains("isCompact"),
+        "error should mention the bad arg; got: " + errorText(result));
   }
 
   @Test void rejects_missing_json_argument()

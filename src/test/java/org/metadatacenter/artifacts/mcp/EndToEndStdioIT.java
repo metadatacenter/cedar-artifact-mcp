@@ -111,6 +111,10 @@ final class EndToEndStdioIT
           "field_from_yaml tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("template_to_yaml"),
           "template_to_yaml tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("element_to_yaml"),
+          "element_to_yaml tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("field_to_yaml"),
+          "field_to_yaml tool should be listed; got " + toolNames);
 
       // 4. tools/call create_template -----------------------------------------------
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":"
@@ -447,7 +451,7 @@ final class EndToEndStdioIT
       String escapedJson = jackson.writeValueAsString(templateJsonText);
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"tools/call\",\"params\":"
           + "{\"name\":\"template_to_yaml\",\"arguments\":{\"json\":"
-          + escapedJson + ",\"form\":\"compact\"}}}");
+          + escapedJson + ",\"isCompact\":true}}}");
       JsonNode toYamlResponse = readResponse(stdout, stderr);
       assertEquals(5, toYamlResponse.path("id").asInt());
       assertFalse(toYamlResponse.path("result").path("isError").asBoolean(true),

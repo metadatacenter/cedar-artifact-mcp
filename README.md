@@ -17,10 +17,11 @@ See [DESIGN.md](./DESIGN.md) for the architectural principles and
 
 ## Status
 
-Six tools: `ping`, `create_template`, the headline authoring tool
+Eight tools: `ping`, `create_template`, the headline authoring tool
 `template_from_yaml`, its element and field variants (`element_from_yaml`,
-`field_from_yaml`), and the reverse direction `template_to_yaml`. The roadmap
-covers the instance variants and the element/field reverse-direction tools.
+`field_from_yaml`), and the matching reverse-direction tools (`template_to_yaml`,
+`element_to_yaml`, `field_to_yaml`). The roadmap covers incremental builders,
+value-constraint tools, and the instance variants.
 
 ## Tools
 
@@ -73,19 +74,19 @@ template tool; validate with `validateTemplateElement` and `validateTemplateFiel
 respectively. Use these when authoring a reusable element or a standalone field that
 will later be embedded in a template by other tooling.
 
-### `template_to_yaml(json, form)`
+### `template_to_yaml(json, isCompact?)` / `element_to_yaml(json, isCompact?)` / `field_to_yaml(json, isCompact?)`
 
-Reverse direction of `template_from_yaml`: takes a CEDAR template JSON Schema and
-returns the artifact library's YAML serialization. The `form` argument selects between
-the two forms the `YamlArtifactRenderer` supports:
+Reverse direction of the matching `*_from_yaml` tools: each takes a CEDAR JSON Schema
+artifact and returns the artifact library's YAML serialization. The `isCompact` boolean
+selects between the two forms the `YamlArtifactRenderer` supports (default `true`):
 
-- `compact` (default) — the lean, LLM-friendly authoring form. Provenance fields,
-  status, version, and `modelVersion` are all omitted. `template_from_yaml` runs the
-  library reader in compact mode, which defaults an absent `modelVersion` to the
-  canonical value, so compact YAML round-trips cleanly. Best for showing an LLM a
-  template it should edit.
-- `standard` — every field the renderer can emit. Suitable for archival and round-trip
-  diffing where provenance and version metadata need to survive.
+- `isCompact: true` (default) — the lean, LLM-friendly authoring form. Provenance
+  fields, status, version, and `modelVersion` are all omitted. The matching
+  `*_from_yaml` tools run the library reader in compact mode, which defaults an
+  absent `modelVersion` to the canonical value, so compact YAML round-trips
+  cleanly. Best for showing an LLM an artifact it should edit.
+- `isCompact: false` — every field the renderer can emit. Suitable for archival and
+  round-trip diffing where provenance and version metadata need to survive.
 
 ## Requirements
 
