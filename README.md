@@ -54,18 +54,18 @@ These tools are lower-level than the `*_from_yaml` family; useful when programma
 composing artifacts from non-YAML inputs, or as starting points for the eventual
 incremental builder / value-constraint tools.
 
-### `add_field(parent_json, field_type, key, name, description?, required?)`
+### `add_field(parent_json, child_json, key, name?)` / `add_element(parent_json, child_json, key, name?)`
 
-Adds a new field as a child of an existing CEDAR template or element. Parent kind
-is inferred from its `@type` URI; the result is re-validated with the matching
-CedarValidator method. The `field_type` enum is the same vocabulary as `create_field`.
+Adds an existing child (typically produced by `create_field` / `create_element` or
+the matching `*_from_yaml` tool) as a child of a CEDAR template or element. Parent
+kind is inferred from its `@type` URI; the result is re-validated with the matching
+CedarValidator method.
 
-### `add_element(parent_json, child_json, key, name?)`
-
-Adds an existing CEDAR element (typically produced by `create_element` or
-`element_from_yaml`) as a child of a parent template or element. The optional
-`name` overrides the propertyLabel that appears in the parent's `_ui` block; if
-omitted, the child's own `schema:name` is used.
+The optional `name` overrides the propertyLabel that appears in the parent's `_ui`
+block; if omitted, the child's own `schema:name` is used. The compose workflow is
+two-step by design — build the child first, then graft it onto the parent — to keep
+the MCP API surface small (the library does allow on-the-fly creation, but the MCP
+keeps that one obvious path).
 
 ### `template_from_yaml(yaml)`
 

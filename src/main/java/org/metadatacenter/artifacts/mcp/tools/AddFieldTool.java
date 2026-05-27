@@ -7,7 +7,6 @@ import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.model.core.ElementSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
-import org.metadatacenter.artifacts.model.core.FieldSchemaArtifactBuilder;
 import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
 import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
 import org.metadatacenter.artifacts.model.reader.JsonArtifactReader;
@@ -21,18 +20,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.metadatacenter.artifacts.model.yaml.YamlConstants.FIELD_TYPES;
-
 /**
- * MCP tool {@code add_field} — adds a new field as a child of an existing parent
- * (template or element) JSON Schema artifact.
+ * MCP tool {@code add_field} — adds an existing field (passed as JSON) as a child
+ * of an existing parent (template or element) JSON Schema artifact.
  *
- * <p>This is the incremental builder counterpart to {@code template_from_yaml}: when
- * YAML can't cleanly cover the authoring path (e.g. mid-pipeline mutation, interleaved
- * terminology MCP calls), this tool grows a template or element field-by-field.
- *
- * <p>Parent kind is inferred from the {@code @type} URI; the result is re-validated with
- * the matching CedarValidator method.
+ * <p>Parallel to {@link AddElementTool}: both take a pre-built child JSON rather
+ * than building it on the fly. The compose workflow is two-step — {@code create_field}
+ * (or {@code field_from_yaml}) returns the child JSON, then {@code add_field} grafts
+ * it onto the parent under the supplied key.
  */
 public final class AddFieldTool
 {
@@ -49,45 +44,35 @@ public final class AddFieldTool
     properties.put("parent_json", Map.of(
         "type", "string",
         "description",
-        "Parent CEDAR template or element JSON Schema. The kind is inferred from the "
-            + "artifact's @type URI; both Template and TemplateElement parents are "
-            + "supported."));
-    properties.put("field_type", Map.of(
+        "Parent CEDAR template or element JSON Schema. Kind is inferred from the @type URI."));
+    properties.put("child_json", Map.of(
         "type", "string",
-        "enum", List.copyOf(FIELD_TYPES),
         "description",
-        "Kebab-case CEDAR field type for the new child. Same vocabulary as "
-            + "'create_field' / 'field_from_yaml' (text-field, controlled-term-field, "
-            + "numeric-field, temporal-field, etc.)."));
+        "Child CEDAR field JSON Schema to add — the kind of JSON 'create_field' or "
+            + "'field_from_yaml' returns."));
     properties.put("key", Map.of(
         "type", "string",
         "description",
-        "Property key under which the new field appears in the parent (the JSON Schema "
+        "Property key under which the field appears in the parent (the JSON Schema "
             + "'properties' map key)."));
     properties.put("name", Map.of(
         "type", "string",
-        "description", "Human-readable field name (carried into the parent's _ui propertyLabels)."));
-    properties.put("description", Map.of(
-        "type", "string",
-        "description", "Free-text field description. Optional; defaults to an empty string."));
-    properties.put("required", Map.of(
-        "type", "boolean",
-        "default", Boolean.FALSE,
         "description",
-        "Whether the new field is required in instances of the parent. Optional; defaults to false."));
+        "Optional property label override for the parent's _ui block. If omitted, the "
+            + "child field's own schema:name is used."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
-        List.of("parent_json", "field_type", "key", "name"),
+        List.of("parent_json", "child_json", "key"),
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
         .name("add_field")
-        .title("Add a CEDAR field to a template or element")
+        .title("Add a CEDAR field to a template or element parent")
         .description(
-            "Adds a new field of the requested kebab-case type to an existing CEDAR "
-                + "template or element. Parent kind is inferred from the @type URI. "
-                + "Returns the updated parent JSON, re-validated with CedarValidator.")
+            "Adds an existing CEDAR field (as JSON) as a child of a CEDAR template or "
+                + "element. Parent kind is inferred from its @type URI. Returns the "
+                + "updated parent JSON, re-validated with CedarValidator.")
         .inputSchema(schema)
         .build();
   }
@@ -101,40 +86,33 @@ public final class AddFieldTool
     if (parentJsonText == null || parentJsonText.isBlank())
       return error("parent_json is required and must not be blank");
 
-    String fieldType = stringArg(args, "field_type");
-    if (fieldType == null || fieldType.isBlank())
-      return error("field_type is required and must not be blank");
-    if (!FIELD_TYPES.contains(fieldType))
-      return error("field_type \"" + fieldType + "\" is not a known CEDAR field type. Known: " + FIELD_TYPES);
+    String childJsonText = stringArg(args, "child_json");
+    if (childJsonText == null || childJsonText.isBlank())
+      return error("child_json is required and must not be blank");
 
     String key = stringArg(args, "key");
     if (key == null || key.isBlank())
       return error("key is required and must not be blank");
 
-    String name = stringArg(args, "name");
-    if (name == null || name.isBlank())
-      return error("name is required and must not be blank");
-
-    String description = stringArgOrDefault(args, "description", "");
-    boolean required;
-    Object rawRequired = args.get("required");
-    if (rawRequired == null) {
-      required = false;
-    } else if (rawRequired instanceof Boolean b) {
-      required = b;
-    } else {
-      return error("required must be a boolean (got "
-          + rawRequired.getClass().getSimpleName() + ")");
-    }
+    String nameOverride = stringArg(args, "name");  // optional
 
     JsonNode parsedParent;
     try {
       parsedParent = JACKSON2.readTree(parentJsonText);
     } catch (Exception e) {
-      return error("parent JSON parse failed: " + e.getMessage());
+      return error("parent_json parse failed: " + e.getMessage());
     }
     if (!(parsedParent instanceof ObjectNode parentObject))
       return error("parent_json must parse to a JSON object");
+
+    JsonNode parsedChild;
+    try {
+      parsedChild = JACKSON2.readTree(childJsonText);
+    } catch (Exception e) {
+      return error("child_json parse failed: " + e.getMessage());
+    }
+    if (!(parsedChild instanceof ObjectNode childObject))
+      return error("child_json must parse to a JSON object");
 
     ParentKinds.ParentKind parentKind;
     try {
@@ -143,14 +121,16 @@ public final class AddFieldTool
       return error(e.getMessage());
     }
 
-    FieldSchemaArtifact field;
+    FieldSchemaArtifact child;
     try {
-      FieldSchemaArtifactBuilder<?> fieldBuilder = FieldBuilders.builderFor(fieldType);
-      fieldBuilder.withName(name).withDescription(description).withRequiredValue(required);
-      field = fieldBuilder.build();
+      child = READER.readFieldSchemaArtifact(childObject);
+    } catch (ArtifactParseException e) {
+      return error("child_json rejected by reader (must be a CEDAR field): " + e.getMessage());
     } catch (RuntimeException e) {
-      return error("field build failed: " + e.getMessage());
+      return error("field reader threw " + e.getClass().getSimpleName() + ": " + e.getMessage());
     }
+
+    String label = nameOverride == null || nameOverride.isBlank() ? child.name() : nameOverride;
 
     ObjectNode rendered;
     try {
@@ -158,14 +138,14 @@ public final class AddFieldTool
         case TEMPLATE -> {
           TemplateSchemaArtifact parent = READER.readTemplateSchemaArtifact(parentObject);
           TemplateSchemaArtifact updated = TemplateSchemaArtifact.builder(parent)
-              .withFieldSchema(key, field)
+              .withFieldSchema(key, child, label)
               .build();
           yield RENDERER.renderTemplateSchemaArtifact(updated);
         }
         case ELEMENT -> {
           ElementSchemaArtifact parent = READER.readElementSchemaArtifact(parentObject);
           ElementSchemaArtifact updated = ElementSchemaArtifact.builder(parent)
-              .withFieldSchema(key, field)
+              .withFieldSchema(key, child, label)
               .build();
           yield RENDERER.renderElementSchemaArtifact(updated);
         }
@@ -219,12 +199,6 @@ public final class AddFieldTool
   {
     Object raw = args.get(key);
     return raw == null ? null : raw.toString();
-  }
-
-  private static String stringArgOrDefault(Map<String, Object> args, String key, String fallback)
-  {
-    String value = stringArg(args, key);
-    return value == null ? fallback : value;
   }
 
   private static McpSchema.CallToolResult error(String message)

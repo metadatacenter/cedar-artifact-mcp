@@ -8,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.metadatacenter.model.validation.CedarValidator;
 import org.metadatacenter.model.validation.ModelValidator;
-import org.metadatacenter.model.validation.report.ErrorItem;
 import org.metadatacenter.model.validation.report.ValidationReport;
 
 import java.util.Map;
@@ -17,13 +16,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
- * Tests for the {@code add_field} tool. Each test sources a parent JSON from the
- * {@code create_template} / {@code create_element} tools so the inputs are real
- * CEDAR JSON Schema, then asserts that the result still validates and that the
- * new child appears under {@code properties.<key>}.
+ * Tests for the {@code add_field} tool. Parallels {@link AddElementToolTest}: both
+ * tools take a pre-built child JSON, dispatch on parent {@code @type}, and return
+ * the updated parent JSON revalidated by CedarValidator.
  */
 final class AddFieldToolTest
 {
@@ -36,114 +33,104 @@ final class AddFieldToolTest
     jackson = new ObjectMapper();
   }
 
-  @Test void adds_text_field_to_template_parent() throws Exception
+  @Test void adds_field_to_template_parent() throws Exception
   {
     String templateJson = createTemplate("Demographics");
+    String fieldJson = createField("Patient name", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
         "parent_json", templateJson,
-        "field_type", "text-field",
-        "key", "patient_name",
-        "name", "Patient name",
-        "description", "Free-text patient name"));
+        "child_json", fieldJson,
+        "key", "patient_name"));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
 
     JsonNode child = rendered.path("properties").path("patient_name");
     assertTrue(child.isObject(),
-        "patient_name child must appear under properties; got: " + rendered.path("properties"));
-    assertEquals("Patient name", child.path("schema:name").asText(),
-        "child schema:name must match the supplied name");
+        "field must appear under properties.<key>; got: " + rendered.path("properties"));
 
     ValidationReport report = cedarValidator.validateTemplate(rendered);
-    if (!"true".equals(report.getValidationStatus())) {
-      StringBuilder msg = new StringBuilder("CedarValidator rejected the updated template:\n");
-      for (ErrorItem err : report.getErrors()) msg.append("  - ").append(err).append('\n');
-      fail(msg.toString());
-    }
+    assertEquals("true", report.getValidationStatus(),
+        "updated template must pass validateTemplate");
   }
 
-  @Test void adds_required_text_field_and_template_marks_it_required() throws Exception
-  {
-    String templateJson = createTemplate("With required");
-
-    McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateJson,
-        "field_type", "text-field",
-        "key", "must_have",
-        "name", "Must have",
-        "required", true));
-
-    assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-
-    // CEDAR templates push required fields into the top-level "required" array.
-    JsonNode requiredArray = rendered.path("required");
-    assertTrue(requiredArray.isArray(), "required must be an array; got: " + requiredArray);
-
-    boolean found = false;
-    for (JsonNode entry : requiredArray)
-      if ("must_have".equals(entry.asText())) found = true;
-    assertTrue(found, "required field key must appear in the template's 'required' array; got: " + requiredArray);
-  }
-
-  @Test void adds_controlled_term_field_to_element_parent() throws Exception
+  @Test void adds_field_to_element_parent() throws Exception
   {
     String elementJson = createElement("Address");
+    String fieldJson = createField("Country", "controlled-term-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
         "parent_json", elementJson,
-        "field_type", "controlled-term-field",
-        "key", "country",
-        "name", "Country"));
+        "child_json", fieldJson,
+        "key", "country"));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
 
-    JsonNode child = rendered.path("properties").path("country");
-    assertTrue(child.isObject(),
-        "country child must appear under the element's properties; got: " + rendered.path("properties"));
+    assertTrue(rendered.path("properties").path("country").isObject(),
+        "country must appear under the element's properties");
 
     ValidationReport report = cedarValidator.validateTemplateElement(rendered);
     assertEquals("true", report.getValidationStatus(),
         "updated element must pass validateTemplateElement");
   }
 
-  @Test void rejects_unknown_field_type()
+  @Test void name_override_appears_in_propertyLabels() throws Exception
   {
+    String templateJson = createTemplate("Demographics");
+    String fieldJson = createField("Patient name", "text-field");
+
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", createTemplate("X"),
-        "field_type", "not-a-real-field-type",
-        "key", "x",
-        "name", "X"));
-    assertTrue(result.isError());
-    assertTrue(errorText(result).contains("not-a-real-field-type"));
+        "parent_json", templateJson,
+        "child_json", fieldJson,
+        "key", "patient_full_name",
+        "name", "Patient full name"));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+
+    assertEquals("Patient full name",
+        rendered.path("_ui").path("propertyLabels").path("patient_full_name").asText(),
+        "name override must surface in _ui.propertyLabels; got _ui: " + rendered.path("_ui"));
   }
 
-  @Test void rejects_parent_json_without_at_type()
+  @Test void rejects_child_json_that_is_not_a_field()
   {
+    // An element JSON must not be accepted as a field child — that's add_element's job.
+    String templateJson = createTemplate("X");
+    String elementJson = createElement("not-a-field");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent_json", templateJson,
+        "child_json", elementJson,
+        "key", "x"));
+    assertTrue(result.isError(),
+        "an element JSON must not be accepted as a field child; got: " + result);
+  }
+
+  @Test void rejects_parent_without_at_type()
+  {
+    String fieldJson = createField("X", "text-field");
+
     McpSchema.CallToolResult result = invoke(Map.of(
         "parent_json", "{}",
-        "field_type", "text-field",
-        "key", "x",
-        "name", "X"));
+        "child_json", fieldJson,
+        "key", "x"));
     assertTrue(result.isError());
-    assertTrue(errorText(result).toLowerCase().contains("@type"),
-        "error should mention the missing @type; got: " + errorText(result));
+    assertTrue(errorText(result).toLowerCase().contains("@type"));
   }
 
-  @Test void rejects_parent_json_with_wrong_at_type()
+  @Test void rejects_parent_with_field_at_type()
   {
-    // A bare field (not a template or element) is a valid CEDAR artifact but isn't a
-    // parent — add_field must refuse it.
-    String fieldJson = invokeCreateField("standalone", "text-field");
+    // A bare field is a valid CEDAR artifact but isn't a parent — add_field must refuse it.
+    String fieldJson = createField("standalone", "text-field");
+    String anotherFieldJson = createField("another", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
         "parent_json", fieldJson,
-        "field_type", "text-field",
-        "key", "x",
-        "name", "X"));
+        "child_json", anotherFieldJson,
+        "key", "x"));
     assertTrue(result.isError(),
         "field artifact must not be accepted as a parent; got: " + result);
   }
@@ -152,7 +139,6 @@ final class AddFieldToolTest
   {
     McpSchema.CallToolResult result = invoke(Map.of());
     assertTrue(result.isError());
-    // First missing required arg surfaces — parent_json comes first in the validation.
     assertTrue(errorText(result).contains("parent_json"));
   }
 
@@ -171,7 +157,7 @@ final class AddFieldToolTest
     McpSchema.CallToolResult result = CreateTemplateTool.handler(null,
         new McpSchema.CallToolRequest("create_template", Map.of("name", name)));
     assertFalse(result.isError(),
-        "test fixture template must build cleanly; got: " + errorText(result));
+        "fixture template must build cleanly; got: " + errorText(result));
     return textOf(result);
   }
 
@@ -180,16 +166,16 @@ final class AddFieldToolTest
     McpSchema.CallToolResult result = CreateElementTool.handler(null,
         new McpSchema.CallToolRequest("create_element", Map.of("name", name)));
     assertFalse(result.isError(),
-        "test fixture element must build cleanly; got: " + errorText(result));
+        "fixture element must build cleanly; got: " + errorText(result));
     return textOf(result);
   }
 
-  private String invokeCreateField(String name, String type)
+  private String createField(String name, String type)
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
         new McpSchema.CallToolRequest("create_field", Map.of("name", name, "type", type)));
     assertFalse(result.isError(),
-        "test fixture field must build cleanly; got: " + errorText(result));
+        "fixture field must build cleanly; got: " + errorText(result));
     return textOf(result);
   }
 

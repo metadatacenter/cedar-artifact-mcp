@@ -30,12 +30,11 @@ This file tracks what's built, what's planned, and what's deliberately out of sc
   defaults to `true` (LLM-friendly, omits provenance/status/version/modelVersion).
   Set `false` for full-fidelity output that carries provenance and version metadata.
   Both forms round-trip through the matching `*_from_yaml` tool.
-- `add_field(parent_json, field_type, key, name, description?, required?)` — adds a new
-  field of the kebab-case `field_type` as a child of an existing template or element JSON.
-  Parent kind is inferred from the `@type` URI.
-- `add_element(parent_json, child_json, key, name?)` — adds an existing element JSON
-  (typically from `create_element` or `element_from_yaml`) as a child of a template or
-  element JSON.
+- `add_field(parent_json, child_json, key, name?)` /
+  `add_element(parent_json, child_json, key, name?)` — adds an existing child JSON
+  (typically from the matching `create_*` or `*_from_yaml` tool) as a child of a
+  template or element JSON. Parent kind is inferred from the `@type` URI. The
+  `name` argument optionally overrides the propertyLabel in the parent's `_ui` block.
 
 ## Authoring strategy
 
