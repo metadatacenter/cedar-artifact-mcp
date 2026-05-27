@@ -197,6 +197,42 @@ final class AddElementToolTest
     assertTrue(errorText(result).contains("isMultiInstance"));
   }
 
+  @Test void key_defaults_to_childs_schema_name() throws Exception
+  {
+    String templateJson = createTemplate("Demographics");
+    String elementJson = createElement("address");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent_json", templateJson,
+        "child_json", elementJson));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+
+    assertTrue(rendered.path("properties").path("address").isObject(),
+        "element should appear under the default key (child's schema:name); got: "
+            + rendered.path("properties"));
+  }
+
+  @Test void rejects_duplicate_default_key() throws Exception
+  {
+    String templateJson = createTemplate("Dup");
+    String elementJson = createElement("address");
+
+    McpSchema.CallToolResult first = invoke(Map.of(
+        "parent_json", templateJson,
+        "child_json", elementJson));
+    assertFalse(first.isError(), errorText(first));
+
+    McpSchema.CallToolResult second = invoke(Map.of(
+        "parent_json", textOf(first),
+        "child_json", elementJson));
+    assertTrue(second.isError(),
+        "duplicate key (default) must produce isError=true; got: " + second);
+    assertTrue(errorText(second).toLowerCase().contains("address"),
+        "error should mention the conflicting key; got: " + errorText(second));
+  }
+
   @Test void rejects_child_json_that_is_not_an_element() throws Exception
   {
     String templateJson = createTemplate("X");

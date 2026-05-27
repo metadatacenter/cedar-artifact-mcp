@@ -54,7 +54,7 @@ These tools are lower-level than the `*_from_yaml` family; useful when programma
 composing artifacts from non-YAML inputs, or as starting points for the eventual
 incremental builder / value-constraint tools.
 
-### `add_field(parent_json, child_json, key, name?, description?, isMultiInstance?, minItems?, maxItems?)` / `add_element(parent_json, child_json, key, name?, description?, isMultiInstance?, minItems?, maxItems?)`
+### `add_field(parent_json, child_json, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)` / `add_element(parent_json, child_json, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
 
 Adds an existing child (typically produced by `create_field` / `create_element` or
 the matching `*_from_yaml` tool) as a child of a CEDAR template or element. Parent
@@ -63,6 +63,9 @@ CedarValidator method.
 
 The optional per-add-site overrides:
 
+- `key` — JSON Schema property key in the parent; falls back to child's `schema:name`.
+  The library rejects duplicate keys, so supply an explicit `key` when adding two
+  children with the same name.
 - `name` — propertyLabel for the parent's `_ui` block; falls back to child's `schema:name`.
 - `description` — propertyDescription for the parent's `_ui` block; falls back to child's `schema:description`.
 - `isMultiInstance` (default `false`) — whether the child appears as an array (multi)

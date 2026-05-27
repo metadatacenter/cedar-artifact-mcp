@@ -200,6 +200,45 @@ final class AddFieldToolTest
     assertTrue(errorText(result).contains("isMultiInstance"));
   }
 
+  @Test void key_defaults_to_childs_schema_name() throws Exception
+  {
+    String templateJson = createTemplate("Demographics");
+    String fieldJson = createField("patient_email", "email-field");
+
+    // No 'key' arg — should fall back to child's schema:name ("patient_email").
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent_json", templateJson,
+        "child_json", fieldJson));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+
+    assertTrue(rendered.path("properties").path("patient_email").isObject(),
+        "field should appear under the default key (child's schema:name); got: "
+            + rendered.path("properties"));
+  }
+
+  @Test void rejects_duplicate_default_key() throws Exception
+  {
+    // Adding the same-named child twice with no explicit key surfaces the library's
+    // duplicate-child guard — the second add must fail rather than silently overwriting.
+    String templateJson = createTemplate("Dup");
+    String fieldJson = createField("contact", "text-field");
+
+    McpSchema.CallToolResult first = invoke(Map.of(
+        "parent_json", templateJson,
+        "child_json", fieldJson));
+    assertFalse(first.isError(), errorText(first));
+
+    McpSchema.CallToolResult second = invoke(Map.of(
+        "parent_json", textOf(first),
+        "child_json", fieldJson));
+    assertTrue(second.isError(),
+        "duplicate key (default) must produce isError=true; got: " + second);
+    assertTrue(errorText(second).toLowerCase().contains("contact"),
+        "error should mention the conflicting key; got: " + errorText(second));
+  }
+
   @Test void rejects_child_json_that_is_not_a_field()
   {
     // An element JSON must not be accepted as a field child — that's add_element's job.

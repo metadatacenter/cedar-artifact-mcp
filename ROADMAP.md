@@ -30,13 +30,14 @@ This file tracks what's built, what's planned, and what's deliberately out of sc
   defaults to `true` (LLM-friendly, omits provenance/status/version/modelVersion).
   Set `false` for full-fidelity output that carries provenance and version metadata.
   Both forms round-trip through the matching `*_from_yaml` tool.
-- `add_field(parent_json, child_json, key, name?, description?, isMultiInstance?, minItems?, maxItems?)` /
-  `add_element(parent_json, child_json, key, name?, description?, isMultiInstance?, minItems?, maxItems?)` —
+- `add_field(parent_json, child_json, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)` /
+  `add_element(parent_json, child_json, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)` —
   adds an existing child JSON (typically from the matching `create_*` or `*_from_yaml`
   tool) as a child of a template or element JSON. Parent kind is inferred from the
-  `@type` URI. The optional per-add-site overrides: `name` and `description` (override
-  the parent's `_ui` propertyLabel / propertyDescription); `isMultiInstance` (default
-  `false`); and `minItems` / `maxItems` (cardinality bounds when multi-instance).
+  `@type` URI. The optional per-add-site overrides: `key` (defaults to child's
+  `schema:name`); `name` and `description` (override the parent's `_ui` propertyLabel /
+  propertyDescription); `isMultiInstance` (default `false`); and `minItems` / `maxItems`
+  (cardinality bounds when multi-instance).
 
 ## Authoring strategy
 

@@ -55,7 +55,9 @@ public final class AddFieldTool
         "type", "string",
         "description",
         "Property key under which the field appears in the parent (the JSON Schema "
-            + "'properties' map key)."));
+            + "'properties' map key). Optional; defaults to the child field's own "
+            + "schema:name. The library rejects duplicate keys, so supply an explicit "
+            + "key when adding two children with the same name."));
     properties.put("name", Map.of(
         "type", "string",
         "description",
@@ -88,7 +90,7 @@ public final class AddFieldTool
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
-        List.of("parent_json", "child_json", "key"),
+        List.of("parent_json", "child_json"),
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
@@ -115,10 +117,7 @@ public final class AddFieldTool
     if (childJsonText == null || childJsonText.isBlank())
       return error("child_json is required and must not be blank");
 
-    String key = stringArg(args, "key");
-    if (key == null || key.isBlank())
-      return error("key is required and must not be blank");
-
+    String keyArg = stringArg(args, "key");  // optional; defaults to child's schema:name
     String nameOverride = stringArg(args, "name");  // optional
     String descriptionOverride = stringArg(args, "description");  // optional
 
@@ -189,6 +188,7 @@ public final class AddFieldTool
       return error("field reader threw " + e.getClass().getSimpleName() + ": " + e.getMessage());
     }
 
+    String key = keyArg == null || keyArg.isBlank() ? child.name() : keyArg;
     String label = nameOverride == null || nameOverride.isBlank() ? child.name() : nameOverride;
     String descriptionLabel = descriptionOverride == null || descriptionOverride.isBlank()
         ? child.description() : descriptionOverride;
