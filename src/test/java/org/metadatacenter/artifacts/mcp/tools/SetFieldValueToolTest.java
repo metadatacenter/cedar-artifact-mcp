@@ -77,6 +77,80 @@ final class SetFieldValueToolTest
     assertEquals("42", rendered.path("age").path("@value").asText());
   }
 
+  @Test void numeric_set_preserves_xsd_type_so_instance_still_validates() throws Exception
+  {
+    // The template's per-field sub-schema for numeric fields requires both @value
+    // and @type. set_field_value rebuilds the FieldInstance — if it forgets to
+    // thread the declared XsdNumericDatatype, @type vanishes and the instance
+    // fails CedarValidator with "object has missing required properties (['@type'])".
+    String templateJson = compileTemplate(
+        "type: template\n"
+            + "name: NumericTypePreserved\n"
+            + "version: 0.0.1\n"
+            + "status: draft\n"
+            + "modelVersion: 1.6.0\n"
+            + "children:\n"
+            + "  - key: age\n"
+            + "    type: numeric-field\n"
+            + "    name: Age\n"
+            + "    datatype: xsd:int\n");
+    String instanceJson = createInstance(templateJson, "P1");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "template_json", templateJson,
+        "instance_json", instanceJson,
+        "field_path", "age",
+        "value", 30));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+    JsonNode age = rendered.path("age");
+    assertEquals("30", age.path("@value").asText());
+    assertEquals("xsd:int", age.path("@type").asText(),
+        "@type must survive set_field_value; rendered: " + age);
+
+    assertValidatesAgainst(rendered, templateJson);
+  }
+
+  @Test void set_value_does_not_drop_other_fields_null_value() throws Exception
+  {
+    // Setting one field's value re-renders the whole instance. If the renderer
+    // elides @value: null on sibling untouched literal fields, those fields
+    // become {} on output and the template's sub-schema rejects them with
+    // "object has missing required properties (['@value'])".
+    String templateJson = compileTemplate(
+        "type: template\n"
+            + "name: SiblingPreserved\n"
+            + "version: 0.0.1\n"
+            + "status: draft\n"
+            + "modelVersion: 1.6.0\n"
+            + "children:\n"
+            + "  - key: patient_name\n"
+            + "    type: text-field\n"
+            + "    name: Patient name\n"
+            + "  - key: notes\n"
+            + "    type: text-field\n"
+            + "    name: Notes\n");
+    String instanceJson = createInstance(templateJson, "P1");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "template_json", templateJson,
+        "instance_json", instanceJson,
+        "field_path", "patient_name",
+        "value", "Alice"));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+    assertEquals("Alice", rendered.path("patient_name").path("@value").asText());
+    JsonNode notes = rendered.path("notes");
+    assertTrue(notes.isObject(), "untouched sibling must remain an object; got: " + notes);
+    assertTrue(notes.has("@value"),
+        "untouched sibling must keep @value (possibly null) so the template's sub-schema "
+            + "still accepts it; rendered: " + notes);
+
+    assertValidatesAgainst(rendered, templateJson);
+  }
+
   @Test void sets_field_value_inside_nested_element() throws Exception
   {
     String templateJson = compileTemplate(
@@ -331,5 +405,21 @@ final class SetFieldValueToolTest
   {
     if (result.content() == null || result.content().isEmpty()) return "(no content)";
     return ((McpSchema.TextContent) result.content().get(0)).text();
+  }
+
+  /**
+   * Calls validate_instance and asserts the report says valid:true. Mirrors the helper
+   * in CreateInstanceToolTest — keep them in sync.
+   */
+  private void assertValidatesAgainst(JsonNode instanceJson, String templateJson) throws Exception
+  {
+    McpSchema.CallToolResult result = ValidateInstanceTool.handler(null,
+        new McpSchema.CallToolRequest("validate_instance", Map.of(
+            "template_json", templateJson,
+            "instance_json", jackson.writeValueAsString(instanceJson))));
+    assertFalse(result.isError(), errorText(result));
+    JsonNode report = jackson.readTree(textOf(result));
+    assertTrue(report.path("valid").asBoolean(),
+        "instance must validate against its template; got report:\n" + report.toPrettyString());
   }
 }

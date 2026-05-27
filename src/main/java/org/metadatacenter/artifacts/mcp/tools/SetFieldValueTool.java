@@ -20,6 +20,10 @@ import org.metadatacenter.artifacts.model.core.TemporalFieldInstance;
 import org.metadatacenter.artifacts.model.core.TextAreaFieldInstance;
 import org.metadatacenter.artifacts.model.core.TextFieldInstance;
 import org.metadatacenter.artifacts.model.core.fields.FieldInputType;
+import org.metadatacenter.artifacts.model.core.fields.XsdNumericDatatype;
+import org.metadatacenter.artifacts.model.core.fields.XsdTemporalDatatype;
+import org.metadatacenter.artifacts.model.core.fields.constraints.NumericValueConstraints;
+import org.metadatacenter.artifacts.model.core.fields.constraints.TemporalValueConstraints;
 import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
 import org.metadatacenter.artifacts.model.reader.JsonArtifactReader;
 import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
@@ -155,7 +159,7 @@ public final class SetFieldValueTool
 
     FieldInstanceArtifact newFieldInstance;
     try {
-      newFieldInstance = buildLiteralFieldInstance(inputType, value);
+      newFieldInstance = buildLiteralFieldInstance(schemaField, inputType, value);
     } catch (IllegalArgumentException e) {
       return error(e.getMessage());
     }
@@ -184,13 +188,38 @@ public final class SetFieldValueTool
         .build();
   }
 
-  private static FieldInstanceArtifact buildLiteralFieldInstance(FieldInputType inputType, Object value)
+  private static FieldInstanceArtifact buildLiteralFieldInstance(FieldSchemaArtifact schemaField,
+    FieldInputType inputType, Object value)
   {
     return switch (inputType) {
       case TEXTFIELD -> TextFieldInstance.builder().withValue(stringValue(value)).build();
       case TEXTAREA -> TextAreaFieldInstance.builder().withValue(stringValue(value)).build();
-      case TEMPORAL -> TemporalFieldInstance.builder().withValue(stringValue(value)).build();
-      case NUMERIC -> NumericFieldInstance.builder().withValue(numericValue(value)).build();
+      case TEMPORAL -> {
+        // Numeric and temporal field instances carry @type alongside @value per CEDAR's
+        // typed-literal contract; the template's per-field sub-schema requires both.
+        // Thread the declared XsdTemporalDatatype from the schema so the rendered
+        // instance keeps its @type after the value is set.
+        TemporalFieldInstance.TemporalFieldInstanceBuilder builder =
+          TemporalFieldInstance.builder().withValue(stringValue(value));
+        XsdTemporalDatatype datatype = schemaField.valueConstraints()
+            .filter(TemporalValueConstraints.class::isInstance)
+            .map(TemporalValueConstraints.class::cast)
+            .map(TemporalValueConstraints::temporalType)
+            .orElse(XsdTemporalDatatype.DATETIME);
+        builder.withType(datatype);
+        yield builder.build();
+      }
+      case NUMERIC -> {
+        NumericFieldInstance.NumericFieldInstanceBuilder builder =
+          NumericFieldInstance.builder().withValue(numericValue(value));
+        XsdNumericDatatype datatype = schemaField.valueConstraints()
+            .filter(NumericValueConstraints.class::isInstance)
+            .map(NumericValueConstraints.class::cast)
+            .map(NumericValueConstraints::numberType)
+            .orElse(XsdNumericDatatype.DECIMAL);
+        builder.withType(datatype);
+        yield builder.build();
+      }
       case PHONE_NUMBER -> PhoneNumberFieldInstance.builder().withValue(stringValue(value)).build();
       case EMAIL -> EmailFieldInstance.builder().withValue(stringValue(value)).build();
       case RADIO -> RadioFieldInstance.builder().withValue(stringValue(value)).build();
