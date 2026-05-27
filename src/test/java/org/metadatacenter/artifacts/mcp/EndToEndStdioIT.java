@@ -131,6 +131,12 @@ final class EndToEndStdioIT
           "add_branch_constraint tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("add_valueset_constraint"),
           "add_valueset_constraint tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("instance_from_yaml"),
+          "instance_from_yaml tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("instance_to_yaml"),
+          "instance_to_yaml tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("validate_instance"),
+          "validate_instance tool should be listed; got " + toolNames);
 
       // 4. tools/call create_template -----------------------------------------------
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":"

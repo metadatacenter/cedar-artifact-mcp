@@ -18,8 +18,11 @@ import org.metadatacenter.artifacts.mcp.tools.ElementFromYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.ElementToYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.FieldFromYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.FieldToYamlTool;
+import org.metadatacenter.artifacts.mcp.tools.InstanceFromYamlTool;
+import org.metadatacenter.artifacts.mcp.tools.InstanceToYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.TemplateFromYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.TemplateToYamlTool;
+import org.metadatacenter.artifacts.mcp.tools.ValidateInstanceTool;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -61,6 +64,9 @@ public final class ArtifactMcpServer
         .toolCall(AddOntologyConstraintTool.tool(), AddOntologyConstraintTool::handler)
         .toolCall(AddBranchConstraintTool.tool(), AddBranchConstraintTool::handler)
         .toolCall(AddValueSetConstraintTool.tool(), AddValueSetConstraintTool::handler)
+        .toolCall(InstanceFromYamlTool.tool(), InstanceFromYamlTool::handler)
+        .toolCall(InstanceToYamlTool.tool(), InstanceToYamlTool::handler)
+        .toolCall(ValidateInstanceTool.tool(), ValidateInstanceTool::handler)
         .build();
 
     // Stdio transport reads from System.in in a background thread. Keep the main thread

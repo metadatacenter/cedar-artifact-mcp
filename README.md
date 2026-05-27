@@ -17,14 +17,16 @@ See [DESIGN.md](./DESIGN.md) for the architectural principles and
 
 ## Status
 
-Sixteen tools: `ping`, the three empty-shell builders (`create_template`,
+Nineteen tools: `ping`, the three empty-shell builders (`create_template`,
 `create_element`, `create_field`), the headline authoring tool
 `template_from_yaml` and its element/field variants (`element_from_yaml`,
 `field_from_yaml`), the matching reverse-direction tools (`template_to_yaml`,
 `element_to_yaml`, `field_to_yaml`), the two incremental builders
-(`add_field`, `add_element`), and the four value-constraint tools
+(`add_field`, `add_element`), the four value-constraint tools
 (`add_class_constraint`, `add_ontology_constraint`, `add_branch_constraint`,
-`add_valueset_constraint`). The roadmap covers instance-side tools.
+`add_valueset_constraint`), and the instance trio (`instance_from_yaml`,
+`instance_to_yaml`, `validate_instance`). The roadmap covers skeleton creation
+from a template and value-setter tools.
 
 ## Tools
 
@@ -108,6 +110,20 @@ controlled-term-field) and produce a controlled-term-field with the new constrai
 attached. The library's reader only classifies a TEXTFIELD as controlled-term once it
 carries a constraint, so an "empty controlled-term-field" and a "text-field" are JSON-
 indistinguishable on the wire — both are valid inputs here.
+
+### `instance_from_yaml(yaml)` / `instance_to_yaml(json, isCompact?)`
+
+Compile a CEDAR template instance from YAML to its canonical JSON, or back. Same shape
+as the schema-side `*_from_yaml` / `*_to_yaml` tools. Minimal instance YAML needs
+`type: instance`, `name`, and `isBasedOn` (the template's URI); per-field values live
+under a `children` map keyed by the schema's property keys.
+
+### `validate_instance(template_json, instance_json)`
+
+Validates a template instance against its template via
+`CedarValidator.validateTemplateInstance`. Returns a structured report:
+`{"valid": true}` on success, or `{"valid": false, "errors": [...]}` with the
+validator's diagnostics on failure.
 
 ### `template_from_yaml(yaml)`
 

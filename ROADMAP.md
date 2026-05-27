@@ -55,17 +55,26 @@ JSON Schema, not YAML — every authoring tool ends in JSON Schema.
   controlled-term once it carries a constraint, so an empty controlled-term-field and a
   text-field are JSON-indistinguishable on the wire.
 
-## Next — defaults and instances
+- Instance round-trip and validation:
+  - `instance_from_yaml(yaml)` — YAML → JSON for a template instance.
+  - `instance_to_yaml(json, isCompact?)` — JSON → YAML.
+  - `validate_instance(template_json, instance_json)` — validate an instance against
+    its template via `CedarValidator.validateTemplateInstance`.
+
+## Next — defaults and instance authoring helpers
 
 - `add_default_value(field_json, value)` — set a default value on a field. Each field
   type takes a different value shape, so this'll likely be a small family of tools
   rather than one. Defer until a concrete authoring need surfaces.
 
-### Instances
+### Skeleton creation and value setters
 
-- `create_instance(template_handle)`.
-- `set_field_value(instance_handle, field_path, value)`.
-- `set_controlled_term_field(instance_handle, field_path, class_iri, label)`.
+- `create_instance(template_json)` — walks a template, produces an empty instance shell
+  with one empty FieldInstance per schema child.
+- `set_field_value(instance_json, field_path, value)` — set a literal field's value by
+  property path (with element-nesting via slashes).
+- `set_controlled_term_field(instance_json, field_path, class_iri, label)` — set a
+  controlled-term field's IRI + label.
 
 ### Readers / renderers
 
