@@ -119,6 +119,10 @@ final class EndToEndStdioIT
           "element_to_yaml tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("field_to_yaml"),
           "field_to_yaml tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("add_field"),
+          "add_field tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("add_element"),
+          "add_element tool should be listed; got " + toolNames);
 
       // 4. tools/call create_template -----------------------------------------------
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":"

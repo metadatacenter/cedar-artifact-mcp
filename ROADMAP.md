@@ -30,6 +30,12 @@ This file tracks what's built, what's planned, and what's deliberately out of sc
   defaults to `true` (LLM-friendly, omits provenance/status/version/modelVersion).
   Set `false` for full-fidelity output that carries provenance and version metadata.
   Both forms round-trip through the matching `*_from_yaml` tool.
+- `add_field(parent_json, field_type, key, name, description?, required?)` — adds a new
+  field of the kebab-case `field_type` as a child of an existing template or element JSON.
+  Parent kind is inferred from the `@type` URI.
+- `add_element(parent_json, child_json, key, name?)` — adds an existing element JSON
+  (typically from `create_element` or `element_from_yaml`) as a child of a template or
+  element JSON.
 
 ## Authoring strategy
 
@@ -37,17 +43,7 @@ YAML is the primary authoring serialization (compact, hierarchical, LLM-friendly
 CEDAR JSON Schema is the canonical output because downstream CEDAR tooling consumes
 JSON Schema, not YAML — every authoring tool ends in JSON Schema.
 
-## Next — incremental builders (the escape hatch)
-
-These exist for cases YAML can't cleanly cover: interleaving with terminology MCPs,
-mutating an existing JSON template, composing from non-YAML sources. Lower priority
-than the transcoders.
-
-- `add_field(parent_json, field_type, key, name, description?, required?)` — one tool
-  with a `field_type` enum discriminator covering all 24 field types.
-- `add_element(parent_json, child_json, key, name)`.
-
-### Value constraints
+## Next — value constraints
 
 One tool per constraint kind. The canonical tuple inputs match what the artifact
 library expects; they intentionally do not assume any particular upstream provided them.

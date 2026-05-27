@@ -17,12 +17,13 @@ See [DESIGN.md](./DESIGN.md) for the architectural principles and
 
 ## Status
 
-Ten tools: `ping`, the three empty-shell builders (`create_template`,
+Twelve tools: `ping`, the three empty-shell builders (`create_template`,
 `create_element`, `create_field`), the headline authoring tool
 `template_from_yaml` and its element/field variants (`element_from_yaml`,
-`field_from_yaml`), and the matching reverse-direction tools
-(`template_to_yaml`, `element_to_yaml`, `field_to_yaml`). The roadmap covers
-add-to-parent builders, value-constraint tools, and the instance variants.
+`field_from_yaml`), the matching reverse-direction tools (`template_to_yaml`,
+`element_to_yaml`, `field_to_yaml`), and the two incremental builders
+(`add_field`, `add_element`) for growing an existing template or element
+JSON. The roadmap covers value-constraint tools and the instance variants.
 
 ## Tools
 
@@ -52,6 +53,19 @@ without those.
 These tools are lower-level than the `*_from_yaml` family; useful when programmatically
 composing artifacts from non-YAML inputs, or as starting points for the eventual
 incremental builder / value-constraint tools.
+
+### `add_field(parent_json, field_type, key, name, description?, required?)`
+
+Adds a new field as a child of an existing CEDAR template or element. Parent kind
+is inferred from its `@type` URI; the result is re-validated with the matching
+CedarValidator method. The `field_type` enum is the same vocabulary as `create_field`.
+
+### `add_element(parent_json, child_json, key, name?)`
+
+Adds an existing CEDAR element (typically produced by `create_element` or
+`element_from_yaml`) as a child of a parent template or element. The optional
+`name` overrides the propertyLabel that appears in the parent's `_ui` block; if
+omitted, the child's own `schema:name` is used.
 
 ### `template_from_yaml(yaml)`
 
