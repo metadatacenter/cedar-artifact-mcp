@@ -78,6 +78,29 @@ final class AddDefaultValueToolTest
         "temporal default value must appear under _valueConstraints");
   }
 
+  @Test void sets_numeric_field_default() throws Exception
+  {
+    // Numeric defaults must serialize as JSON strings (not bare numbers). The CEDAR
+    // validator rejects bare numbers at _valueConstraints.defaultValue, so this test
+    // both pins the wire shape and exercises the full validate path.
+    String fieldJson = createField("Age", "numeric-field");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "field_json", fieldJson,
+        "value", "42"));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+    JsonNode defaultNode = rendered.path("_valueConstraints").path("defaultValue");
+    assertTrue(defaultNode.isTextual(),
+        "numeric defaultValue must be a JSON string, not a number; got: " + defaultNode);
+    assertEquals("42", defaultNode.asText());
+
+    ValidationReport report = cedarValidator.validateTemplateField(rendered);
+    assertEquals("true", report.getValidationStatus(),
+        "numeric field with default must pass CEDAR validation; report: " + report);
+  }
+
   @Test void rejects_controlled_term_field()
   {
     // Direct add_default_value on a controlled-term field must redirect to the
