@@ -54,13 +54,10 @@ public final class TemplateFromYamlTool
     properties.put("yaml", Map.of(
         "type", "string",
         "description",
-        "CEDAR template described in the artifact library's YAML format. Required "
-            + "top-level keys: 'type: template', 'name', 'modelVersion: 1.6.0', "
-            + "'version' (e.g. '0.0.1'), and 'status' (e.g. 'draft'). The 'children' "
-            + "list carries field and element specifications. Field types are "
-            + "kebab-case (e.g. 'text-field', 'controlled-term-field', 'numeric-field', "
-            + "'temporal-field'). See the artifact library's YamlConstants for the "
-            + "full vocabulary."));
+        "CEDAR template described in the artifact library's YAML format. The top-level "
+            + "'type:' must be 'template'. The 'children:' list carries field and element "
+            + "specifications. Full key vocabulary:\n\n"
+            + YamlVocabulary.fullSchemaVocabulary()));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("yaml"), Boolean.FALSE, null, null);

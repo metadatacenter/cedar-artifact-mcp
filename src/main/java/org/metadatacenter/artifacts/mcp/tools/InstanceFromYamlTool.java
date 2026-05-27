@@ -37,10 +37,9 @@ public final class InstanceFromYamlTool
     properties.put("yaml", Map.of(
         "type", "string",
         "description",
-        "CEDAR template instance in the artifact library's YAML format. Required "
-            + "top-level keys: 'type: instance', 'name', 'isBasedOn' (URI of the template "
-            + "the instance is based on). The 'children' map carries field and element "
-            + "instance values keyed by the schema's property keys."));
+        "CEDAR template instance described in the artifact library's YAML format. Full "
+            + "key vocabulary and value-shape conventions:\n\n"
+            + YamlVocabulary.instanceVocabulary()));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("yaml"), Boolean.FALSE, null, null);

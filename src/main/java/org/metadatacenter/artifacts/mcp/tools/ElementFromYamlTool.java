@@ -41,11 +41,10 @@ public final class ElementFromYamlTool
     properties.put("yaml", Map.of(
         "type", "string",
         "description",
-        "CEDAR element described in the artifact library's YAML format. Required "
-            + "top-level keys: 'type: element', 'name', 'modelVersion: 1.6.0'. Optional "
-            + "'version' and 'status'. The 'children' list carries field and (nested) "
-            + "element specifications using the same kebab-case vocabulary as "
-            + "'template_from_yaml'."));
+        "CEDAR element described in the artifact library's YAML format. The top-level "
+            + "'type:' must be 'element'. The 'children:' list carries field and (nested) "
+            + "element specifications. Full key vocabulary:\n\n"
+            + YamlVocabulary.fullSchemaVocabulary()));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("yaml"), Boolean.FALSE, null, null);

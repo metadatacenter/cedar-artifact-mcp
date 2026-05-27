@@ -41,11 +41,10 @@ public final class FieldFromYamlTool
     properties.put("yaml", Map.of(
         "type", "string",
         "description",
-        "CEDAR field described in the artifact library's YAML format. The 'type' key "
-            + "selects the field kind in kebab-case (e.g. 'text-field', "
-            + "'controlled-term-field', 'numeric-field', 'temporal-field'); 'name' and "
-            + "'modelVersion: 1.6.0' are required; 'version' and 'status' are optional. "
-            + "See the artifact library's YamlConstants for the full vocabulary."));
+        "CEDAR field described in the artifact library's YAML format. The 'type:' "
+            + "discriminator selects the field kind; per-field-type keys live at the "
+            + "top level of the same YAML document. Full key vocabulary:\n\n"
+            + YamlVocabulary.fieldOnlyVocabulary()));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("yaml"), Boolean.FALSE, null, null);

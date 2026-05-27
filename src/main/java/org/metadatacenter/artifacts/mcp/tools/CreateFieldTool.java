@@ -76,7 +76,17 @@ public final class CreateFieldTool
                 + "(e.g. text-field, controlled-term-field, numeric-field). Returns the "
                 + "artifact serialized as JSON. Standalone fields are first-class CEDAR "
                 + "artifacts; the returned JSON can be referenced or composed via other "
-                + "tools.")
+                + "tools.\n\n"
+                + "Scope: this tool sets ONLY name + type + description + version. It does "
+                + "NOT set type-specific configuration (numeric datatype like xsd:int, "
+                + "temporal granularity, list values, controlled-term constraints, default "
+                + "values, etc.). For any of those, use 'field_from_yaml' instead — its "
+                + "input-schema description enumerates the full per-field-type key "
+                + "vocabulary. Constraints and default values can also be layered onto a "
+                + "created field via 'add_class_constraint', 'add_branch_constraint', "
+                + "'add_ontology_constraint', 'add_valueset_constraint', "
+                + "'add_default_value', 'add_iri_default_value', and "
+                + "'add_controlled_term_default_value'.")
         .inputSchema(schema)
         .build();
   }
