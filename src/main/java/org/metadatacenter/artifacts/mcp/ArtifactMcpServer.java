@@ -13,6 +13,7 @@ import org.metadatacenter.artifacts.mcp.tools.AddOntologyConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.AddValueSetConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateElementTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateFieldTool;
+import org.metadatacenter.artifacts.mcp.tools.CreateInstanceTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateTemplateTool;
 import org.metadatacenter.artifacts.mcp.tools.ElementFromYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.ElementToYamlTool;
@@ -64,6 +65,7 @@ public final class ArtifactMcpServer
         .toolCall(AddOntologyConstraintTool.tool(), AddOntologyConstraintTool::handler)
         .toolCall(AddBranchConstraintTool.tool(), AddBranchConstraintTool::handler)
         .toolCall(AddValueSetConstraintTool.tool(), AddValueSetConstraintTool::handler)
+        .toolCall(CreateInstanceTool.tool(), CreateInstanceTool::handler)
         .toolCall(InstanceFromYamlTool.tool(), InstanceFromYamlTool::handler)
         .toolCall(InstanceToYamlTool.tool(), InstanceToYamlTool::handler)
         .toolCall(ValidateInstanceTool.tool(), ValidateInstanceTool::handler)

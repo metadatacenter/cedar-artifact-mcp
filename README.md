@@ -17,16 +17,16 @@ See [DESIGN.md](./DESIGN.md) for the architectural principles and
 
 ## Status
 
-Nineteen tools: `ping`, the three empty-shell builders (`create_template`,
+Twenty tools: `ping`, the three empty-shell builders (`create_template`,
 `create_element`, `create_field`), the headline authoring tool
 `template_from_yaml` and its element/field variants (`element_from_yaml`,
 `field_from_yaml`), the matching reverse-direction tools (`template_to_yaml`,
 `element_to_yaml`, `field_to_yaml`), the two incremental builders
 (`add_field`, `add_element`), the four value-constraint tools
 (`add_class_constraint`, `add_ontology_constraint`, `add_branch_constraint`,
-`add_valueset_constraint`), and the instance trio (`instance_from_yaml`,
-`instance_to_yaml`, `validate_instance`). The roadmap covers skeleton creation
-from a template and value-setter tools.
+`add_valueset_constraint`), and the instance group (`create_instance`,
+`instance_from_yaml`, `instance_to_yaml`, `validate_instance`). The roadmap
+covers value-setter tools.
 
 ## Tools
 
@@ -110,6 +110,18 @@ controlled-term-field) and produce a controlled-term-field with the new constrai
 attached. The library's reader only classifies a TEXTFIELD as controlled-term once it
 carries a constraint, so an "empty controlled-term-field" and a "text-field" are JSON-
 indistinguishable on the wire — both are valid inputs here.
+
+### `create_instance(template_json, name?, description?, is_based_on?)`
+
+Builds an empty (skeleton) CEDAR template instance from a template JSON. Walks the
+template's children and creates one empty `FieldInstance` per non-static,
+non-attribute-value field; multi-instance children start as empty arrays; nested
+elements are recursively populated. The `@context` mappings are populated from the
+template's child property URIs so the result passes `validate_instance` straight away.
+
+`is_based_on` defaults to the template's `@id` when present. For freshly built
+templates without an `@id` (e.g. just out of `create_template`) the caller must supply
+`is_based_on` explicitly.
 
 ### `instance_from_yaml(yaml)` / `instance_to_yaml(json, isCompact?)`
 
