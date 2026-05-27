@@ -61,6 +61,11 @@ public final class AddFieldTool
         "description",
         "Optional property label override for the parent's _ui block. If omitted, the "
             + "child field's own schema:name is used."));
+    properties.put("description", Map.of(
+        "type", "string",
+        "description",
+        "Optional property description override for the parent's _ui block. If omitted, "
+            + "the child field's own schema:description is used."));
     properties.put("isMultiInstance", Map.of(
         "type", "boolean",
         "default", Boolean.FALSE,
@@ -70,6 +75,16 @@ public final class AddFieldTool
             + "whatever isMultiple setting the child JSON already carries — this is the "
             + "per-add-site control, since the same reusable field may be single-instance "
             + "in one parent and multi-instance in another."));
+    properties.put("minItems", Map.of(
+        "type", "integer",
+        "description",
+        "Minimum number of instances when isMultiInstance is true. Optional; left unset "
+            + "if omitted. Only meaningful for multi-instance fields."));
+    properties.put("maxItems", Map.of(
+        "type", "integer",
+        "description",
+        "Maximum number of instances when isMultiInstance is true. Optional; left unset "
+            + "if omitted. Only meaningful for multi-instance fields."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
@@ -105,6 +120,7 @@ public final class AddFieldTool
       return error("key is required and must not be blank");
 
     String nameOverride = stringArg(args, "name");  // optional
+    String descriptionOverride = stringArg(args, "description");  // optional
 
     boolean isMultiInstance;
     Object rawIsMulti = args.get("isMultiInstance");
@@ -115,6 +131,19 @@ public final class AddFieldTool
     } else {
       return error("isMultiInstance must be a boolean (got "
           + rawIsMulti.getClass().getSimpleName() + ")");
+    }
+
+    Integer minItems;
+    try {
+      minItems = optionalIntArg(args, "minItems");
+    } catch (IllegalArgumentException e) {
+      return error(e.getMessage());
+    }
+    Integer maxItems;
+    try {
+      maxItems = optionalIntArg(args, "maxItems");
+    } catch (IllegalArgumentException e) {
+      return error(e.getMessage());
     }
 
     JsonNode parsedParent;
@@ -145,10 +174,15 @@ public final class AddFieldTool
     FieldSchemaArtifact child;
     try {
       FieldSchemaArtifact parsed = READER.readFieldSchemaArtifact(childObject);
-      // Rebuild the child with isMultiInstance applied at this add site, overriding
-      // whatever the child JSON carried. The same reusable field can be single- or
-      // multi-instance in different parents, so the flag belongs on the add call.
-      child = FieldSchemaArtifactBuilder.builder(parsed).withIsMultiple(isMultiInstance).build();
+      // Rebuild the child applying the per-add-site overrides (isMultiInstance plus
+      // its companion minItems/maxItems bounds), discarding whatever the child JSON
+      // carried for those. The same reusable field can be single- or multi-instance
+      // in different parents, with different bounds in each.
+      FieldSchemaArtifactBuilder<?> rebuild = FieldSchemaArtifactBuilder.builder(parsed)
+          .withIsMultiple(isMultiInstance);
+      if (minItems != null) rebuild.withMinItems(minItems);
+      if (maxItems != null) rebuild.withMaxItems(maxItems);
+      child = rebuild.build();
     } catch (ArtifactParseException e) {
       return error("child_json rejected by reader (must be a CEDAR field): " + e.getMessage());
     } catch (RuntimeException e) {
@@ -156,6 +190,8 @@ public final class AddFieldTool
     }
 
     String label = nameOverride == null || nameOverride.isBlank() ? child.name() : nameOverride;
+    String descriptionLabel = descriptionOverride == null || descriptionOverride.isBlank()
+        ? child.description() : descriptionOverride;
 
     ObjectNode rendered;
     try {
@@ -163,14 +199,14 @@ public final class AddFieldTool
         case TEMPLATE -> {
           TemplateSchemaArtifact parent = READER.readTemplateSchemaArtifact(parentObject);
           TemplateSchemaArtifact updated = TemplateSchemaArtifact.builder(parent)
-              .withFieldSchema(key, child, label)
+              .withFieldSchema(key, child, label, descriptionLabel)
               .build();
           yield RENDERER.renderTemplateSchemaArtifact(updated);
         }
         case ELEMENT -> {
           ElementSchemaArtifact parent = READER.readElementSchemaArtifact(parentObject);
           ElementSchemaArtifact updated = ElementSchemaArtifact.builder(parent)
-              .withFieldSchema(key, child, label)
+              .withFieldSchema(key, child, label, descriptionLabel)
               .build();
           yield RENDERER.renderElementSchemaArtifact(updated);
         }
@@ -224,6 +260,26 @@ public final class AddFieldTool
   {
     Object raw = args.get(key);
     return raw == null ? null : raw.toString();
+  }
+
+  /**
+   * Read an optional integer argument. JSON-RPC numbers arrive boxed as Integer, Long,
+   * or in rare cases a stringified form; coerce them to Integer or fail with a clean
+   * message. Returns {@code null} when the argument is absent.
+   */
+  private static Integer optionalIntArg(Map<String, Object> args, String key)
+  {
+    Object raw = args.get(key);
+    if (raw == null) return null;
+    if (raw instanceof Integer i) return i;
+    if (raw instanceof Long l) {
+      if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE)
+        throw new IllegalArgumentException(key + " is out of integer range: " + l);
+      return l.intValue();
+    }
+    if (raw instanceof Number n) return n.intValue();
+    throw new IllegalArgumentException(key + " must be an integer (got "
+        + raw.getClass().getSimpleName() + ")");
   }
 
   private static McpSchema.CallToolResult error(String message)

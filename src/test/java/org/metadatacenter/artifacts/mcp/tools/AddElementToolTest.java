@@ -133,6 +133,59 @@ final class AddElementToolTest
         "default (isMultiInstance unset) must render as a bare object");
   }
 
+  @Test void description_override_appears_in_propertyDescriptions() throws Exception
+  {
+    String templateJson = createTemplate("Demographics");
+    String elementJson = createElement("Address");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent_json", templateJson,
+        "child_json", elementJson,
+        "key", "addr",
+        "description", "Override description"));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+
+    assertEquals("Override description",
+        rendered.path("_ui").path("propertyDescriptions").path("addr").asText(),
+        "description override must surface in _ui.propertyDescriptions");
+  }
+
+  @Test void minItems_and_maxItems_apply_to_multi_instance_element() throws Exception
+  {
+    String templateJson = createTemplate("Bounded");
+    String elementJson = createElement("Address");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent_json", templateJson,
+        "child_json", elementJson,
+        "key", "addresses",
+        "isMultiInstance", true,
+        "minItems", 1,
+        "maxItems", 3));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+
+    JsonNode addresses = rendered.path("properties").path("addresses");
+    assertEquals("array", addresses.path("type").asText(),
+        "multi-instance element must render as an array");
+    assertEquals(1, addresses.path("minItems").asInt());
+    assertEquals(3, addresses.path("maxItems").asInt());
+  }
+
+  @Test void rejects_non_integer_minItems()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent_json", createTemplate("X"),
+        "child_json", createElement("X"),
+        "key", "x",
+        "minItems", "two"));
+    assertTrue(result.isError());
+    assertTrue(errorText(result).contains("minItems"));
+  }
+
   @Test void rejects_non_boolean_isMultiInstance()
   {
     McpSchema.CallToolResult result = invoke(Map.of(

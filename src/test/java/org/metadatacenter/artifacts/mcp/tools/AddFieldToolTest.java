@@ -134,6 +134,61 @@ final class AddFieldToolTest
         "default (isMultiInstance unset) must render as a bare object");
   }
 
+  @Test void description_override_appears_in_propertyDescriptions() throws Exception
+  {
+    String templateJson = createTemplate("Demographics");
+    String fieldJson = createField("Patient name", "text-field");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent_json", templateJson,
+        "child_json", fieldJson,
+        "key", "patient_name",
+        "description", "Override description"));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+
+    assertEquals("Override description",
+        rendered.path("_ui").path("propertyDescriptions").path("patient_name").asText(),
+        "description override must surface in _ui.propertyDescriptions");
+  }
+
+  @Test void minItems_and_maxItems_apply_to_multi_instance_field() throws Exception
+  {
+    String templateJson = createTemplate("Bounded");
+    String fieldJson = createField("Tag", "text-field");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent_json", templateJson,
+        "child_json", fieldJson,
+        "key", "tags",
+        "isMultiInstance", true,
+        "minItems", 1,
+        "maxItems", 5));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+
+    JsonNode tags = rendered.path("properties").path("tags");
+    assertEquals("array", tags.path("type").asText(),
+        "multi-instance field must render as an array");
+    assertEquals(1, tags.path("minItems").asInt(),
+        "minItems must surface on the array wrapper; got: " + tags);
+    assertEquals(5, tags.path("maxItems").asInt(),
+        "maxItems must surface on the array wrapper; got: " + tags);
+  }
+
+  @Test void rejects_non_integer_minItems()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent_json", createTemplate("X"),
+        "child_json", createField("X", "text-field"),
+        "key", "x",
+        "minItems", "two"));
+    assertTrue(result.isError());
+    assertTrue(errorText(result).contains("minItems"));
+  }
+
   @Test void rejects_non_boolean_isMultiInstance()
   {
     McpSchema.CallToolResult result = invoke(Map.of(

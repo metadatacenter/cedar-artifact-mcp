@@ -54,19 +54,24 @@ These tools are lower-level than the `*_from_yaml` family; useful when programma
 composing artifacts from non-YAML inputs, or as starting points for the eventual
 incremental builder / value-constraint tools.
 
-### `add_field(parent_json, child_json, key, name?, isMultiInstance?)` / `add_element(parent_json, child_json, key, name?, isMultiInstance?)`
+### `add_field(parent_json, child_json, key, name?, description?, isMultiInstance?, minItems?, maxItems?)` / `add_element(parent_json, child_json, key, name?, description?, isMultiInstance?, minItems?, maxItems?)`
 
 Adds an existing child (typically produced by `create_field` / `create_element` or
 the matching `*_from_yaml` tool) as a child of a CEDAR template or element. Parent
 kind is inferred from its `@type` URI; the result is re-validated with the matching
 CedarValidator method.
 
-The optional `name` overrides the propertyLabel that appears in the parent's `_ui`
-block; if omitted, the child's own `schema:name` is used. The optional
-`isMultiInstance` boolean (default `false`) controls whether the child appears as
-an array (multi-instance) or a single object in instances of the parent — set at
-the add site since the same reusable child may be single-instance in one parent
-and multi-instance in another.
+The optional per-add-site overrides:
+
+- `name` — propertyLabel for the parent's `_ui` block; falls back to child's `schema:name`.
+- `description` — propertyDescription for the parent's `_ui` block; falls back to child's `schema:description`.
+- `isMultiInstance` (default `false`) — whether the child appears as an array (multi)
+  or a single object in instances of the parent.
+- `minItems` / `maxItems` — bounds on the array length when `isMultiInstance` is true.
+
+All five are per-add-site because the same reusable child may be used differently in
+different parents (single-instance in one, bounded multi-instance in another, with
+distinct labels each time).
 
 The compose workflow is two-step by design — build the child first, then graft it
 onto the parent — to keep the MCP API surface small (the library does allow
