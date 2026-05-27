@@ -111,6 +111,110 @@ final class SetFieldValueToolTest
         "nested field value must be set; got address:\n" + rendered.path("address"));
   }
 
+  @Test void appends_value_to_multi_instance_field() throws Exception
+  {
+    String templateJson = compileTemplate(
+        "type: template\n"
+            + "name: With tags\n"
+            + "description: T\n"
+            + "version: 0.0.1\n"
+            + "status: draft\n"
+            + "modelVersion: 1.6.0\n"
+            + "children:\n"
+            + "  - key: tags\n"
+            + "    type: text-field\n"
+            + "    name: Tag\n"
+            + "    configuration:\n"
+            + "      multiple: true\n");
+    String instanceJson = createInstance(templateJson, "P");
+
+    // First append: index 0 on an empty list = append "alpha"
+    McpSchema.CallToolResult first = invoke(Map.of(
+        "template_json", templateJson,
+        "instance_json", instanceJson,
+        "field_path", "tags[0]",
+        "value", "alpha"));
+    assertFalse(first.isError(), errorText(first));
+
+    // Second append: index 1 on a 1-length list = append "beta"
+    McpSchema.CallToolResult second = invoke(Map.of(
+        "template_json", templateJson,
+        "instance_json", textOf(first),
+        "field_path", "tags[1]",
+        "value", "beta"));
+    assertFalse(second.isError(), errorText(second));
+
+    ObjectNode rendered = parseJson(second);
+    JsonNode tags = rendered.path("tags");
+    assertTrue(tags.isArray() && tags.size() == 2, "tags should be a 2-element array; got: " + tags);
+    assertEquals("alpha", tags.get(0).path("@value").asText());
+    assertEquals("beta", tags.get(1).path("@value").asText());
+  }
+
+  @Test void replaces_existing_multi_instance_field_value() throws Exception
+  {
+    String templateJson = compileTemplate(
+        "type: template\n"
+            + "name: T\n"
+            + "description: T\n"
+            + "version: 0.0.1\n"
+            + "status: draft\n"
+            + "modelVersion: 1.6.0\n"
+            + "children:\n"
+            + "  - key: tags\n"
+            + "    type: text-field\n"
+            + "    name: Tag\n"
+            + "    configuration:\n"
+            + "      multiple: true\n");
+    String instanceJson = createInstance(templateJson, "P");
+
+    // Append then replace at index 0.
+    String afterAppend = textOf(invoke(Map.of(
+        "template_json", templateJson,
+        "instance_json", instanceJson,
+        "field_path", "tags[0]",
+        "value", "alpha")));
+    McpSchema.CallToolResult replaced = invoke(Map.of(
+        "template_json", templateJson,
+        "instance_json", afterAppend,
+        "field_path", "tags[0]",
+        "value", "ALPHA"));
+
+    assertFalse(replaced.isError(), errorText(replaced));
+    ObjectNode rendered = parseJson(replaced);
+    JsonNode tags = rendered.path("tags");
+    assertEquals(1, tags.size(), "list length should still be 1 after replace");
+    assertEquals("ALPHA", tags.get(0).path("@value").asText());
+  }
+
+  @Test void rejects_multi_instance_field_index_out_of_range()
+  {
+    String templateJson = compileTemplate(
+        "type: template\n"
+            + "name: T\n"
+            + "description: T\n"
+            + "version: 0.0.1\n"
+            + "status: draft\n"
+            + "modelVersion: 1.6.0\n"
+            + "children:\n"
+            + "  - key: tags\n"
+            + "    type: text-field\n"
+            + "    name: Tag\n"
+            + "    configuration:\n"
+            + "      multiple: true\n");
+    String instanceJson = createInstance(templateJson, "P");
+
+    // Index 5 on an empty list is out of range (> size).
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "template_json", templateJson,
+        "instance_json", instanceJson,
+        "field_path", "tags[5]",
+        "value", "x"));
+    assertTrue(result.isError());
+    assertTrue(errorText(result).toLowerCase().contains("out of range"),
+        "error should mention out-of-range; got: " + errorText(result));
+  }
+
   @Test void rejects_path_to_iri_field()
   {
     String templateJson = compileTemplate(

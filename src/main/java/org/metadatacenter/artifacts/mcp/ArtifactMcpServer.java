@@ -7,8 +7,11 @@ import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.mcp.tools.AddBranchConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.AddClassConstraintTool;
+import org.metadatacenter.artifacts.mcp.tools.AddControlledTermDefaultValueTool;
+import org.metadatacenter.artifacts.mcp.tools.AddDefaultValueTool;
 import org.metadatacenter.artifacts.mcp.tools.AddElementTool;
 import org.metadatacenter.artifacts.mcp.tools.AddFieldTool;
+import org.metadatacenter.artifacts.mcp.tools.AddIriDefaultValueTool;
 import org.metadatacenter.artifacts.mcp.tools.AddOntologyConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.AddValueSetConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateElementTool;
@@ -70,6 +73,9 @@ public final class ArtifactMcpServer
         .toolCall(AddOntologyConstraintTool.tool(), AddOntologyConstraintTool::handler)
         .toolCall(AddBranchConstraintTool.tool(), AddBranchConstraintTool::handler)
         .toolCall(AddValueSetConstraintTool.tool(), AddValueSetConstraintTool::handler)
+        .toolCall(AddDefaultValueTool.tool(), AddDefaultValueTool::handler)
+        .toolCall(AddIriDefaultValueTool.tool(), AddIriDefaultValueTool::handler)
+        .toolCall(AddControlledTermDefaultValueTool.tool(), AddControlledTermDefaultValueTool::handler)
         .toolCall(CreateInstanceTool.tool(), CreateInstanceTool::handler)
         .toolCall(InstanceFromYamlTool.tool(), InstanceFromYamlTool::handler)
         .toolCall(InstanceToYamlTool.tool(), InstanceToYamlTool::handler)

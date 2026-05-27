@@ -133,6 +133,12 @@ final class EndToEndStdioIT
           "add_branch_constraint tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("add_valueset_constraint"),
           "add_valueset_constraint tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("add_default_value"),
+          "add_default_value tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("add_iri_default_value"),
+          "add_iri_default_value tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("add_controlled_term_default_value"),
+          "add_controlled_term_default_value tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("create_instance"),
           "create_instance tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("instance_from_yaml"),

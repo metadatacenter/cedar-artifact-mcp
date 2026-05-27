@@ -55,6 +55,16 @@ All four accept any TEXTFIELD-shape field; the library only classifies a TEXTFIE
 as controlled-term once it carries a constraint (an empty controlled-term-field
 and a text-field are JSON-indistinguishable on the wire).
 
+### Default values (schema-side)
+
+- `add_default_value(field_json, value)` — literal-valued fields (text, numeric,
+  temporal, phone, email, radio, checkbox, list).
+- `add_iri_default_value(field_json, iri)` — IRI fields (bare URI; the library's
+  schema-side default doesn't carry a label).
+- `add_controlled_term_default_value(field_json, iri, label)` — controlled-term
+  fields only. Stricter than the constraint tools: a plain text-field is refused
+  with a redirect to `add_*_constraint` first.
+
 ### Instances
 
 - `create_instance(template_json, name?, description?, is_based_on?)` — walks a
@@ -67,7 +77,10 @@ and a text-field are JSON-indistinguishable on the wire).
 - `set_iri_field_value(template_json, instance_json, field_path, iri, label?)` — IRI
   fields (link, ROR, ORCID, PFAS, RRID, PubMed, NIH-grant-ID, DOI).
 - `set_controlled_term_field_value(template_json, instance_json, field_path, iri, label, pref_label?)`
-  — controlled-term fields. Slash-separated `field_path` supports nested elements.
+  — controlled-term fields. `field_path` is slash-separated with optional bracketed
+  indices for multi-instance children (`address/street`, `addresses[2]/street`,
+  `emails[0]`). Index equal to current list size on a multi-instance field leaf
+  appends; multi-instance element steps must already exist.
 
 ## Authoring strategy
 
@@ -80,18 +93,14 @@ JSON Schema, not YAML — every authoring tool ends in JSON Schema.
 These are the open items, ordered roughly by how likely a real authoring workflow
 would hit them.
 
-- **`add_default_value(field_json, value)`** — set a field's default value at
-  schema-build time. Each field type takes a different value shape so this'll
-  likely be a small family (`add_text_default_value`, `add_numeric_default_value`,
-  `add_iri_default_value` / `add_controlled_term_default_value`). Defer until a
-  concrete need surfaces.
+- **Text-area default value** — `add_default_value` doesn't support text-area
+  because `TextAreaField.Builder` lacks a `withDefaultValue` method (library gap).
+  A small library addition would close this; deferred until needed.
 
-- **Multi-instance value indexing on the setters** — `set_field_value`,
-  `set_iri_field_value`, `set_controlled_term_field_value` currently only handle
-  single-instance fields and walk through single-instance elements. To populate
-  the 3rd address in a multi-instance address element, callers need an index in
-  the path syntax (e.g. `addresses[2]/street`) or a dedicated multi-instance
-  append/replace tool.
+- **Numeric default-value validator quirk** — `add_default_value` builds and
+  renders for numeric fields, but the library writes the default as a plain JSON
+  number while CedarValidator's schema for that location expects a string or
+  object. Library/validator alignment issue, not a tool issue.
 
 - **Replacing children in place** — `remove_child` lands a child to remove an
   existing child; replacing in place still requires remove + add. A dedicated

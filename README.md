@@ -17,17 +17,18 @@ See [DESIGN.md](./DESIGN.md) for the architectural principles and
 
 ## Status
 
-Twenty-four tools: `ping`, the three empty-shell builders (`create_template`,
+Twenty-seven tools: `ping`, the three empty-shell builders (`create_template`,
 `create_element`, `create_field`), the headline authoring tool
 `template_from_yaml` and its element/field variants (`element_from_yaml`,
 `field_from_yaml`), the matching reverse-direction tools (`template_to_yaml`,
 `element_to_yaml`, `field_to_yaml`), the incremental builders
 (`add_field`, `add_element`, `remove_child`), the four value-constraint tools
 (`add_class_constraint`, `add_ontology_constraint`, `add_branch_constraint`,
-`add_valueset_constraint`), the instance group (`create_instance`,
-`instance_from_yaml`, `instance_to_yaml`, `validate_instance`), and the three
-instance-value setters (`set_field_value`, `set_iri_field_value`,
-`set_controlled_term_field_value`).
+`add_valueset_constraint`), the three default-value tools (`add_default_value`,
+`add_iri_default_value`, `add_controlled_term_default_value`), the instance
+group (`create_instance`, `instance_from_yaml`, `instance_to_yaml`,
+`validate_instance`), and the three instance-value setters (`set_field_value`,
+`set_iri_field_value`, `set_controlled_term_field_value`).
 
 ## Tools
 
@@ -132,6 +133,21 @@ template's child property URIs so the result passes `validate_instance` straight
 templates without an `@id` (e.g. just out of `create_template`) the caller must supply
 `is_based_on` explicitly.
 
+### `add_default_value(field_json, value)` / `add_iri_default_value(field_json, iri)` / `add_controlled_term_default_value(field_json, iri, label)`
+
+Three tools for attaching a schema-level default value to a field, mirroring the
+shape of the instance-value setters:
+
+- `add_default_value` — literal-valued fields (text, numeric, temporal, phone, email,
+  radio, checkbox, list). Text-area is not yet supported (library gap).
+- `add_iri_default_value` — IRI fields (link, ROR, ORCID, PFAS, RRID, PubMed,
+  NIH-grant-ID, DOI). The library's schema-level IRI default is a bare URI with no
+  label — if a labelled default is needed, set it on the instance side via
+  `set_iri_field_value`.
+- `add_controlled_term_default_value` — controlled-term fields only. Requires the
+  field already be classified as ControlledTermField (at least one constraint
+  attached); a plain text-field is refused with a redirect to the constraint tools.
+
 ### `instance_from_yaml(yaml)` / `instance_to_yaml(json, isCompact?)`
 
 Compile a CEDAR template instance from YAML to its canonical JSON, or back. Same shape
@@ -154,9 +170,11 @@ Three setters for populating field values on an existing instance:
   value-set constraint) — see the note on the wire collision in the constraint
   docs above.
 
-All three take a `field_path` with slash-separated nesting (`address/street`) and
-work on single-instance fields under single-instance element steps. Multi-instance
-indexing isn't supported yet.
+All three take a `field_path` with slash-separated nesting and bracketed indices
+for multi-instance children: `address/street`, `addresses[2]/street`, `emails[0]`.
+For multi-instance fields at the leaf, an index equal to the current list size
+appends (extends the list by one); any larger index errors. Multi-instance element
+indices walking through intermediate steps must already exist.
 
 The `template_json` argument is required because the instance JSON loses field
 type info on round-trip — the schema is the source of truth for which kind of
