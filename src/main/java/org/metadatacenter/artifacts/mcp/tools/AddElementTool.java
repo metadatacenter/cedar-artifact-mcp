@@ -58,6 +58,15 @@ public final class AddElementTool
         "description",
         "Optional property label override for the parent's _ui block. If omitted, the "
             + "child element's own schema:name is used."));
+    properties.put("isMultiInstance", Map.of(
+        "type", "boolean",
+        "default", Boolean.FALSE,
+        "description",
+        "Whether the element appears as a list (array of nested objects) rather than a "
+            + "single object in instances of the parent. Optional; defaults to false. "
+            + "Overrides whatever isMultiple setting the child JSON already carries — "
+            + "this is the per-add-site control, since the same reusable element may be "
+            + "single-instance in one parent and multi-instance in another."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
@@ -94,6 +103,17 @@ public final class AddElementTool
 
     String nameOverride = stringArg(args, "name");  // optional
 
+    boolean isMultiInstance;
+    Object rawIsMulti = args.get("isMultiInstance");
+    if (rawIsMulti == null) {
+      isMultiInstance = false;
+    } else if (rawIsMulti instanceof Boolean b) {
+      isMultiInstance = b;
+    } else {
+      return error("isMultiInstance must be a boolean (got "
+          + rawIsMulti.getClass().getSimpleName() + ")");
+    }
+
     JsonNode parsedParent;
     try {
       parsedParent = JACKSON2.readTree(parentJsonText);
@@ -121,7 +141,11 @@ public final class AddElementTool
 
     ElementSchemaArtifact child;
     try {
-      child = READER.readElementSchemaArtifact(childObject);
+      ElementSchemaArtifact parsed = READER.readElementSchemaArtifact(childObject);
+      // Rebuild the child with isMultiInstance applied at this add site, overriding
+      // whatever the child JSON carried. The same reusable element can be single- or
+      // multi-instance in different parents, so the flag belongs on the add call.
+      child = ElementSchemaArtifact.builder(parsed).withIsMultiple(isMultiInstance).build();
     } catch (ArtifactParseException e) {
       return error("child_json rejected by reader (must be a CEDAR element): " + e.getMessage());
     } catch (RuntimeException e) {

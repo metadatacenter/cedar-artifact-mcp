@@ -7,6 +7,7 @@ import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.model.core.ElementSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
+import org.metadatacenter.artifacts.model.core.FieldSchemaArtifactBuilder;
 import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
 import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
 import org.metadatacenter.artifacts.model.reader.JsonArtifactReader;
@@ -60,6 +61,15 @@ public final class AddFieldTool
         "description",
         "Optional property label override for the parent's _ui block. If omitted, the "
             + "child field's own schema:name is used."));
+    properties.put("isMultiInstance", Map.of(
+        "type", "boolean",
+        "default", Boolean.FALSE,
+        "description",
+        "Whether the field appears as a list (array of values) rather than a single "
+            + "value in instances of the parent. Optional; defaults to false. Overrides "
+            + "whatever isMultiple setting the child JSON already carries — this is the "
+            + "per-add-site control, since the same reusable field may be single-instance "
+            + "in one parent and multi-instance in another."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
@@ -96,6 +106,17 @@ public final class AddFieldTool
 
     String nameOverride = stringArg(args, "name");  // optional
 
+    boolean isMultiInstance;
+    Object rawIsMulti = args.get("isMultiInstance");
+    if (rawIsMulti == null) {
+      isMultiInstance = false;
+    } else if (rawIsMulti instanceof Boolean b) {
+      isMultiInstance = b;
+    } else {
+      return error("isMultiInstance must be a boolean (got "
+          + rawIsMulti.getClass().getSimpleName() + ")");
+    }
+
     JsonNode parsedParent;
     try {
       parsedParent = JACKSON2.readTree(parentJsonText);
@@ -123,7 +144,11 @@ public final class AddFieldTool
 
     FieldSchemaArtifact child;
     try {
-      child = READER.readFieldSchemaArtifact(childObject);
+      FieldSchemaArtifact parsed = READER.readFieldSchemaArtifact(childObject);
+      // Rebuild the child with isMultiInstance applied at this add site, overriding
+      // whatever the child JSON carried. The same reusable field can be single- or
+      // multi-instance in different parents, so the flag belongs on the add call.
+      child = FieldSchemaArtifactBuilder.builder(parsed).withIsMultiple(isMultiInstance).build();
     } catch (ArtifactParseException e) {
       return error("child_json rejected by reader (must be a CEDAR field): " + e.getMessage());
     } catch (RuntimeException e) {

@@ -95,6 +95,56 @@ final class AddFieldToolTest
         "name override must surface in _ui.propertyLabels; got _ui: " + rendered.path("_ui"));
   }
 
+  @Test void isMultiInstance_true_renders_field_as_array() throws Exception
+  {
+    // CEDAR templates render multi-instance fields as a JSON Schema array of objects;
+    // single-instance fields render as a bare object. The isMultiInstance flag is the
+    // per-add-site control over which shape the parent gets.
+    String templateJson = createTemplate("Multi");
+    String fieldJson = createField("Email", "email-field");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent_json", templateJson,
+        "child_json", fieldJson,
+        "key", "emails",
+        "isMultiInstance", true));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+
+    assertEquals("array", rendered.path("properties").path("emails").path("type").asText(),
+        "multi-instance field must render as an array; got: "
+            + rendered.path("properties").path("emails"));
+  }
+
+  @Test void isMultiInstance_default_false_renders_field_as_object() throws Exception
+  {
+    String templateJson = createTemplate("Single");
+    String fieldJson = createField("Email", "email-field");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent_json", templateJson,
+        "child_json", fieldJson,
+        "key", "email"));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+
+    assertEquals("object", rendered.path("properties").path("email").path("type").asText(),
+        "default (isMultiInstance unset) must render as a bare object");
+  }
+
+  @Test void rejects_non_boolean_isMultiInstance()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent_json", createTemplate("X"),
+        "child_json", createField("X", "text-field"),
+        "key", "x",
+        "isMultiInstance", "yes"));
+    assertTrue(result.isError());
+    assertTrue(errorText(result).contains("isMultiInstance"));
+  }
+
   @Test void rejects_child_json_that_is_not_a_field()
   {
     // An element JSON must not be accepted as a field child — that's add_element's job.

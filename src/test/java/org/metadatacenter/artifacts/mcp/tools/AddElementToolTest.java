@@ -97,6 +97,53 @@ final class AddElementToolTest
         "name override must surface in _ui.propertyLabels; got _ui: " + rendered.path("_ui"));
   }
 
+  @Test void isMultiInstance_true_renders_element_as_array() throws Exception
+  {
+    String templateJson = createTemplate("Multi");
+    String elementJson = createElement("Address");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent_json", templateJson,
+        "child_json", elementJson,
+        "key", "addresses",
+        "isMultiInstance", true));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+
+    assertEquals("array", rendered.path("properties").path("addresses").path("type").asText(),
+        "multi-instance element must render as an array; got: "
+            + rendered.path("properties").path("addresses"));
+  }
+
+  @Test void isMultiInstance_default_false_renders_element_as_object() throws Exception
+  {
+    String templateJson = createTemplate("Single");
+    String elementJson = createElement("Address");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent_json", templateJson,
+        "child_json", elementJson,
+        "key", "address"));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+
+    assertEquals("object", rendered.path("properties").path("address").path("type").asText(),
+        "default (isMultiInstance unset) must render as a bare object");
+  }
+
+  @Test void rejects_non_boolean_isMultiInstance()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent_json", createTemplate("X"),
+        "child_json", createElement("X"),
+        "key", "x",
+        "isMultiInstance", "yes"));
+    assertTrue(result.isError());
+    assertTrue(errorText(result).contains("isMultiInstance"));
+  }
+
   @Test void rejects_child_json_that_is_not_an_element() throws Exception
   {
     String templateJson = createTemplate("X");
