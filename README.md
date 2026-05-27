@@ -17,11 +17,12 @@ See [DESIGN.md](./DESIGN.md) for the architectural principles and
 
 ## Status
 
-Eight tools: `ping`, `create_template`, the headline authoring tool
-`template_from_yaml`, its element and field variants (`element_from_yaml`,
-`field_from_yaml`), and the matching reverse-direction tools (`template_to_yaml`,
-`element_to_yaml`, `field_to_yaml`). The roadmap covers incremental builders,
-value-constraint tools, and the instance variants.
+Ten tools: `ping`, the three empty-shell builders (`create_template`,
+`create_element`, `create_field`), the headline authoring tool
+`template_from_yaml` and its element/field variants (`element_from_yaml`,
+`field_from_yaml`), and the matching reverse-direction tools
+(`template_to_yaml`, `element_to_yaml`, `field_to_yaml`). The roadmap covers
+add-to-parent builders, value-constraint tools, and the instance variants.
 
 ## Tools
 
@@ -34,11 +35,23 @@ a client. No library interaction.
 |---|---|
 | `{ "message": "hello" }` | `"pong: hello"` |
 
-### `create_template(name, description?, version?)`
+### `create_template(name, description?, version?)` / `create_element(name, description?, version?)` / `create_field(name, type, description?, version?)`
 
-Builds an empty CEDAR template schema artifact and returns it as JSON Schema. Validates
-with `CedarValidator` before returning. Lower-level than `template_from_yaml`; useful
-when programmatically composing templates from non-YAML inputs.
+The three empty-shell builders. Each returns a CEDAR JSON Schema artifact of the
+matching kind, validated with `CedarValidator` before returning. Elements and fields
+are first-class CEDAR artifacts, on equal footing with templates.
+
+`create_field` takes a `type` discriminator — the same kebab-case vocabulary
+`field_from_yaml` accepts (`text-field`, `controlled-term-field`, `numeric-field`,
+`temporal-field`, `radio-field`, `checkbox-field`, the list, list-extension, static,
+and identifier variants — see the tool's input schema for the complete enum).
+`numeric-field` and `temporal-field` get sensible defaults (`xsd:decimal`,
+`xsd:date` with day granularity) since the library refuses to build either
+without those.
+
+These tools are lower-level than the `*_from_yaml` family; useful when programmatically
+composing artifacts from non-YAML inputs, or as starting points for the eventual
+incremental builder / value-constraint tools.
 
 ### `template_from_yaml(yaml)`
 

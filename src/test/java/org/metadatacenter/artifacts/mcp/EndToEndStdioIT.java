@@ -103,6 +103,10 @@ final class EndToEndStdioIT
       assertTrue(toolNames.contains("ping"), "ping tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("create_template"),
           "create_template tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("create_element"),
+          "create_element tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("create_field"),
+          "create_field tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("template_from_yaml"),
           "template_from_yaml tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("element_from_yaml"),

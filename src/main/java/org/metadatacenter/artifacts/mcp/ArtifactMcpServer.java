@@ -5,6 +5,8 @@ import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
 import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
 import io.modelcontextprotocol.spec.McpSchema;
+import org.metadatacenter.artifacts.mcp.tools.CreateElementTool;
+import org.metadatacenter.artifacts.mcp.tools.CreateFieldTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateTemplateTool;
 import org.metadatacenter.artifacts.mcp.tools.ElementFromYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.ElementToYamlTool;
@@ -39,6 +41,8 @@ public final class ArtifactMcpServer
         .capabilities(McpSchema.ServerCapabilities.builder().tools(true).build())
         .toolCall(pingTool(), ArtifactMcpServer::pingHandler)
         .toolCall(CreateTemplateTool.tool(), CreateTemplateTool::handler)
+        .toolCall(CreateElementTool.tool(), CreateElementTool::handler)
+        .toolCall(CreateFieldTool.tool(), CreateFieldTool::handler)
         .toolCall(TemplateFromYamlTool.tool(), TemplateFromYamlTool::handler)
         .toolCall(ElementFromYamlTool.tool(), ElementFromYamlTool::handler)
         .toolCall(FieldFromYamlTool.tool(), FieldFromYamlTool::handler)

@@ -13,6 +13,11 @@ This file tracks what's built, what's planned, and what's deliberately out of sc
   ITs (`EndToEndStdioIT`) that spawn the shaded jar and speak real JSON-RPC.
 - `create_template(name, description?, version?)` — empty-shell template builder,
   validated with `CedarValidator` before returning.
+- `create_element(name, description?, version?)` — empty-shell element builder.
+- `create_field(name, type, description?, version?)` — empty-shell field builder;
+  `type` is the same kebab-case vocabulary as `field_from_yaml` (24 variants plus
+  multi-select-list-field). Numeric and temporal fields receive sensible defaults
+  for the otherwise-required numberType / temporalType / granularity invariants.
 - `template_from_yaml(yaml)` — **the headline authoring tool.** Compiles a CEDAR
   template described in YAML to the canonical CEDAR JSON Schema; validates with
   `CedarValidator` end-to-end.
