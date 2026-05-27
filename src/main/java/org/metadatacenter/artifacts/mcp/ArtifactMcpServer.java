@@ -6,7 +6,10 @@ import io.modelcontextprotocol.server.McpSyncServer;
 import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.mcp.tools.CreateTemplateTool;
+import org.metadatacenter.artifacts.mcp.tools.ElementFromYamlTool;
+import org.metadatacenter.artifacts.mcp.tools.FieldFromYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.TemplateFromYamlTool;
+import org.metadatacenter.artifacts.mcp.tools.TemplateToYamlTool;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -35,6 +38,9 @@ public final class ArtifactMcpServer
         .toolCall(pingTool(), ArtifactMcpServer::pingHandler)
         .toolCall(CreateTemplateTool.tool(), CreateTemplateTool::handler)
         .toolCall(TemplateFromYamlTool.tool(), TemplateFromYamlTool::handler)
+        .toolCall(ElementFromYamlTool.tool(), ElementFromYamlTool::handler)
+        .toolCall(FieldFromYamlTool.tool(), FieldFromYamlTool::handler)
+        .toolCall(TemplateToYamlTool.tool(), TemplateToYamlTool::handler)
         .build();
 
     // Stdio transport reads from System.in in a background thread. Keep the main thread

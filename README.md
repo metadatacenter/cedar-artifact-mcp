@@ -17,9 +17,10 @@ See [DESIGN.md](./DESIGN.md) for the architectural principles and
 
 ## Status
 
-Three tools: `ping`, `create_template`, and the headline authoring tool
-`template_from_yaml`. The roadmap covers the element/field/instance variants and
-the JSON-Schema-to-YAML reverse direction.
+Six tools: `ping`, `create_template`, the headline authoring tool
+`template_from_yaml`, its element and field variants (`element_from_yaml`,
+`field_from_yaml`), and the reverse direction `template_to_yaml`. The roadmap
+covers the instance variants and the element/field reverse-direction tools.
 
 ## Tools
 
@@ -64,6 +65,26 @@ children:
     name: Patient name
     description: Free-text patient name
 ```
+
+### `element_from_yaml(yaml)` / `field_from_yaml(yaml)`
+
+Element and field variants of `template_from_yaml`. Same four-stage pipeline as the
+template tool; validate with `validateTemplateElement` and `validateTemplateField`
+respectively. Use these when authoring a reusable element or a standalone field that
+will later be embedded in a template by other tooling.
+
+### `template_to_yaml(json, form)`
+
+Reverse direction of `template_from_yaml`: takes a CEDAR template JSON Schema and
+returns the artifact library's YAML serialization. The `form` argument selects between
+the two forms the `YamlArtifactRenderer` supports:
+
+- `compact` (default) — the lean, LLM-friendly authoring form. Provenance fields,
+  status, and version are omitted; `modelVersion` is retained so the YAML round-trips
+  cleanly through `template_from_yaml`. Best for showing an LLM a template it should
+  edit.
+- `standard` — every field the renderer can emit. Suitable for archival and round-trip
+  diffing where provenance and version metadata need to survive.
 
 ## Requirements
 

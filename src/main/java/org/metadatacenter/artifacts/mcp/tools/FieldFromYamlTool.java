@@ -1,0 +1,145 @@
+package org.metadatacenter.artifacts.mcp.tools;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.modelcontextprotocol.server.McpSyncServerExchange;
+import io.modelcontextprotocol.spec.McpSchema;
+import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
+import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
+import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
+import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
+import org.metadatacenter.model.validation.CedarValidator;
+import org.metadatacenter.model.validation.ModelValidator;
+import org.metadatacenter.model.validation.report.ErrorItem;
+import org.metadatacenter.model.validation.report.ValidationReport;
+import org.yaml.snakeyaml.Yaml;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * MCP tool {@code field_from_yaml} — field variant of {@code template_from_yaml}.
+ *
+ * <p>Takes a CEDAR field described in YAML and returns the canonical CEDAR JSON Schema
+ * for a field artifact. Validates the rendered JSON with
+ * {@link CedarValidator#validateTemplateField} before returning (DESIGN.md Principle 6).
+ */
+public final class FieldFromYamlTool
+{
+  private static final ObjectMapper JACKSON2 = new ObjectMapper();
+  private static final YamlArtifactReader READER = new YamlArtifactReader();
+  private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
+  private static final ModelValidator VALIDATOR = new CedarValidator();
+
+  private FieldFromYamlTool() {}
+
+  public static McpSchema.Tool tool()
+  {
+    Map<String, Object> properties = new LinkedHashMap<>();
+    properties.put("yaml", Map.of(
+        "type", "string",
+        "description",
+        "CEDAR field described in the artifact library's YAML format. The 'type' key "
+            + "selects the field kind in kebab-case (e.g. 'text-field', "
+            + "'controlled-term-field', 'numeric-field', 'temporal-field'); 'name' and "
+            + "'modelVersion: 1.6.0' are required; 'version' and 'status' are optional. "
+            + "See the artifact library's YamlConstants for the full vocabulary."));
+
+    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
+        "object", properties, List.of("yaml"), Boolean.FALSE, null, null);
+
+    return McpSchema.Tool.builder()
+        .name("field_from_yaml")
+        .title("CEDAR field: YAML → JSON Schema")
+        .description(
+            "Compiles a CEDAR field described in YAML into the canonical CEDAR JSON "
+                + "Schema for a field artifact. The returned JSON has been round-tripped "
+                + "through the artifact library's reader/renderer and accepted by "
+                + "CedarValidator.validateTemplateField, so a non-error result is a "
+                + "guaranteed-valid CEDAR field.")
+        .inputSchema(schema)
+        .build();
+  }
+
+  public static McpSchema.CallToolResult handler(
+      McpSyncServerExchange exchange, McpSchema.CallToolRequest request)
+  {
+    Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
+
+    Object rawYaml = args.get("yaml");
+    if (rawYaml == null)
+      return error("yaml argument is required");
+    String yamlText = rawYaml.toString();
+    if (yamlText.isBlank())
+      return error("yaml argument must not be blank");
+
+    LinkedHashMap<String, Object> yamlMap;
+    try {
+      Object parsed = new Yaml().load(yamlText);
+      if (!(parsed instanceof Map<?, ?>))
+        return error("yaml must parse to a mapping at the top level (got "
+            + (parsed == null ? "null" : parsed.getClass().getSimpleName()) + ")");
+      yamlMap = new LinkedHashMap<>();
+      for (Map.Entry<?, ?> entry : ((Map<?, ?>) parsed).entrySet())
+        yamlMap.put(String.valueOf(entry.getKey()), entry.getValue());
+    } catch (RuntimeException e) {
+      return error("YAML parse failed: " + e.getMessage());
+    }
+
+    FieldSchemaArtifact field;
+    try {
+      field = READER.readFieldSchemaArtifact(yamlMap);
+    } catch (ArtifactParseException e) {
+      return error("CEDAR YAML rejected by reader: " + e.getMessage());
+    } catch (RuntimeException e) {
+      return error("field reader threw " + e.getClass().getSimpleName()
+          + ": " + e.getMessage());
+    }
+
+    ObjectNode rendered = RENDERER.renderFieldSchemaArtifact(field);
+    try {
+      ValidationReport report = VALIDATOR.validateTemplateField(rendered);
+      if (!"true".equals(report.getValidationStatus()))
+        return error("rendered field failed CedarValidator: " + formatErrors(report));
+    } catch (Exception e) {
+      return error("CedarValidator threw while validating rendered field: "
+          + e.getMessage());
+    }
+
+    String json;
+    try {
+      json = JACKSON2.writerWithDefaultPrettyPrinter().writeValueAsString(rendered);
+    } catch (Exception e) {
+      return error("failed to serialize rendered field: " + e.getMessage());
+    }
+
+    return McpSchema.CallToolResult.builder()
+        .content(List.of(new McpSchema.TextContent(null, json)))
+        .isError(false)
+        .build();
+  }
+
+  private static String formatErrors(ValidationReport report)
+  {
+    StringBuilder sb = new StringBuilder();
+    int i = 0;
+    for (ErrorItem err : report.getErrors()) {
+      if (i++ > 0) sb.append("; ");
+      sb.append(err.toString());
+      if (i >= 5) {
+        sb.append("; ... (").append(report.getErrors().size() - i).append(" more)");
+        break;
+      }
+    }
+    return sb.length() == 0 ? "(no error details)" : sb.toString();
+  }
+
+  private static McpSchema.CallToolResult error(String message)
+  {
+    return McpSchema.CallToolResult.builder()
+        .content(List.of(new McpSchema.TextContent(null, message)))
+        .isError(true)
+        .build();
+  }
+}

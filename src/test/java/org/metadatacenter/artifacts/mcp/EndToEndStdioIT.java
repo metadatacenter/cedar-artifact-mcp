@@ -105,6 +105,12 @@ final class EndToEndStdioIT
           "create_template tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("template_from_yaml"),
           "template_from_yaml tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("element_from_yaml"),
+          "element_from_yaml tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("field_from_yaml"),
+          "field_from_yaml tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("template_to_yaml"),
+          "template_to_yaml tool should be listed; got " + toolNames);
 
       // 4. tools/call create_template -----------------------------------------------
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":"
@@ -350,6 +356,110 @@ final class EndToEndStdioIT
         for (ErrorItem err : report.getErrors()) msg.append("  - ").append(err).append('\n');
         fail(msg.toString());
       }
+    } finally {
+      shutdown(server, stderr);
+    }
+  }
+
+  @Test void server_exercises_new_transcoders_over_stdio() throws Exception
+  {
+    // One IT covering element_from_yaml, field_from_yaml, and template_to_yaml in a
+    // single session — proves each routes cleanly through the shaded jar and the
+    // tool-registration plumbing. Exhaustive per-tool cases live in the surefire
+    // unit tests; this IT exists to catch shading/registration regressions.
+    Path jar = locateShadedJar();
+    Process server = new ProcessBuilder("java", "-jar", jar.toString())
+        .redirectErrorStream(false).start();
+    StringBuilder stderr = drainStderr(server);
+    BufferedReader stdout = new BufferedReader(
+        new InputStreamReader(server.getInputStream(), StandardCharsets.UTF_8));
+
+    try (Writer stdin = new OutputStreamWriter(server.getOutputStream(), StandardCharsets.UTF_8)) {
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":"
+          + "{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},"
+          + "\"clientInfo\":{\"name\":\"e2e\",\"version\":\"0\"}}}");
+      readResponse(stdout, stderr);
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
+
+      // 1) element_from_yaml --------------------------------------------------------
+      String elementYaml = String.join("\\n",
+          "type: element",
+          "name: Address",
+          "description: Postal address element",
+          "modelVersion: 1.6.0",
+          "children:",
+          "  - key: street",
+          "    type: text-field",
+          "    name: Street");
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":"
+          + "{\"name\":\"element_from_yaml\",\"arguments\":{\"yaml\":\""
+          + elementYaml + "\"}}}");
+      JsonNode elementResponse = readResponse(stdout, stderr);
+      assertEquals(2, elementResponse.path("id").asInt());
+      assertFalse(elementResponse.path("result").path("isError").asBoolean(true),
+          "element_from_yaml must compile cleanly over stdio; got: " + elementResponse);
+      JsonNode element = jackson.readTree(
+          elementResponse.path("result").path("content").get(0).path("text").asText());
+      ValidationReport elemReport = cedarValidator.validateTemplateElement(element);
+      assertEquals("true", elemReport.getValidationStatus(),
+          "element JSON returned over stdio must pass validateTemplateElement");
+
+      // 2) field_from_yaml ----------------------------------------------------------
+      String fieldYaml = String.join("\\n",
+          "type: text-field",
+          "name: Patient name",
+          "description: Free-text patient name",
+          "modelVersion: 1.6.0");
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":"
+          + "{\"name\":\"field_from_yaml\",\"arguments\":{\"yaml\":\""
+          + fieldYaml + "\"}}}");
+      JsonNode fieldResponse = readResponse(stdout, stderr);
+      assertEquals(3, fieldResponse.path("id").asInt());
+      assertFalse(fieldResponse.path("result").path("isError").asBoolean(true),
+          "field_from_yaml must compile cleanly over stdio; got: " + fieldResponse);
+      JsonNode field = jackson.readTree(
+          fieldResponse.path("result").path("content").get(0).path("text").asText());
+      ValidationReport fieldReport = cedarValidator.validateTemplateField(field);
+      assertEquals("true", fieldReport.getValidationStatus(),
+          "field JSON returned over stdio must pass validateTemplateField");
+
+      // 3) template_to_yaml ---------------------------------------------------------
+      // First compile a template to JSON, then ask the server to render it back to
+      // YAML. Compact form (default) is what an LLM would see; assert it contains
+      // the type/name shape and elides status (which would appear in standard form).
+      String templateYaml = String.join("\\n",
+          "type: template",
+          "name: Round-trip template",
+          "description: Used for end-to-end to_yaml exercise",
+          "version: 0.1.0",
+          "status: draft",
+          "modelVersion: 1.6.0");
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\",\"params\":"
+          + "{\"name\":\"template_from_yaml\",\"arguments\":{\"yaml\":\""
+          + templateYaml + "\"}}}");
+      JsonNode fromYamlResponse = readResponse(stdout, stderr);
+      assertFalse(fromYamlResponse.path("result").path("isError").asBoolean(true),
+          "template_from_yaml setup call must succeed; got: " + fromYamlResponse);
+      String templateJsonText =
+          fromYamlResponse.path("result").path("content").get(0).path("text").asText();
+
+      // Re-encode the JSON as a JSON string literal so it survives the JSON-RPC frame.
+      String escapedJson = jackson.writeValueAsString(templateJsonText);
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"tools/call\",\"params\":"
+          + "{\"name\":\"template_to_yaml\",\"arguments\":{\"json\":"
+          + escapedJson + ",\"form\":\"compact\"}}}");
+      JsonNode toYamlResponse = readResponse(stdout, stderr);
+      assertEquals(5, toYamlResponse.path("id").asInt());
+      assertFalse(toYamlResponse.path("result").path("isError").asBoolean(true),
+          "template_to_yaml must render cleanly over stdio; got: " + toYamlResponse);
+      String yamlOut =
+          toYamlResponse.path("result").path("content").get(0).path("text").asText();
+      assertTrue(yamlOut.contains("type: template"),
+          "compact YAML must contain 'type: template'; got:\n" + yamlOut);
+      assertTrue(yamlOut.contains("Round-trip template"),
+          "compact YAML must carry the template name; got:\n" + yamlOut);
+      assertFalse(yamlOut.contains("status:"),
+          "compact YAML must omit the status field; got:\n" + yamlOut);
     } finally {
       shutdown(server, stderr);
     }
