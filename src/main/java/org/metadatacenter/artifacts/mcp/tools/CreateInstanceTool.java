@@ -159,7 +159,8 @@ public final class CreateInstanceTool
       populateChildren(template, builder::withSingleInstanceFieldInstance,
           builder::withMultiInstanceFieldInstances,
           builder::withSingleInstanceElementInstance,
-          builder::withMultiInstanceElementInstances);
+          builder::withMultiInstanceElementInstances,
+          builder::withAttributeValueFieldGroup);
       instance = builder.build();
     } catch (RuntimeException e) {
       return error("instance build failed: " + e.getClass().getSimpleName() + ": " + e.getMessage());
@@ -181,18 +182,31 @@ public final class CreateInstanceTool
   }
 
   /**
-   * Walk a parent schema and dispatch its non-static, non-attribute-value children to
-   * the four put-functions on the parent instance builder. Used for both the top-level
-   * template and any nested element via {@link #buildEmptyElement}.
+   * Walk a parent schema and dispatch its non-static children to the five put-functions
+   * on the parent instance builder. Used for both the top-level template and any nested
+   * element via {@link #buildEmptyElement}.
+   *
+   * <p>Attribute-value fields don't live in the regular single/multi-instance maps;
+   * they go through the parent's {@code attributeValueFieldInstanceGroups} as a name →
+   * (inner-field-name → instance) map. For a freshly-built skeleton instance, the inner
+   * map is empty — the instance carries the group placeholder, awaiting the LLM to
+   * populate the per-attribute fields later.
    */
   private static void populateChildren(
       ParentSchemaArtifact parent,
       java.util.function.BiConsumer<String, FieldInstanceArtifact> putSingleField,
       java.util.function.BiConsumer<String, List<FieldInstanceArtifact>> putMultiField,
       java.util.function.BiConsumer<String, ElementInstanceArtifact> putSingleElement,
-      java.util.function.BiConsumer<String, List<ElementInstanceArtifact>> putMultiElement)
+      java.util.function.BiConsumer<String, List<ElementInstanceArtifact>> putMultiElement,
+      java.util.function.BiConsumer<String, LinkedHashMap<String, FieldInstanceArtifact>> putAttributeValueGroup)
   {
-    for (String childKey : parent.getNonStaticNonAttributeValueChildKeys()) {
+    for (String childKey : parent.getUi().order()) {
+      if (parent.isStaticField(childKey))
+        continue;  // static fields have no instance representation
+      if (parent.isAttributeValueField(childKey)) {
+        putAttributeValueGroup.accept(childKey, new LinkedHashMap<>());
+        continue;
+      }
       if (parent.isField(childKey)) {
         FieldSchemaArtifact field = parent.getFieldSchemaArtifact(childKey);
         if (field.isMultiple()) {
@@ -225,7 +239,8 @@ public final class CreateInstanceTool
     populateChildren(element, builder::withSingleInstanceFieldInstance,
         builder::withMultiInstanceFieldInstances,
         builder::withSingleInstanceElementInstance,
-        builder::withMultiInstanceElementInstances);
+        builder::withMultiInstanceElementInstances,
+        builder::withAttributeValueFieldGroup);
     return builder.build();
   }
 

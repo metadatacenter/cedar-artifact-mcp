@@ -21,6 +21,7 @@ import org.metadatacenter.artifacts.mcp.tools.FieldFromYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.FieldToYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.InstanceFromYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.InstanceToYamlTool;
+import org.metadatacenter.artifacts.mcp.tools.RemoveChildTool;
 import org.metadatacenter.artifacts.mcp.tools.SetControlledTermFieldValueTool;
 import org.metadatacenter.artifacts.mcp.tools.SetFieldValueTool;
 import org.metadatacenter.artifacts.mcp.tools.SetIriFieldValueTool;
@@ -64,6 +65,7 @@ public final class ArtifactMcpServer
         .toolCall(FieldToYamlTool.tool(), FieldToYamlTool::handler)
         .toolCall(AddFieldTool.tool(), AddFieldTool::handler)
         .toolCall(AddElementTool.tool(), AddElementTool::handler)
+        .toolCall(RemoveChildTool.tool(), RemoveChildTool::handler)
         .toolCall(AddClassConstraintTool.tool(), AddClassConstraintTool::handler)
         .toolCall(AddOntologyConstraintTool.tool(), AddOntologyConstraintTool::handler)
         .toolCall(AddBranchConstraintTool.tool(), AddBranchConstraintTool::handler)

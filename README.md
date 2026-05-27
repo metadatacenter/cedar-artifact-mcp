@@ -17,12 +17,12 @@ See [DESIGN.md](./DESIGN.md) for the architectural principles and
 
 ## Status
 
-Twenty-three tools: `ping`, the three empty-shell builders (`create_template`,
+Twenty-four tools: `ping`, the three empty-shell builders (`create_template`,
 `create_element`, `create_field`), the headline authoring tool
 `template_from_yaml` and its element/field variants (`element_from_yaml`,
 `field_from_yaml`), the matching reverse-direction tools (`template_to_yaml`,
-`element_to_yaml`, `field_to_yaml`), the two incremental builders
-(`add_field`, `add_element`), the four value-constraint tools
+`element_to_yaml`, `field_to_yaml`), the incremental builders
+(`add_field`, `add_element`, `remove_child`), the four value-constraint tools
 (`add_class_constraint`, `add_ontology_constraint`, `add_branch_constraint`,
 `add_valueset_constraint`), the instance group (`create_instance`,
 `instance_from_yaml`, `instance_to_yaml`, `validate_instance`), and the three
@@ -83,6 +83,14 @@ distinct labels each time).
 The compose workflow is two-step by design — build the child first, then graft it
 onto the parent — to keep the MCP API surface small (the library does allow
 on-the-fly creation, but the MCP keeps that one obvious path).
+
+### `remove_child(parent_json, key)`
+
+Removes a field or element child from a CEDAR template or element parent. Auto-detects
+whether the key names a field or element child by looking it up in the parent's
+`fieldSchemas` / `elementSchemas`; the parent's `_ui` `order`, `propertyLabels`, and
+`propertyDescriptions` entries are removed in lockstep. Returns the updated parent
+JSON, re-validated with CedarValidator.
 
 ### `add_class_constraint(field_json, class_iri, ontology_acronym, label, pref_label, value_type?)`
 

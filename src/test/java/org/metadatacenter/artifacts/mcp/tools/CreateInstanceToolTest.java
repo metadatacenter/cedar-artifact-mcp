@@ -142,6 +142,40 @@ final class CreateInstanceToolTest
     assertValidatesAgainst(rendered, templateJson);
   }
 
+  @Test void attribute_value_field_seeds_empty_group() throws Exception
+  {
+    // attribute-value fields live in a separate map (attributeValueFieldInstanceGroups)
+    // on the parent instance — the walker must seed them with an empty inner map so
+    // the LLM can later populate per-attribute fields without the group placeholder
+    // being missing.
+    String templateJson = compileTemplate(
+        "type: template\n"
+            + "name: With av\n"
+            + "description: Template with attribute-value field\n"
+            + "version: 0.0.1\n"
+            + "status: draft\n"
+            + "modelVersion: 1.6.0\n"
+            + "children:\n"
+            + "  - key: extras\n"
+            + "    type: attribute-value-field\n"
+            + "    name: Extras\n");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "template_json", templateJson,
+        "is_based_on", FAKE_BASED_ON));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+
+    // The attribute-value group renders as an array of attribute-name strings under
+    // the group's key. An empty group renders as an empty array.
+    JsonNode extras = rendered.path("extras");
+    assertTrue(extras.isArray(),
+        "empty attribute-value group must render as a JSON array; got: " + extras);
+    assertEquals(0, extras.size(),
+        "freshly-seeded attribute-value group must be empty");
+  }
+
   @Test void static_fields_are_skipped() throws Exception
   {
     // static-section-break is a UI marker with no instance representation; the

@@ -123,6 +123,8 @@ final class EndToEndStdioIT
           "add_field tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("add_element"),
           "add_element tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("remove_child"),
+          "remove_child tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("add_class_constraint"),
           "add_class_constraint tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("add_ontology_constraint"),

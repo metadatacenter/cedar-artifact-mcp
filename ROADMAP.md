@@ -40,6 +40,9 @@ This file tracks what's built, what's planned, and what's deliberately out of sc
   — adds an existing child JSON to a template or element parent. Parent kind is
   inferred from `@type`. Optional per-add-site overrides for key, label,
   description, multi-instance flag, and cardinality bounds.
+- `remove_child(parent_json, key)` — removes a field or element child by key.
+  Auto-detects child kind and removes the parent's `_ui` order/label/description
+  entries in lockstep.
 
 ### Value-constraint tools (controlled-term fields)
 
@@ -56,6 +59,7 @@ and a text-field are JSON-indistinguishable on the wire).
 
 - `create_instance(template_json, name?, description?, is_based_on?)` — walks a
   template and produces an empty instance skeleton that validates against it.
+  Attribute-value fields are seeded as empty groups; static fields are skipped.
 - `instance_from_yaml(yaml)` / `instance_to_yaml(json, isCompact?)`.
 - `validate_instance(template_json, instance_json)` — `CedarValidator.validateTemplateInstance`.
 - `set_field_value(template_json, instance_json, field_path, value)` — literal-valued
@@ -89,14 +93,9 @@ would hit them.
   the path syntax (e.g. `addresses[2]/street`) or a dedicated multi-instance
   append/replace tool.
 
-- **Removing or replacing children** — `remove_field` / `remove_element` to undo
-  an add. Currently the only way to "change your mind" is to rebuild the parent
-  from scratch via YAML.
-
-- **Attribute-value field instance support in `create_instance`** — the walker
-  currently skips attribute-value fields (they live in their own
-  `attributeValueFieldInstanceGroups` map, not the regular single/multi-instance
-  maps). Add when a workflow needs them.
+- **Replacing children in place** — `remove_child` lands a child to remove an
+  existing child; replacing in place still requires remove + add. A dedicated
+  `replace_child` would be ergonomic if a workflow needs it.
 
 ## Known limitation
 
