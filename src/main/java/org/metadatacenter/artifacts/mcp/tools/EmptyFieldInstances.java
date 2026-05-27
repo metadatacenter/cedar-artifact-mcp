@@ -22,6 +22,10 @@ import org.metadatacenter.artifacts.model.core.TemporalFieldInstance;
 import org.metadatacenter.artifacts.model.core.TextAreaFieldInstance;
 import org.metadatacenter.artifacts.model.core.TextFieldInstance;
 import org.metadatacenter.artifacts.model.core.fields.FieldInputType;
+import org.metadatacenter.artifacts.model.core.fields.XsdNumericDatatype;
+import org.metadatacenter.artifacts.model.core.fields.XsdTemporalDatatype;
+import org.metadatacenter.artifacts.model.core.fields.constraints.NumericValueConstraints;
+import org.metadatacenter.artifacts.model.core.fields.constraints.TemporalValueConstraints;
 
 /**
  * Dispatch from a {@link FieldSchemaArtifact} to an empty (value-less)
@@ -56,8 +60,32 @@ final class EmptyFieldInstances
 
     return switch (inputType) {
       case TEXTAREA -> TextAreaFieldInstance.builder().build();
-      case NUMERIC -> NumericFieldInstance.builder().build();
-      case TEMPORAL -> TemporalFieldInstance.builder().build();
+      case NUMERIC -> {
+        // Numeric instances carry both @value and @type per CEDAR's typed-literal
+        // contract; the rendered template's per-field sub-schema lists both as
+        // required. Thread the field's declared XsdNumericDatatype through to
+        // the instance so validate_instance accepts the skeleton on the first try.
+        NumericFieldInstance.NumericFieldInstanceBuilder builder = NumericFieldInstance.builder();
+        XsdNumericDatatype datatype = field.valueConstraints()
+            .filter(NumericValueConstraints.class::isInstance)
+            .map(NumericValueConstraints.class::cast)
+            .map(NumericValueConstraints::numberType)
+            .orElse(XsdNumericDatatype.DECIMAL);
+        builder.withType(datatype);
+        yield builder.build();
+      }
+      case TEMPORAL -> {
+        // Same shape as NUMERIC: rendered sub-schema requires @type, so seed it
+        // from the field's declared XsdTemporalDatatype.
+        TemporalFieldInstance.TemporalFieldInstanceBuilder builder = TemporalFieldInstance.builder();
+        XsdTemporalDatatype datatype = field.valueConstraints()
+            .filter(TemporalValueConstraints.class::isInstance)
+            .map(TemporalValueConstraints.class::cast)
+            .map(TemporalValueConstraints::temporalType)
+            .orElse(XsdTemporalDatatype.DATETIME);
+        builder.withType(datatype);
+        yield builder.build();
+      }
       case PHONE_NUMBER -> PhoneNumberFieldInstance.builder().build();
       case EMAIL -> EmailFieldInstance.builder().build();
       case RADIO -> RadioFieldInstance.builder().build();

@@ -77,6 +77,72 @@ final class CreateInstanceToolTest
     assertValidatesAgainst(rendered, templateJson);
   }
 
+  @Test void numeric_field_child_seeds_instance_with_xsd_type() throws Exception
+  {
+    // Numeric typed-literal instances must carry both @value and @type — the
+    // per-field sub-schema lists both as required. A skeleton instance that
+    // omits @type fails CedarValidator with
+    // "object has missing required properties (['@type']), /Age".
+    String templateJson = compileTemplate(
+        "type: template\n"
+            + "name: PatientStudy\n"
+            + "modelVersion: 1.6.0\n"
+            + "version: 0.0.1\n"
+            + "status: draft\n"
+            + "children:\n"
+            + "  - key: Age\n"
+            + "    type: numeric-field\n"
+            + "    name: Age\n"
+            + "    datatype: xsd:int\n");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "template_json", templateJson,
+        "is_based_on", FAKE_BASED_ON));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+
+    JsonNode age = rendered.path("Age");
+    assertTrue(age.isObject(), "Age must appear as a child object; got:\n" + rendered);
+    assertTrue(age.has("@type"),
+        "Age sub-instance must carry @type (xsd:int) so the template's sub-schema "
+            + "validates; got: " + age);
+    assertEquals("xsd:int", age.path("@type").asText(),
+        "Age @type must match the field's declared xsd:int datatype");
+
+    assertValidatesAgainst(rendered, templateJson);
+  }
+
+  @Test void temporal_field_child_seeds_instance_with_xsd_type() throws Exception
+  {
+    String templateJson = compileTemplate(
+        "type: template\n"
+            + "name: WithTemporal\n"
+            + "modelVersion: 1.6.0\n"
+            + "version: 0.0.1\n"
+            + "status: draft\n"
+            + "children:\n"
+            + "  - key: visit_date\n"
+            + "    type: temporal-field\n"
+            + "    name: Visit date\n"
+            + "    datatype: xsd:date\n"
+            + "    granularity: day\n");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "template_json", templateJson,
+        "is_based_on", FAKE_BASED_ON));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+
+    JsonNode child = rendered.path("visit_date");
+    assertTrue(child.has("@type"),
+        "temporal sub-instance must carry @type matching the field's xsd:date; got: " + child);
+    assertEquals("xsd:date", child.path("@type").asText());
+
+    assertValidatesAgainst(rendered, templateJson);
+  }
+
   @Test void multi_instance_field_seeds_empty_array() throws Exception
   {
     String templateJson = compileTemplate(
