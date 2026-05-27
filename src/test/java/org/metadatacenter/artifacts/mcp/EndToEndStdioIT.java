@@ -123,6 +123,14 @@ final class EndToEndStdioIT
           "add_field tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("add_element"),
           "add_element tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("add_class_constraint"),
+          "add_class_constraint tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("add_ontology_constraint"),
+          "add_ontology_constraint tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("add_branch_constraint"),
+          "add_branch_constraint tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("add_valueset_constraint"),
+          "add_valueset_constraint tool should be listed; got " + toolNames);
 
       // 4. tools/call create_template -----------------------------------------------
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":"

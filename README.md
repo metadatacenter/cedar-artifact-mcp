@@ -17,13 +17,14 @@ See [DESIGN.md](./DESIGN.md) for the architectural principles and
 
 ## Status
 
-Twelve tools: `ping`, the three empty-shell builders (`create_template`,
+Sixteen tools: `ping`, the three empty-shell builders (`create_template`,
 `create_element`, `create_field`), the headline authoring tool
 `template_from_yaml` and its element/field variants (`element_from_yaml`,
 `field_from_yaml`), the matching reverse-direction tools (`template_to_yaml`,
-`element_to_yaml`, `field_to_yaml`), and the two incremental builders
-(`add_field`, `add_element`) for growing an existing template or element
-JSON. The roadmap covers value-constraint tools and the instance variants.
+`element_to_yaml`, `field_to_yaml`), the two incremental builders
+(`add_field`, `add_element`), and the four value-constraint tools
+(`add_class_constraint`, `add_ontology_constraint`, `add_branch_constraint`,
+`add_valueset_constraint`). The roadmap covers instance-side tools.
 
 ## Tools
 
@@ -79,6 +80,34 @@ distinct labels each time).
 The compose workflow is two-step by design — build the child first, then graft it
 onto the parent — to keep the MCP API surface small (the library does allow
 on-the-fly creation, but the MCP keeps that one obvious path).
+
+### `add_class_constraint(field_json, class_iri, ontology_acronym, label, pref_label, value_type?)`
+
+Pins a controlled-term field to a single ontology class. The canonical input tuple
+matches what `bioportal-term-mcp`'s `get_class` returns. `value_type` is `"class"` by
+default (a real ontology class) or `"value"` for permissible-value entries.
+
+### `add_ontology_constraint(field_json, ontology_iri, acronym, name)`
+
+Scopes a controlled-term field's permissible values to all classes from a named
+ontology. The canonical input tuple matches `bioportal-term-mcp`'s `get_ontology`.
+
+### `add_branch_constraint(field_json, branch_iri, ontology_name, ontology_acronym, branch_label, max_depth?)`
+
+Scopes a controlled-term field to a subtree rooted at a named class. `max_depth`
+defaults to `0` (the library's convention for unbounded depth).
+
+### `add_valueset_constraint(field_json, value_set_iri, vs_collection, name)`
+
+Pins a controlled-term field to a curated value set hosted in BioPortal. Value sets
+live in special "value-set collection" ontologies (e.g. `CEDARVS`, `HRAVS`); the
+`vs_collection` arg names that collection.
+
+All four constraint tools accept any TEXTFIELD-shape field (text-field or
+controlled-term-field) and produce a controlled-term-field with the new constraint
+attached. The library's reader only classifies a TEXTFIELD as controlled-term once it
+carries a constraint, so an "empty controlled-term-field" and a "text-field" are JSON-
+indistinguishable on the wire — both are valid inputs here.
 
 ### `template_from_yaml(yaml)`
 

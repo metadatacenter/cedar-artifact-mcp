@@ -45,16 +45,21 @@ YAML is the primary authoring serialization (compact, hierarchical, LLM-friendly
 CEDAR JSON Schema is the canonical output because downstream CEDAR tooling consumes
 JSON Schema, not YAML — every authoring tool ends in JSON Schema.
 
-## Next — value constraints
+- Value-constraint tools for controlled-term fields:
+  - `add_class_constraint(field_json, class_iri, ontology_acronym, label, pref_label, value_type?)`.
+  - `add_ontology_constraint(field_json, ontology_iri, acronym, name)`.
+  - `add_branch_constraint(field_json, branch_iri, ontology_name, ontology_acronym, branch_label, max_depth?)`.
+  - `add_valueset_constraint(field_json, value_set_iri, vs_collection, name)`.
 
-One tool per constraint kind. The canonical tuple inputs match what the artifact
-library expects; they intentionally do not assume any particular upstream provided them.
+  All four accept any TEXTFIELD-shape field; the library only classifies a TEXTFIELD as
+  controlled-term once it carries a constraint, so an empty controlled-term-field and a
+  text-field are JSON-indistinguishable on the wire.
 
-- `add_ontology_constraint(field_handle, ontology_iri, acronym, name)`.
-- `add_branch_constraint(field_handle, ontology_iri, acronym, name, branch_iri, branch_label)`.
-- `add_class_constraint(field_handle, class_iri, ontology_acronym, label, source?)`.
-- `add_valueset_constraint(field_handle, value_set_iri, vs_collection, name, num_terms?)`.
-- `add_default_value(field_handle, value)`.
+## Next — defaults and instances
+
+- `add_default_value(field_json, value)` — set a default value on a field. Each field
+  type takes a different value shape, so this'll likely be a small family of tools
+  rather than one. Defer until a concrete authoring need surfaces.
 
 ### Instances
 

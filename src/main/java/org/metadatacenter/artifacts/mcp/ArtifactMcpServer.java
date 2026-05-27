@@ -5,8 +5,12 @@ import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
 import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
 import io.modelcontextprotocol.spec.McpSchema;
+import org.metadatacenter.artifacts.mcp.tools.AddBranchConstraintTool;
+import org.metadatacenter.artifacts.mcp.tools.AddClassConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.AddElementTool;
 import org.metadatacenter.artifacts.mcp.tools.AddFieldTool;
+import org.metadatacenter.artifacts.mcp.tools.AddOntologyConstraintTool;
+import org.metadatacenter.artifacts.mcp.tools.AddValueSetConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateElementTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateFieldTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateTemplateTool;
@@ -53,6 +57,10 @@ public final class ArtifactMcpServer
         .toolCall(FieldToYamlTool.tool(), FieldToYamlTool::handler)
         .toolCall(AddFieldTool.tool(), AddFieldTool::handler)
         .toolCall(AddElementTool.tool(), AddElementTool::handler)
+        .toolCall(AddClassConstraintTool.tool(), AddClassConstraintTool::handler)
+        .toolCall(AddOntologyConstraintTool.tool(), AddOntologyConstraintTool::handler)
+        .toolCall(AddBranchConstraintTool.tool(), AddBranchConstraintTool::handler)
+        .toolCall(AddValueSetConstraintTool.tool(), AddValueSetConstraintTool::handler)
         .build();
 
     // Stdio transport reads from System.in in a background thread. Keep the main thread
