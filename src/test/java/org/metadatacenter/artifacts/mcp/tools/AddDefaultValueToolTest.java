@@ -47,6 +47,22 @@ final class AddDefaultValueToolTest
     assertEquals("true", report.getValidationStatus());
   }
 
+  @Test void sets_text_area_field_default() throws Exception
+  {
+    // Text-area used to be unsupported because TextAreaField.Builder lacked
+    // withDefaultValue; the library now exposes it, so this tool covers it too.
+    String fieldJson = createField("Notes", "text-area-field");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "field_json", fieldJson,
+        "value", "Initial notes here"));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+    assertEquals("Initial notes here",
+        rendered.path("_valueConstraints").path("defaultValue").asText());
+  }
+
   @Test void sets_temporal_field_default() throws Exception
   {
     String fieldJson = createField("DOB", "temporal-field");

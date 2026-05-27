@@ -57,8 +57,8 @@ and a text-field are JSON-indistinguishable on the wire).
 
 ### Default values (schema-side)
 
-- `add_default_value(field_json, value)` — literal-valued fields (text, numeric,
-  temporal, phone, email, radio, checkbox, list).
+- `add_default_value(field_json, value)` — literal-valued fields (text, text-area,
+  numeric, temporal, phone, email, radio, checkbox, list).
 - `add_iri_default_value(field_json, iri)` — IRI fields (bare URI; the library's
   schema-side default doesn't carry a label).
 - `add_controlled_term_default_value(field_json, iri, label)` — controlled-term
@@ -92,10 +92,6 @@ JSON Schema, not YAML — every authoring tool ends in JSON Schema.
 
 These are the open items, ordered roughly by how likely a real authoring workflow
 would hit them.
-
-- **Text-area default value** — `add_default_value` doesn't support text-area
-  because `TextAreaField.Builder` lacks a `withDefaultValue` method (library gap).
-  A small library addition would close this; deferred until needed.
 
 - **Numeric default-value validator quirk** — `add_default_value` builds and
   renders for numeric fields, but the library writes the default as a plain JSON

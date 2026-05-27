@@ -14,6 +14,7 @@ import org.metadatacenter.artifacts.model.core.NumericField;
 import org.metadatacenter.artifacts.model.core.PhoneNumberField;
 import org.metadatacenter.artifacts.model.core.RadioField;
 import org.metadatacenter.artifacts.model.core.TemporalField;
+import org.metadatacenter.artifacts.model.core.TextAreaField;
 import org.metadatacenter.artifacts.model.core.TextField;
 import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
 import org.metadatacenter.artifacts.model.reader.JsonArtifactReader;
@@ -30,12 +31,10 @@ import java.util.Map;
 
 /**
  * MCP tool {@code add_default_value} — sets the schema-level default value on a
- * literal-valued field (text, numeric, temporal, phone, email, radio, checkbox,
- * list). For IRI fields use {@link AddIriDefaultValueTool}; for controlled-term
- * fields use {@link AddControlledTermDefaultValueTool}.
+ * literal-valued field (text, text-area, numeric, temporal, phone, email, radio,
+ * checkbox, list). For IRI fields use {@link AddIriDefaultValueTool}; for
+ * controlled-term fields use {@link AddControlledTermDefaultValueTool}.
  *
- * <p>Text-area fields are not supported here — the library's {@code TextAreaField.Builder}
- * doesn't expose {@code withDefaultValue} as of the tracked snapshot.
  */
 public final class AddDefaultValueTool
 {
@@ -145,6 +144,8 @@ public final class AddDefaultValueTool
   {
     if (field instanceof TextField tf)
       return TextField.builder(tf).withDefaultValue(stringValue(value)).build();
+    if (field instanceof TextAreaField taf)
+      return TextAreaField.builder(taf).withDefaultValue(stringValue(value)).build();
     if (field instanceof NumericField nf)
       return NumericField.builder(nf).withDefaultValue(numericValue(value)).build();
     if (field instanceof TemporalField tf)

@@ -138,8 +138,8 @@ templates without an `@id` (e.g. just out of `create_template`) the caller must 
 Three tools for attaching a schema-level default value to a field, mirroring the
 shape of the instance-value setters:
 
-- `add_default_value` — literal-valued fields (text, numeric, temporal, phone, email,
-  radio, checkbox, list). Text-area is not yet supported (library gap).
+- `add_default_value` — literal-valued fields (text, text-area, numeric, temporal,
+  phone, email, radio, checkbox, list).
 - `add_iri_default_value` — IRI fields (link, ROR, ORCID, PFAS, RRID, PubMed,
   NIH-grant-ID, DOI). The library's schema-level IRI default is a bare URI with no
   label — if a labelled default is needed, set it on the instance side via
