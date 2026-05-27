@@ -21,6 +21,9 @@ import org.metadatacenter.artifacts.mcp.tools.FieldFromYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.FieldToYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.InstanceFromYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.InstanceToYamlTool;
+import org.metadatacenter.artifacts.mcp.tools.SetControlledTermFieldValueTool;
+import org.metadatacenter.artifacts.mcp.tools.SetFieldValueTool;
+import org.metadatacenter.artifacts.mcp.tools.SetIriFieldValueTool;
 import org.metadatacenter.artifacts.mcp.tools.TemplateFromYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.TemplateToYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.ValidateInstanceTool;
@@ -69,6 +72,9 @@ public final class ArtifactMcpServer
         .toolCall(InstanceFromYamlTool.tool(), InstanceFromYamlTool::handler)
         .toolCall(InstanceToYamlTool.tool(), InstanceToYamlTool::handler)
         .toolCall(ValidateInstanceTool.tool(), ValidateInstanceTool::handler)
+        .toolCall(SetFieldValueTool.tool(), SetFieldValueTool::handler)
+        .toolCall(SetIriFieldValueTool.tool(), SetIriFieldValueTool::handler)
+        .toolCall(SetControlledTermFieldValueTool.tool(), SetControlledTermFieldValueTool::handler)
         .build();
 
     // Stdio transport reads from System.in in a background thread. Keep the main thread

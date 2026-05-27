@@ -17,16 +17,17 @@ See [DESIGN.md](./DESIGN.md) for the architectural principles and
 
 ## Status
 
-Twenty tools: `ping`, the three empty-shell builders (`create_template`,
+Twenty-three tools: `ping`, the three empty-shell builders (`create_template`,
 `create_element`, `create_field`), the headline authoring tool
 `template_from_yaml` and its element/field variants (`element_from_yaml`,
 `field_from_yaml`), the matching reverse-direction tools (`template_to_yaml`,
 `element_to_yaml`, `field_to_yaml`), the two incremental builders
 (`add_field`, `add_element`), the four value-constraint tools
 (`add_class_constraint`, `add_ontology_constraint`, `add_branch_constraint`,
-`add_valueset_constraint`), and the instance group (`create_instance`,
-`instance_from_yaml`, `instance_to_yaml`, `validate_instance`). The roadmap
-covers value-setter tools.
+`add_valueset_constraint`), the instance group (`create_instance`,
+`instance_from_yaml`, `instance_to_yaml`, `validate_instance`), and the three
+instance-value setters (`set_field_value`, `set_iri_field_value`,
+`set_controlled_term_field_value`).
 
 ## Tools
 
@@ -129,6 +130,29 @@ Compile a CEDAR template instance from YAML to its canonical JSON, or back. Same
 as the schema-side `*_from_yaml` / `*_to_yaml` tools. Minimal instance YAML needs
 `type: instance`, `name`, and `isBasedOn` (the template's URI); per-field values live
 under a `children` map keyed by the schema's property keys.
+
+### `set_field_value(template_json, instance_json, field_path, value)` / `set_iri_field_value(template_json, instance_json, field_path, iri, label?)` / `set_controlled_term_field_value(template_json, instance_json, field_path, iri, label, pref_label?)`
+
+Three setters for populating field values on an existing instance:
+
+- `set_field_value` — literal-valued fields (text, numeric, temporal, phone, email,
+  radio, checkbox, list, text-area). Value type must match the schema's input type.
+- `set_iri_field_value` — IRI fields (link, ROR, ORCID, PFAS, RRID, PubMed,
+  NIH-grant-ID, DOI). The optional `label` populates `rdfs:label` alongside the
+  `@id` and is typically supplied (the terminology MCP returns it).
+- `set_controlled_term_field_value` — controlled-term fields. Both `iri` and `label`
+  are required; `pref_label` defaults to `label` when omitted. The schema must
+  declare the field as controlled-term (carrying at least one class/ontology/branch/
+  value-set constraint) — see the note on the wire collision in the constraint
+  docs above.
+
+All three take a `field_path` with slash-separated nesting (`address/street`) and
+work on single-instance fields under single-instance element steps. Multi-instance
+indexing isn't supported yet.
+
+The `template_json` argument is required because the instance JSON loses field
+type info on round-trip — the schema is the source of truth for which kind of
+`FieldInstance` to build.
 
 ### `validate_instance(template_json, instance_json)`
 

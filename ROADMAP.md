@@ -69,12 +69,17 @@ JSON Schema, not YAML — every authoring tool ends in JSON Schema.
   type takes a different value shape, so this'll likely be a small family of tools
   rather than one. Defer until a concrete authoring need surfaces.
 
-### Value setters
+- Instance value setters:
+  - `set_field_value(template_json, instance_json, field_path, value)` — literal-valued
+    fields (text, numeric, temporal, phone, email, radio, checkbox, list, text-area).
+  - `set_iri_field_value(template_json, instance_json, field_path, iri, label?)` —
+    IRI fields (link, ROR, ORCID, PFAS, RRID, PubMed, NIH-grant-ID, DOI).
+  - `set_controlled_term_field_value(template_json, instance_json, field_path, iri, label, pref_label?)`
+    — controlled-term fields. The schema must declare the field as controlled-term;
+    pref_label defaults to label.
 
-- `set_field_value(instance_json, field_path, value)` — set a literal field's value by
-  property path (with element-nesting via slashes).
-- `set_controlled_term_field(instance_json, field_path, class_iri, label)` — set a
-  controlled-term field's IRI + label.
+  Slash-separated paths support nested elements. Multi-instance indexing isn't yet
+  supported.
 
 ### Readers / renderers
 
