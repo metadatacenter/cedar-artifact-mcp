@@ -1,16 +1,32 @@
 # cedar-artifact-mcp
 
-A [Model Context Protocol](https://modelcontextprotocol.io/) server that exposes the
-[CEDAR artifact library](https://github.com/metadatacenter/cedar-artifact-library) —
-its builders, readers, renderers, and validators — as composable tools an LLM can call.
+[CEDAR](https://metadatacenter.org/) — the Center for Expanded Data Annotation
+and Retrieval, a Stanford BMIR project — builds tools for authoring and
+applying metadata templates over scientific datasets. The metadata-template
+story is the data-side scaffolding behind the FAIR principles: every dataset
+is described by an instance of a shared, typed, controlled-vocabulary-aware
+template, so downstream tools can reason about the data without per-dataset
+glue. A **CEDAR artifact** is one of the building blocks of that story:
+a **template** (a typed schema for a metadata record), an **element** (a
+reusable sub-schema embedded inside templates or other elements), a **field**
+(a typed property — text, numeric, temporal, controlled-term, identifier, …),
+or an **instance** (a template populated with values).
 
-The server is the model-construction half of a metadata-template pipeline: it knows
-how to assemble CEDAR templates, elements, fields, value constraints, and instances,
-but it does not perform terminology lookups, talk to a CEDAR server, or do any other
-I/O. Terminology MCPs (e.g.
-[`bioportal-term-mcp`](https://github.com/metadatacenter/bioportal-term-mcp)) supply
-the IRI/acronym/name tuples that controlled-term constraints need; the calling LLM
-threads those tuples into this MCP's tools.
+This is a [Model Context Protocol](https://modelcontextprotocol.io/) server
+that exposes the
+[CEDAR artifact library](https://github.com/metadatacenter/cedar-artifact-library)
+— its builders, readers, renderers, and validators — as composable tools an
+LLM can call. The LLM authors templates and elements, fills in instances,
+validates them, and round-trips through the artifact library's compact YAML
+serialization for editing.
+
+The server is the model-construction half of a metadata-template pipeline: it
+knows how to assemble CEDAR templates, elements, fields, value constraints,
+and instances, but it does not perform terminology lookups, talk to a CEDAR
+server, or do any other I/O. Terminology MCPs (e.g.
+[`bioportal-term-mcp`](https://github.com/metadatacenter/bioportal-term-mcp))
+supply the IRI/acronym/name tuples that controlled-term constraints need; the
+calling LLM threads those tuples into this MCP's tools.
 
 See [DESIGN.md](./DESIGN.md) for the architectural principles and
 [ROADMAP.md](./ROADMAP.md) for what's planned.
@@ -144,15 +160,6 @@ children:
 ```
 
 ## Tools
-
-### `ping(message)`
-
-Echoes `pong: <message>` back. Useful for verifying the MCP server is reachable from
-a client. No library interaction.
-
-| Input | Output |
-|---|---|
-| `{ "message": "hello" }` | `"pong: hello"` |
 
 ### `create_template(name, description?, version?)`
 
@@ -410,6 +417,15 @@ CEDAR element JSON Schema as YAML.
 
 Field variant of `template_to_yaml`. Same `isCompact` semantics; renders a CEDAR
 field JSON Schema as YAML.
+
+### `ping(message)`
+
+Echoes `pong: <message>` back. Useful for verifying the MCP server is reachable
+from a client. No library interaction.
+
+| Input | Output |
+|---|---|
+| `{ "message": "hello" }` | `"pong: hello"` |
 
 ## Requirements
 
