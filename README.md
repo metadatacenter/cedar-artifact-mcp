@@ -158,13 +158,13 @@ children:
 
 ### Controlled-term fields with BioPortal
 
-CEDAR's real value over a plain-JSON-Schema authoring tool is **controlled
-vocabularies**: a field can be bound to an ontology class, a whole ontology,
-a subtree of one, or a curated value set, so every value carries a stable
-IRI as well as a human label. Authoring those bindings by hand means looking
-up IRIs in BioPortal and pasting in the right `iri` / `acronym` /
-`ontologyName` / `termLabel` tuple — error-prone, and the IRI is the part
-the LLM is *least* likely to invent correctly.
+CEDAR's defining feature is **controlled vocabularies**: a field can be
+bound to an ontology class, a whole ontology, a subtree of one, or a curated
+value set, so every value carries a stable IRI as well as a human label.
+Authoring those bindings by hand means looking up IRIs in BioPortal and
+pasting in the right `iri` / `acronym` / `ontologyName` / `termLabel` tuple
+— error-prone, and the IRI is the part the LLM is *least* likely to invent
+correctly.
 
 The companion
 [`bioportal-term-mcp`](https://github.com/metadatacenter/bioportal-term-mcp)
@@ -201,7 +201,9 @@ via `bioportal-term-mcp`, then calls `create_field` followed by
 `set_branch_constraint` on the CEDAR side. `maxDepth: 0` means unbounded —
 every descendant of `disease` in DOID is permitted.
 
-*Create a new template called Study and add this field to it.*
+*Create a new template called Study with id
+`https://repo.metadatacenter.org/templates/study-template` and add this
+field to it.*
 
 ```yaml
 type: template
@@ -222,6 +224,10 @@ children:
         maxDepth: 0
 ```
 
+(Compact YAML doesn't display the template's `@id`; it lives on the
+underlying JSON Schema and is what the instance's `isBasedOn` references
+below.)
+
 *Create an instance of this template with a value of sickle cell anemia for
 the Disease field.*
 
@@ -229,7 +235,7 @@ the Disease field.*
 type: instance
 name: Study
 description: Study metadata template.
-isBasedOn: https://repo.metadatacenter.org/templates/study-placeholder
+isBasedOn: https://repo.metadatacenter.org/templates/study-template
 children:
   Disease:
     id: http://purl.obolibrary.org/obo/DOID_10923
@@ -240,7 +246,8 @@ children:
 The LLM looks up `sickle cell anemia` in DOID via `bioportal-term-mcp`'s
 `find_class` (returning `DOID_10923`), confirms it sits under the branch the
 field constrains to, and calls `set_controlled_term_field_value` with the
-IRI + label tuple. The instance now carries the full identifier + label
+IRI + label tuple. `isBasedOn` is taken straight from the template's `@id`
+without a placeholder. The instance now carries the full identifier + label
 pair, not just a free-text string — which is what makes the data
 downstream-queryable.
 
