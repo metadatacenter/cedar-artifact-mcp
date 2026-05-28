@@ -62,7 +62,8 @@ public final class CreateTemplateTool
             "Builds an empty CEDAR template schema artifact with the supplied name, description, "
                 + "and version. Returns the artifact serialized as JSON. The caller threads the "
                 + "returned JSON back into follow-up tools (add_field, add_element, validate, ...) "
-                + "to compose larger templates.")
+                + "to compose larger templates."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

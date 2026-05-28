@@ -91,7 +91,8 @@ public final class SetFieldValueTool
                 + "temporal, phone, email, radio, checkbox, list, text-area) at a "
                 + "slash-separated field_path. Returns the updated instance JSON. Use "
                 + "set_iri_field_value for link/ROR/ORCID/etc. fields, or "
-                + "set_controlled_term_field_value for controlled-term fields.")
+                + "set_controlled_term_field_value for controlled-term fields."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

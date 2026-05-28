@@ -68,7 +68,8 @@ public final class AddIriDefaultValueTool
         .title("Set an IRI default value on a field")
         .description(
             "Attaches a default URI value to an IRI-valued CEDAR field schema. "
-                + "Returns the updated field JSON, re-validated with CedarValidator.")
+                + "Returns the updated field JSON, re-validated with CedarValidator."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

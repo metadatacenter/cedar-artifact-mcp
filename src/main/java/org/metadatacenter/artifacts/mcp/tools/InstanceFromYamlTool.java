@@ -50,7 +50,8 @@ public final class InstanceFromYamlTool
         .description(
             "Compiles a CEDAR template instance described in YAML into the canonical "
                 + "CEDAR JSON instance. Use 'validate_instance' to verify the result "
-                + "against a specific template.")
+                + "against a specific template."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

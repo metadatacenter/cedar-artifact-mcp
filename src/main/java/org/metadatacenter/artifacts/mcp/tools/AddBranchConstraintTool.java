@@ -56,7 +56,8 @@ public final class AddBranchConstraintTool
         .description(
             "Attaches a branch-level value constraint to a CEDAR controlled-term field, "
                 + "scoping its permissible values to a subtree rooted at the named class. "
-                + "Returns the updated field JSON, re-validated with CedarValidator.")
+                + "Returns the updated field JSON, re-validated with CedarValidator."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

@@ -81,7 +81,8 @@ public final class CreateInstanceTool
                 + "FieldInstance; multi-instance children start as empty arrays; "
                 + "elements are recursively populated. The result is structurally complete "
                 + "and validates against the template; the caller fills in field values "
-                + "via subsequent edits (e.g. round-trip through 'instance_to_yaml').")
+                + "via subsequent edits (e.g. round-trip through 'instance_to_yaml')."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

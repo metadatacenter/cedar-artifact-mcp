@@ -63,7 +63,8 @@ public final class AddClassConstraintTool
         .description(
             "Attaches a class-level value constraint to a CEDAR controlled-term field, "
                 + "pinning it to a single ontology class. Returns the updated field JSON, "
-                + "re-validated with CedarValidator.")
+                + "re-validated with CedarValidator."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

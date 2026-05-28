@@ -57,7 +57,8 @@ public final class FieldFromYamlTool
                 + "Schema for a field artifact. The returned JSON has been round-tripped "
                 + "through the artifact library's reader/renderer and accepted by "
                 + "CedarValidator.validateTemplateField, so a non-error result is a "
-                + "guaranteed-valid CEDAR field.")
+                + "guaranteed-valid CEDAR field."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

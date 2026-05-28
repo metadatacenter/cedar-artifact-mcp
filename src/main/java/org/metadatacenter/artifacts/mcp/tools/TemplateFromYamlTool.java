@@ -70,7 +70,8 @@ public final class TemplateFromYamlTool
                 + "into the canonical CEDAR JSON Schema (what downstream CEDAR tooling "
                 + "consumes). The returned JSON has been round-tripped through the "
                 + "artifact library's reader/renderer and accepted by CedarValidator, so "
-                + "a non-error result is a guaranteed-valid CEDAR template.")
+                + "a non-error result is a guaranteed-valid CEDAR template."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

@@ -61,7 +61,8 @@ public final class RemoveChildTool
         .title("Remove a field or element child from a template or element")
         .description(
             "Removes a child (field or element) from a CEDAR template or element parent. "
-                + "Returns the updated parent JSON, re-validated with CedarValidator.")
+                + "Returns the updated parent JSON, re-validated with CedarValidator."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

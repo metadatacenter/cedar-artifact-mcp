@@ -57,7 +57,8 @@ public final class ElementFromYamlTool
                 + "Schema for an element artifact. The returned JSON has been round-tripped "
                 + "through the artifact library's reader/renderer and accepted by "
                 + "CedarValidator.validateTemplateElement, so a non-error result is a "
-                + "guaranteed-valid CEDAR element.")
+                + "guaranteed-valid CEDAR element."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

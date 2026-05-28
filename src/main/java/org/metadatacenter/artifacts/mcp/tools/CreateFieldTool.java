@@ -151,7 +151,8 @@ public final class CreateFieldTool
                 + "layered onto a created field via 'add_class_constraint', "
                 + "'add_branch_constraint', 'add_ontology_constraint', "
                 + "'add_valueset_constraint', 'add_default_value', 'add_iri_default_value', "
-                + "and 'add_controlled_term_default_value'.")
+                + "and 'add_controlled_term_default_value'."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

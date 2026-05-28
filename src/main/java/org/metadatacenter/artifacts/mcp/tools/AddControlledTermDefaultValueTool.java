@@ -60,7 +60,8 @@ public final class AddControlledTermDefaultValueTool
         .description(
             "Attaches a default value (class IRI + label) to a CEDAR controlled-term "
                 + "field schema. Returns the updated field JSON, re-validated with "
-                + "CedarValidator.")
+                + "CedarValidator."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

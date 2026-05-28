@@ -233,4 +233,24 @@ final class YamlVocabulary
   {
     return INSTANCE_VOCABULARY;
   }
+
+  // -----------------------------------------------------------------------
+  // Display nudge — appended to every JSON-returning tool's description so the
+  // calling LLM treats JSON Schema as a wire format, not as something to show
+  // the user. The CEDAR JSON Schema serialization is verbose and noisy;
+  // YAML is the form humans read and edit.
+  // -----------------------------------------------------------------------
+
+  /**
+   * Standard footer for tools that return CEDAR JSON Schema. Tells the LLM to convert
+   * to YAML before presenting to the user — JSON Schema is the wire format used to
+   * thread artifacts between tool calls, not the human-facing form.
+   */
+  static final String YAML_PREFERRED_DISPLAY_NUDGE = String.join("\n",
+    "",
+    "DISPLAY: This tool returns CEDAR JSON Schema as the wire format for threading into",
+    "follow-up tool calls. JSON Schema is verbose and rarely what the user wants to see.",
+    "Before showing the result to the user, convert it to YAML with the matching",
+    "*_to_yaml tool (template_to_yaml / element_to_yaml / field_to_yaml / instance_to_yaml).",
+    "Only show JSON Schema when the user explicitly asks for it.");
 }

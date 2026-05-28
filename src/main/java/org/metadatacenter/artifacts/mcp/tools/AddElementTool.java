@@ -96,7 +96,8 @@ public final class AddElementTool
         .description(
             "Adds an existing CEDAR element (as JSON) as a child of a CEDAR template or "
                 + "element. Parent kind is inferred from its @type URI. Returns the "
-                + "updated parent JSON, re-validated with CedarValidator.")
+                + "updated parent JSON, re-validated with CedarValidator."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

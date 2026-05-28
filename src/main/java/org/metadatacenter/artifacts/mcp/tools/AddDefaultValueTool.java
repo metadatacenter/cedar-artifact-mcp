@@ -69,7 +69,8 @@ public final class AddDefaultValueTool
             "Attaches a default value to a literal-valued CEDAR field schema. "
                 + "Returns the updated field JSON, re-validated with CedarValidator. "
                 + "Use add_iri_default_value for link/ROR/ORCID/etc. fields, or "
-                + "add_controlled_term_default_value for controlled-term fields.")
+                + "add_controlled_term_default_value for controlled-term fields."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

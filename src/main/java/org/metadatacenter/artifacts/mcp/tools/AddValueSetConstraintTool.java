@@ -50,7 +50,8 @@ public final class AddValueSetConstraintTool
         .description(
             "Attaches a value-set constraint to a CEDAR controlled-term field, scoping "
                 + "its permissible values to a curated value set hosted in BioPortal. "
-                + "Returns the updated field JSON, re-validated with CedarValidator.")
+                + "Returns the updated field JSON, re-validated with CedarValidator."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

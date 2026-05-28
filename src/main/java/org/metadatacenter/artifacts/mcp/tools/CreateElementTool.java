@@ -54,7 +54,8 @@ public final class CreateElementTool
             "Builds an empty CEDAR element schema artifact with the supplied name, description, "
                 + "and version. Returns the artifact serialized as JSON. Reusable elements are "
                 + "first-class CEDAR artifacts; the returned JSON can be referenced by templates "
-                + "or composed via other tools.")
+                + "or composed via other tools."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

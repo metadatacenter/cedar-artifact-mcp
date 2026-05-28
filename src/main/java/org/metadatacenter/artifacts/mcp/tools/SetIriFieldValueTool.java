@@ -84,7 +84,8 @@ public final class SetIriFieldValueTool
         .description(
             "Sets the @id of an IRI-valued field instance (link, ROR, ORCID, PFAS, "
                 + "RRID, PubMed, NIH-grant-ID, DOI) at a slash-separated field_path, "
-                + "with an optional rdfs:label. Returns the updated instance JSON.")
+                + "with an optional rdfs:label. Returns the updated instance JSON."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }

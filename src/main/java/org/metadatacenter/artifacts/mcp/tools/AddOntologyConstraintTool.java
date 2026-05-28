@@ -48,7 +48,8 @@ public final class AddOntologyConstraintTool
         .description(
             "Attaches an ontology-level value constraint to a CEDAR controlled-term field, "
                 + "scoping its permissible values to all classes from a named ontology. "
-                + "Returns the updated field JSON, re-validated with CedarValidator.")
+                + "Returns the updated field JSON, re-validated with CedarValidator."
+                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
   }
