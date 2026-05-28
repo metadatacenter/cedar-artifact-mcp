@@ -45,18 +45,31 @@ caller threading any intermediate state. If we later need cross-call session sta
 (e.g. an in-progress template handle), that's a deliberate design decision, not a
 default.
 
-## Principle 4 — Schema is the LLM's documentation
+## Principle 4 — The tool surface is the LLM's documentation
 
-The MCP tool list and JSON input schemas are the only documentation the calling LLM
-sees. Every tool needs:
+The calling LLM only sees what MCP's `tools/list` returns: each tool's name, its
+top-level `description`, and a `description` on each input parameter. Nothing else
+from this repo, the artifact library, or any out-of-band documentation reaches the
+LLM at call time. Everything the LLM needs to know about how to invoke a tool
+correctly must therefore live in those surfaces.
 
-- a clear, action-oriented `description` (one sentence on what the tool does and the
-  canonical use case)
-- a JSON input schema with `description` set on every property
+A tool whose correct usage depends on a fact the LLM can't see — an undocumented
+enum value, a contextual default a human contributor takes for granted, a hidden
+coupling between two parameters — is broken from the LLM's perspective even if it
+works for a human caller. Every tool needs:
+
+- a clear, action-oriented top-level `description` (one sentence on what the tool
+  does and the canonical use case)
+- a `description` on every input parameter, listing the full vocabulary of values
+  where there's a fixed set, units where applicable, and references to companion
+  tools where there's a partner workflow
 - a tight `required` list
 
-A tool whose behavior depends on a missing field, an undocumented enum, or a contextual
-default is broken from the LLM's perspective even if it works for a human caller.
+Naming convention to avoid: this principle is about the **MCP tool-input-schema
+mechanism** (which MCP defines using JSON Schema syntax). That is a different
+thing from **CEDAR's JSON Schema serialization** of templates/elements/fields/
+instances — one of several artifact serializations alongside YAML, spreadsheets,
+UBKG, and others, none of which the tool surface privileges over any other.
 
 ## Principle 5 — Errors are content
 

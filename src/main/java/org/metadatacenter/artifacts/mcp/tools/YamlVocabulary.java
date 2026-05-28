@@ -6,8 +6,8 @@ package org.metadatacenter.artifacts.mcp.tools;
  * first attempt rather than discovering keys by trial and error.
  *
  * <p>The MCP protocol gives the LLM only the input-schema description to work from —
- * anything not present here is invisible. DESIGN.md Principle 4 ("Schema is the LLM's
- * documentation") makes this a hard requirement, not a style preference.
+ * anything not present here is invisible. DESIGN.md Principle 4 ("The tool surface is
+ * the LLM's documentation") makes this a hard requirement, not a style preference.
  *
  * <p>Each constant below is a focused vocabulary block. Tools compose the blocks they
  * need: a {@code field_from_yaml} tool wants the field vocabulary; a
