@@ -30,6 +30,36 @@ group (`create_instance`, `instance_from_yaml`, `instance_to_yaml`,
 `validate_instance`), and the three instance-value setters (`set_field_value`,
 `set_iri_field_value`, `set_controlled_term_field_value`).
 
+## Example workflow
+
+A typical authoring session looks like the following — natural-language prompts
+the user gives the LLM, which the LLM translates into MCP tool calls. This
+example exercises the structural and instance tools end-to-end; controlled-term
+constraints are deliberately omitted (they're covered in a separate example set
+that pairs the artifact MCP with a terminology MCP).
+
+1. Ping the cedar-artifact MCP
+2. Create a template called *Patient Study*
+3. Create a text field called *Patient Name*
+4. Create a numeric field called *Age* with type `xsd:int`
+5. Set default value `42` on the *Age* field
+6. Add *Patient Name* and *Age* to *Patient Study*
+7. Create an element called *Address* with a text field *Street*
+8. Add the *Address* element to *Patient Study*
+9. Create an instance of *Patient Study*
+10. Set *Patient Name* to `Alice` in the instance
+11. Set *Age* to `30` in the instance
+12. Validate the instance against *Patient Study*
+
+The LLM picks the right tool at each step: `ping`, `create_template`,
+`create_field` (twice — the second carries `type: numeric-field` and
+`datatype: xsd:int`), `add_default_value`, two `add_field` calls,
+`create_element` plus `add_field` plus `add_element`, `create_instance`,
+`set_field_value` twice, and `validate_instance` to close. Every artifact
+returned along the way is JSON Schema (for threading into the next call); the
+LLM is nudged to convert each to YAML via the matching `*_to_yaml` tool before
+showing it to you (see DESIGN.md Principle 8).
+
 ## Tools
 
 ### `ping(message)`
