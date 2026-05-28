@@ -38,27 +38,140 @@ example exercises the structural and instance tools end-to-end; controlled-term
 constraints are deliberately omitted (they're covered in a separate example set
 that pairs the artifact MCP with a terminology MCP).
 
-1. Ping the cedar-artifact MCP
-2. Create a template called *Patient Study*
-3. Create a text field called *Patient Name*
-4. Create a numeric field called *Age* with type `xsd:int`
-5. Set default value `42` on the *Age* field
-6. Add *Patient Name* and *Age* to *Patient Study*
-7. Create an element called *Address* with a text field *Street*
-8. Add the *Address* element to *Patient Study*
-9. Create an instance of *Patient Study*
-10. Set *Patient Name* to `Alice` in the instance
-11. Set *Age* to `30` in the instance
-12. Validate the instance against *Patient Study*
+Each step shows the YAML the LLM is expected to display back after the matching
+tool call. (Under the hood the tools return JSON Schema; the LLM round-trips
+through `template_to_yaml` / `element_to_yaml` / `field_to_yaml` /
+`instance_to_yaml` before showing you anything — see DESIGN.md Principle 8.)
 
-The LLM picks the right tool at each step: `ping`, `create_template`,
-`create_field` (twice — the second carries `type: numeric-field` and
-`datatype: xsd:int`), `add_default_value`, two `add_field` calls,
-`create_element` plus `add_field` plus `add_element`, `create_instance`,
-`set_field_value` twice, and `validate_instance` to close. Every artifact
-returned along the way is JSON Schema (for threading into the next call); the
-LLM is nudged to convert each to YAML via the matching `*_to_yaml` tool before
-showing it to you (see DESIGN.md Principle 8).
+**Create a template called Patient Study.**
+
+```yaml
+type: template
+name: Patient Study
+```
+
+**Create a text field called Patient Name.**
+
+```yaml
+type: text-field
+name: Patient Name
+```
+
+**Create a numeric field called Age with type `xsd:int`.**
+
+```yaml
+type: numeric-field
+name: Age
+datatype: xsd:int
+```
+
+**Set default value 42 on the Age field.**
+
+```yaml
+type: numeric-field
+name: Age
+datatype: xsd:int
+default: 42
+```
+
+**Add Patient Name and Age to Patient Study.**
+
+```yaml
+type: template
+name: Patient Study
+children:
+  - key: Patient Name
+    type: text-field
+    name: Patient Name
+  - key: Age
+    type: numeric-field
+    name: Age
+    datatype: xsd:int
+    default: 42
+```
+
+**Create an element called Address with a text field Street.**
+
+```yaml
+type: element
+name: Address
+children:
+  - key: Street
+    type: text-field
+    name: Street
+```
+
+**Add the Address element to Patient Study.**
+
+```yaml
+type: template
+name: Patient Study
+children:
+  - key: Patient Name
+    type: text-field
+    name: Patient Name
+  - key: Age
+    type: numeric-field
+    name: Age
+    datatype: xsd:int
+    default: 42
+  - key: Address
+    type: element
+    name: Address
+    children:
+      - key: Street
+        type: text-field
+        name: Street
+```
+
+**Create an instance of Patient Study.**
+
+```yaml
+type: instance
+name: Patient Study
+description: Instance of Patient Study
+isBasedOn: https://repo.metadatacenter.org/templates/patient-study
+children:
+  Age:
+    datatype: xsd:int
+```
+
+**Set Patient Name to Alice in the instance.**
+
+```yaml
+type: instance
+name: Patient Study
+description: Instance of Patient Study
+isBasedOn: https://repo.metadatacenter.org/templates/patient-study
+children:
+  Age:
+    datatype: xsd:int
+  Patient Name:
+    value: Alice
+```
+
+**Set Age to 30 in the instance.**
+
+```yaml
+type: instance
+name: Patient Study
+description: Instance of Patient Study
+isBasedOn: https://repo.metadatacenter.org/templates/patient-study
+children:
+  Patient Name:
+    value: Alice
+  Age:
+    datatype: xsd:int
+    value: 30
+```
+
+**Validate the instance against Patient Study.**
+
+```json
+{
+  "valid": true
+}
+```
 
 ## Tools
 
