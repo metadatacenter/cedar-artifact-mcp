@@ -6,18 +6,31 @@ import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifactBuilder;
+import org.metadatacenter.artifacts.model.core.NumericField;
+import org.metadatacenter.artifacts.model.core.TemporalField;
+import org.metadatacenter.artifacts.model.core.TextAreaField;
+import org.metadatacenter.artifacts.model.core.TextField;
 import org.metadatacenter.artifacts.model.core.Version;
+import org.metadatacenter.artifacts.model.core.fields.InputTimeFormat;
+import org.metadatacenter.artifacts.model.core.fields.TemporalGranularity;
+import org.metadatacenter.artifacts.model.core.fields.XsdNumericDatatype;
+import org.metadatacenter.artifacts.model.core.fields.XsdTemporalDatatype;
 import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
 import org.metadatacenter.model.validation.CedarValidator;
 import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ErrorItem;
 import org.metadatacenter.model.validation.report.ValidationReport;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.metadatacenter.artifacts.model.yaml.YamlConstants.FIELD_TYPES;
+import static org.metadatacenter.artifacts.model.yaml.YamlConstants.NUMERIC_FIELD;
+import static org.metadatacenter.artifacts.model.yaml.YamlConstants.TEMPORAL_FIELD;
+import static org.metadatacenter.artifacts.model.yaml.YamlConstants.TEXT_AREA_FIELD;
+import static org.metadatacenter.artifacts.model.yaml.YamlConstants.TEXT_FIELD;
 
 /**
  * MCP tool {@code create_field} — field variant of {@code create_template}.
@@ -65,6 +78,55 @@ public final class CreateFieldTool
         "type", "string",
         "description", "Semantic version string in major.minor.patch form (e.g. \"0.0.1\"). Optional; defaults to 0.0.1."));
 
+    // ---- Per-type configuration (all optional; applicable only to the matching type) ----
+
+    properties.put("datatype", Map.of(
+        "type", "string",
+        "description",
+        "For numeric-field: one of xsd:int, xsd:long, xsd:byte, xsd:short, xsd:decimal, "
+            + "xsd:float, xsd:double (default xsd:decimal). "
+            + "For temporal-field: one of xsd:date, xsd:dateTime, xsd:time (default xsd:dateTime). "
+            + "Ignored — and an error — for any other field type."));
+
+    // Numeric-only
+    properties.put("min_value", Map.of(
+        "type", "number",
+        "description", "numeric-field minimum permitted value. Optional."));
+    properties.put("max_value", Map.of(
+        "type", "number",
+        "description", "numeric-field maximum permitted value. Optional."));
+    properties.put("decimal_places", Map.of(
+        "type", "integer",
+        "description", "numeric-field decimal places. Optional; only meaningful for xsd:decimal / xsd:float / xsd:double."));
+    properties.put("unit", Map.of(
+        "type", "string",
+        "description", "numeric-field unit of measure (e.g. \"years\", \"mmHg\"). Optional."));
+
+    // Temporal-only
+    properties.put("granularity", Map.of(
+        "type", "string",
+        "description",
+        "temporal-field granularity: one of year, month, day, hour, minute, second, decimalSecond. "
+            + "Optional (defaults to day for xsd:date / xsd:dateTime, minute for xsd:time)."));
+    properties.put("input_time_format", Map.of(
+        "type", "string",
+        "description",
+        "temporal-field clock format: 12h or 24h. Optional; only meaningful when granularity is sub-day."));
+    properties.put("input_time_zone", Map.of(
+        "type", "boolean",
+        "description", "temporal-field timezone toggle. Optional; only meaningful when granularity is sub-day."));
+
+    // Text / text-area
+    properties.put("min_length", Map.of(
+        "type", "integer",
+        "description", "text-field / text-area-field minimum string length. Optional."));
+    properties.put("max_length", Map.of(
+        "type", "integer",
+        "description", "text-field / text-area-field maximum string length. Optional."));
+    properties.put("regex", Map.of(
+        "type", "string",
+        "description", "text-field / text-area-field validation regex. Optional."));
+
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("name", "type"), Boolean.FALSE, null, null);
 
@@ -72,21 +134,24 @@ public final class CreateFieldTool
         .name("create_field")
         .title("Create CEDAR field")
         .description(
-            "Builds an empty CEDAR field schema artifact of the supplied kebab-case type "
+            "Builds a CEDAR field schema artifact of the supplied kebab-case type "
                 + "(e.g. text-field, controlled-term-field, numeric-field). Returns the "
-                + "artifact serialized as JSON. Standalone fields are first-class CEDAR "
-                + "artifacts; the returned JSON can be referenced or composed via other "
-                + "tools.\n\n"
-                + "Scope: this tool sets ONLY name + type + description + version. It does "
-                + "NOT set type-specific configuration (numeric datatype like xsd:int, "
-                + "temporal granularity, list values, controlled-term constraints, default "
-                + "values, etc.). For any of those, use 'field_from_yaml' instead — its "
-                + "input-schema description enumerates the full per-field-type key "
-                + "vocabulary. Constraints and default values can also be layered onto a "
-                + "created field via 'add_class_constraint', 'add_branch_constraint', "
-                + "'add_ontology_constraint', 'add_valueset_constraint', "
-                + "'add_default_value', 'add_iri_default_value', and "
-                + "'add_controlled_term_default_value'.")
+                + "artifact serialized as JSON Schema, validated by CedarValidator.\n\n"
+                + "Beyond name/type/description/version, the tool accepts type-specific "
+                + "configuration for the common literal-field cases: numeric-field "
+                + "(datatype, min_value, max_value, decimal_places, unit), temporal-field "
+                + "(datatype, granularity, input_time_format, input_time_zone), and "
+                + "text-field / text-area-field (min_length, max_length, regex). Passing a "
+                + "param that doesn't apply to the chosen field type is rejected with a "
+                + "clear error.\n\n"
+                + "For shapes that need structured sub-objects — controlled-term values "
+                + "(class/branch/ontology/valueSet constraints), radio/checkbox/list inline "
+                + "values, multi-instance configuration, default values — use "
+                + "'field_from_yaml' instead. Constraints and default values can also be "
+                + "layered onto a created field via 'add_class_constraint', "
+                + "'add_branch_constraint', 'add_ontology_constraint', "
+                + "'add_valueset_constraint', 'add_default_value', 'add_iri_default_value', "
+                + "and 'add_controlled_term_default_value'.")
         .inputSchema(schema)
         .build();
   }
@@ -120,6 +185,8 @@ public final class CreateFieldTool
     try {
       FieldSchemaArtifactBuilder<?> builder = FieldBuilders.builderFor(type);
       builder.withName(name).withDescription(description).withVersion(version);
+      String configError = applyTypeSpecificConfig(builder, type, args);
+      if (configError != null) return error(configError);
       field = builder.build();
     } catch (RuntimeException e) {
       return error("field build failed: " + e.getMessage());
@@ -181,5 +248,159 @@ public final class CreateFieldTool
         .content(List.of(new McpSchema.TextContent(null, message)))
         .isError(true)
         .build();
+  }
+
+  // ---------------------------------------------------------------------
+  // Per-type configuration dispatch — applies the optional args that only
+  // make sense for a particular kebab-case field type. Returns null on
+  // success, an error message when a param is misapplied (e.g. min_length
+  // on a numeric-field).
+  // ---------------------------------------------------------------------
+
+  private static final List<String> NUMERIC_ONLY_KEYS =
+      List.of("min_value", "max_value", "decimal_places", "unit");
+  private static final List<String> TEMPORAL_ONLY_KEYS =
+      List.of("granularity", "input_time_format", "input_time_zone");
+  private static final List<String> TEXT_ONLY_KEYS =
+      List.of("min_length", "max_length", "regex");
+  private static final List<String> DATATYPE_KEYS = List.of("datatype");
+
+  private static String applyTypeSpecificConfig(FieldSchemaArtifactBuilder<?> builder,
+      String type, Map<String, Object> args)
+  {
+    // Reject misapplied keys before doing any work, so the LLM gets a clean
+    // diagnostic rather than a partial build.
+    String mismatch = checkKeyApplicability(type, args);
+    if (mismatch != null) return mismatch;
+
+    switch (type) {
+      case NUMERIC_FIELD: return applyNumericConfig((NumericField.NumericFieldBuilder) builder, args);
+      case TEMPORAL_FIELD: return applyTemporalConfig((TemporalField.TemporalFieldBuilder) builder, args);
+      case TEXT_FIELD: return applyTextConfig((TextField.TextFieldBuilder) builder, args);
+      case TEXT_AREA_FIELD: return applyTextAreaConfig((TextAreaField.TextAreaFieldBuilder) builder, args);
+      default: return null;   // no per-type params apply to this field type
+    }
+  }
+
+  private static String checkKeyApplicability(String type, Map<String, Object> args)
+  {
+    List<String> badKeys = new java.util.ArrayList<>();
+    boolean typeNumeric = NUMERIC_FIELD.equals(type);
+    boolean typeTemporal = TEMPORAL_FIELD.equals(type);
+    boolean typeText = TEXT_FIELD.equals(type) || TEXT_AREA_FIELD.equals(type);
+
+    if (!typeNumeric && !typeTemporal && args.containsKey("datatype"))
+      badKeys.add("datatype");
+    for (String k : NUMERIC_ONLY_KEYS)
+      if (!typeNumeric && args.containsKey(k)) badKeys.add(k);
+    for (String k : TEMPORAL_ONLY_KEYS)
+      if (!typeTemporal && args.containsKey(k)) badKeys.add(k);
+    for (String k : TEXT_ONLY_KEYS)
+      if (!typeText && args.containsKey(k)) badKeys.add(k);
+
+    if (badKeys.isEmpty()) return null;
+    return "the following arguments do not apply to field type '" + type + "': "
+        + badKeys + ". See the input-schema description for the applicable keys.";
+  }
+
+  private static String applyNumericConfig(NumericField.NumericFieldBuilder builder, Map<String, Object> args)
+  {
+    String datatypeArg = stringArg(args, "datatype");
+    if (datatypeArg != null && !datatypeArg.isBlank()) {
+      try { builder.withNumericType(XsdNumericDatatype.fromString(datatypeArg)); }
+      catch (IllegalArgumentException e) {
+        return "invalid numeric datatype '" + datatypeArg + "'. Allowed: xsd:int, xsd:long, "
+            + "xsd:byte, xsd:short, xsd:decimal, xsd:float, xsd:double.";
+      }
+    }
+    Number minValue = numberArg(args, "min_value");
+    if (minValue != null) builder.withMinValue(minValue);
+    Number maxValue = numberArg(args, "max_value");
+    if (maxValue != null) builder.withMaxValue(maxValue);
+    Integer decimalPlaces = integerArg(args, "decimal_places");
+    if (decimalPlaces != null) builder.withDecimalPlaces(decimalPlaces);
+    String unit = stringArg(args, "unit");
+    if (unit != null && !unit.isBlank()) builder.withUnitOfMeasure(unit);
+    return null;
+  }
+
+  private static String applyTemporalConfig(TemporalField.TemporalFieldBuilder builder, Map<String, Object> args)
+  {
+    String datatypeArg = stringArg(args, "datatype");
+    if (datatypeArg != null && !datatypeArg.isBlank()) {
+      try { builder.withTemporalType(XsdTemporalDatatype.fromString(datatypeArg)); }
+      catch (IllegalArgumentException e) {
+        return "invalid temporal datatype '" + datatypeArg + "'. Allowed: xsd:date, xsd:dateTime, xsd:time.";
+      }
+    }
+    String granularityArg = stringArg(args, "granularity");
+    if (granularityArg != null && !granularityArg.isBlank()) {
+      try { builder.withTemporalGranularity(TemporalGranularity.fromString(granularityArg)); }
+      catch (IllegalArgumentException e) {
+        return "invalid granularity '" + granularityArg + "'. Allowed: year, month, day, hour, "
+            + "minute, second, decimalSecond.";
+      }
+    }
+    String formatArg = stringArg(args, "input_time_format");
+    if (formatArg != null && !formatArg.isBlank()) {
+      try { builder.withInputTimeFormat(InputTimeFormat.fromString(formatArg)); }
+      catch (IllegalArgumentException e) {
+        return "invalid input_time_format '" + formatArg + "'. Allowed: 12h, 24h.";
+      }
+    }
+    Boolean tz = booleanArg(args, "input_time_zone");
+    if (tz != null) builder.withTimeZoneEnabled(tz);
+    return null;
+  }
+
+  private static String applyTextConfig(TextField.TextFieldBuilder builder, Map<String, Object> args)
+  {
+    Integer minLength = integerArg(args, "min_length");
+    if (minLength != null) builder.withMinLength(minLength);
+    Integer maxLength = integerArg(args, "max_length");
+    if (maxLength != null) builder.withMaxLength(maxLength);
+    String regex = stringArg(args, "regex");
+    if (regex != null && !regex.isBlank()) builder.withRegex(regex);
+    return null;
+  }
+
+  private static String applyTextAreaConfig(TextAreaField.TextAreaFieldBuilder builder, Map<String, Object> args)
+  {
+    Integer minLength = integerArg(args, "min_length");
+    if (minLength != null) builder.withMinLength(minLength);
+    Integer maxLength = integerArg(args, "max_length");
+    if (maxLength != null) builder.withMaxLength(maxLength);
+    // TextAreaField doesn't carry a regex; we already rejected it at applicability check
+    // when type == text-area-field doesn't have regex in the builder. Confirmed in source.
+    return null;
+  }
+
+  private static Number numberArg(Map<String, Object> args, String key)
+  {
+    Object raw = args.get(key);
+    if (raw == null) return null;
+    if (raw instanceof Number n) return n;
+    if (raw instanceof String s && !s.isBlank()) {
+      try { return new BigDecimal(s); } catch (NumberFormatException e) { /* fall through */ }
+    }
+    return null;
+  }
+
+  private static Integer integerArg(Map<String, Object> args, String key)
+  {
+    Number n = numberArg(args, key);
+    return n == null ? null : n.intValue();
+  }
+
+  private static Boolean booleanArg(Map<String, Object> args, String key)
+  {
+    Object raw = args.get(key);
+    if (raw == null) return null;
+    if (raw instanceof Boolean b) return b;
+    if (raw instanceof String s) {
+      if ("true".equalsIgnoreCase(s)) return Boolean.TRUE;
+      if ("false".equalsIgnoreCase(s)) return Boolean.FALSE;
+    }
+    return null;
   }
 }

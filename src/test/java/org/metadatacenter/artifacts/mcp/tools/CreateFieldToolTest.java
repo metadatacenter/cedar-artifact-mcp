@@ -134,6 +134,148 @@ final class CreateFieldToolTest
   }
 
   // -----------------------------------------------------------------
+  // Per-type configuration: numeric
+  // -----------------------------------------------------------------
+
+  @Test void numeric_field_with_datatype_xsd_int_carries_through() throws Exception
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "name", "Age",
+        "type", "numeric-field",
+        "datatype", "xsd:int"));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+    assertEquals("xsd:int", rendered.path("_valueConstraints").path("numberType").asText());
+  }
+
+  @Test void numeric_field_with_min_max_unit_decimal_places() throws Exception
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "name", "pH",
+        "type", "numeric-field",
+        "datatype", "xsd:decimal",
+        "min_value", 0,
+        "max_value", 14,
+        "decimal_places", 2,
+        "unit", "pH"));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+    JsonNode vc = rendered.path("_valueConstraints");
+    assertEquals("xsd:decimal", vc.path("numberType").asText());
+    assertEquals(0, vc.path("minValue").asInt());
+    assertEquals(14, vc.path("maxValue").asInt());
+    assertEquals(2, vc.path("decimalPlace").asInt());
+    assertEquals("pH", vc.path("unitOfMeasure").asText());
+  }
+
+  @Test void numeric_field_rejects_invalid_datatype()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "name", "X",
+        "type", "numeric-field",
+        "datatype", "xsd:garbage"));
+    assertTrue(result.isError());
+    assertTrue(errorText(result).toLowerCase().contains("datatype"),
+        "error must mention datatype; got: " + errorText(result));
+  }
+
+  // -----------------------------------------------------------------
+  // Per-type configuration: temporal
+  // -----------------------------------------------------------------
+
+  @Test void temporal_field_with_datatype_and_granularity() throws Exception
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "name", "Birthdate",
+        "type", "temporal-field",
+        "datatype", "xsd:date",
+        "granularity", "day"));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+    assertEquals("xsd:date",
+        rendered.path("_valueConstraints").path("temporalType").asText());
+    assertEquals("day",
+        rendered.path("_ui").path("temporalGranularity").asText());
+  }
+
+  @Test void temporal_field_with_input_time_format_and_zone() throws Exception
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "name", "Appointment",
+        "type", "temporal-field",
+        "datatype", "xsd:dateTime",
+        "granularity", "minute",
+        "input_time_format", "24h",
+        "input_time_zone", true));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+    JsonNode ui = rendered.path("_ui");
+    assertEquals("minute", ui.path("temporalGranularity").asText());
+    assertEquals("24h", ui.path("inputTimeFormat").asText());
+    assertTrue(ui.path("timezoneEnabled").asBoolean());
+  }
+
+  // -----------------------------------------------------------------
+  // Per-type configuration: text / text-area
+  // -----------------------------------------------------------------
+
+  @Test void text_field_with_min_max_length_and_regex() throws Exception
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "name", "Postcode",
+        "type", "text-field",
+        "min_length", 5,
+        "max_length", 5,
+        "regex", "^[0-9]{5}$"));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+    JsonNode vc = rendered.path("_valueConstraints");
+    assertEquals(5, vc.path("minLength").asInt());
+    assertEquals(5, vc.path("maxLength").asInt());
+    assertEquals("^[0-9]{5}$", vc.path("regex").asText());
+  }
+
+  // -----------------------------------------------------------------
+  // Cross-type misapplication: param doesn't fit chosen type
+  // -----------------------------------------------------------------
+
+  @Test void rejects_min_length_on_numeric_field()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "name", "X",
+        "type", "numeric-field",
+        "min_length", 5));
+    assertTrue(result.isError());
+    assertTrue(errorText(result).contains("min_length"),
+        "error must mention the misapplied key; got: " + errorText(result));
+  }
+
+  @Test void rejects_datatype_on_text_field()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "name", "X",
+        "type", "text-field",
+        "datatype", "xsd:int"));
+    assertTrue(result.isError());
+    assertTrue(errorText(result).contains("datatype"));
+  }
+
+  @Test void rejects_granularity_on_numeric_field()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "name", "X",
+        "type", "numeric-field",
+        "granularity", "day"));
+    assertTrue(result.isError());
+    assertTrue(errorText(result).contains("granularity"));
+  }
+
+  // -----------------------------------------------------------------
   // helpers
   // -----------------------------------------------------------------
 
