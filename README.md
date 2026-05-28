@@ -26,7 +26,7 @@ and instances, but it does not perform terminology lookups, talk to a CEDAR
 server, or do any other I/O. Terminology MCPs (e.g.
 [`bioportal-term-mcp`](https://github.com/metadatacenter/bioportal-term-mcp))
 supply the IRI/acronym/name tuples that controlled-term constraints need; the
-calling LLM threads those tuples into this MCP's tools.
+calling LLM passes those tuples into this MCP's `add_*_constraint` tools.
 
 See [DESIGN.md](./DESIGN.md) for the architectural principles and
 [ROADMAP.md](./ROADMAP.md) for what's planned.
@@ -163,9 +163,9 @@ children:
 
 ### `create_template(name, description?, version?)`
 
-Creates a new, empty CEDAR template. The result is threaded into the
-composition tools (`add_field`, `add_element`, `create_instance`, …) to build
-something larger.
+Creates a new, empty CEDAR template. Pass the returned template into
+`add_field` or `add_element` to attach children, or into `create_instance` to
+make an empty instance of it.
 
 ### `create_element(name, description?, version?)`
 
