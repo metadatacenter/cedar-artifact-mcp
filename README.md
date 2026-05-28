@@ -466,12 +466,13 @@ CEDAR YAML template — including a controlled-term constraint — through the
 shaded jar over real stdio. That's enough at this layer to catch MCP-specific
 regressions (transport, shading, tool registration).
 
-The exhaustive real-world battery — every published HuBMAP template
+The exhaustive real-world battery — every vendored CEDAR template
 round-tripped through reader / renderer / validator — lives in
-`cedar-artifact-library` as `HubmapTemplatesRoundTripTest`. That's the right
-home for it: the test exercises the library's reader/renderer/validator without
-any MCP wrapping, and the goldens are derived from the library's own
-round-trip. See the library's `develop` branch.
+`cedar-artifact-library` as `TemplateBatteryYamlToJsonTest`,
+`TemplateBatteryYamlRoundTripTest`, and `TemplateBatteryJsonRoundTripTest`.
+That's the right home for it: the tests exercise the library's
+reader/renderer/validator without any MCP wrapping, and the goldens are
+derived from the library's own round-trip. See the library's `develop` branch.
 
 ## License
 
