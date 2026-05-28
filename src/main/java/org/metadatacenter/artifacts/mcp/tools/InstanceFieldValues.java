@@ -58,8 +58,7 @@ final class InstanceFieldValues
         List<FieldInstanceArtifact> updatedList = applyToMultiInstanceField(
             currentList, head.key(), head.index(), transform);
         return TemplateInstanceArtifact.builder(instance)
-            .withoutMultiInstanceFieldInstances(head.key())
-            .withMultiInstanceFieldInstances(head.key(), updatedList)
+            .replaceMultiInstanceFieldInstances(head.key(), updatedList)
             .build();
       }
       // Leaf single-instance field
@@ -69,8 +68,7 @@ final class InstanceFieldValues
             "no single-instance field at '" + head.key() + "' on the instance");
       FieldInstanceArtifact updated = transform.apply(current);
       return TemplateInstanceArtifact.builder(instance)
-          .withoutSingleInstanceFieldInstance(head.key())
-          .withSingleInstanceFieldInstance(head.key(), updated)
+          .replaceSingleInstanceFieldInstance(head.key(), updated)
           .build();
     }
 
@@ -85,8 +83,7 @@ final class InstanceFieldValues
       List<ElementInstanceArtifact> updatedList = applyToMultiInstanceElement(
           currentList, head.key(), head.index(), rest, transform);
       return TemplateInstanceArtifact.builder(instance)
-          .withoutMultiInstanceElementInstances(head.key())
-          .withMultiInstanceElementInstances(head.key(), updatedList)
+          .replaceMultiInstanceElementInstances(head.key(), updatedList)
           .build();
     }
     ElementInstanceArtifact childElement = instance.singleInstanceElementInstances().get(head.key());
@@ -95,8 +92,7 @@ final class InstanceFieldValues
           "no single-instance element at '" + head.key() + "' on the instance");
     ElementInstanceArtifact updatedChild = updateElement(childElement, rest, transform);
     return TemplateInstanceArtifact.builder(instance)
-        .withoutSingleInstanceElementInstance(head.key())
-        .withSingleInstanceElementInstance(head.key(), updatedChild)
+        .replaceSingleInstanceElementInstance(head.key(), updatedChild)
         .build();
   }
 
@@ -117,8 +113,7 @@ final class InstanceFieldValues
         List<FieldInstanceArtifact> updatedList = applyToMultiInstanceField(
             currentList, head.key(), head.index(), transform);
         return ElementInstanceArtifact.builder(element)
-            .withoutMultiInstanceFieldInstances(head.key())
-            .withMultiInstanceFieldInstances(head.key(), updatedList)
+            .replaceMultiInstanceFieldInstances(head.key(), updatedList)
             .build();
       }
       FieldInstanceArtifact current = element.singleInstanceFieldInstances().get(head.key());
@@ -127,8 +122,7 @@ final class InstanceFieldValues
             "no single-instance field at '" + head.key() + "' on element");
       FieldInstanceArtifact updated = transform.apply(current);
       return ElementInstanceArtifact.builder(element)
-          .withoutSingleInstanceFieldInstance(head.key())
-          .withSingleInstanceFieldInstance(head.key(), updated)
+          .replaceSingleInstanceFieldInstance(head.key(), updated)
           .build();
     }
 
@@ -142,8 +136,7 @@ final class InstanceFieldValues
       List<ElementInstanceArtifact> updatedList = applyToMultiInstanceElement(
           currentList, head.key(), head.index(), rest, transform);
       return ElementInstanceArtifact.builder(element)
-          .withoutMultiInstanceElementInstances(head.key())
-          .withMultiInstanceElementInstances(head.key(), updatedList)
+          .replaceMultiInstanceElementInstances(head.key(), updatedList)
           .build();
     }
     ElementInstanceArtifact childElement = element.singleInstanceElementInstances().get(head.key());
@@ -152,8 +145,7 @@ final class InstanceFieldValues
           "no single-instance element at '" + head.key() + "' on element");
     ElementInstanceArtifact updatedChild = updateElement(childElement, rest, transform);
     return ElementInstanceArtifact.builder(element)
-        .withoutSingleInstanceElementInstance(head.key())
-        .withSingleInstanceElementInstance(head.key(), updatedChild)
+        .replaceSingleInstanceElementInstance(head.key(), updatedChild)
         .build();
   }
 

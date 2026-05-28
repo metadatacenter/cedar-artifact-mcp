@@ -131,9 +131,6 @@ type: instance
 name: Patient Study
 description: Instance of Patient Study
 isBasedOn: https://repo.metadatacenter.org/templates/patient-study
-children:
-  Age:
-    datatype: xsd:int
 ```
 
 **Set Patient Name to Alice in the instance.**
@@ -144,8 +141,6 @@ name: Patient Study
 description: Instance of Patient Study
 isBasedOn: https://repo.metadatacenter.org/templates/patient-study
 children:
-  Age:
-    datatype: xsd:int
   Patient Name:
     value: Alice
 ```
@@ -163,14 +158,6 @@ children:
   Age:
     datatype: xsd:int
     value: 30
-```
-
-**Validate the instance against Patient Study.**
-
-```json
-{
-  "valid": true
-}
 ```
 
 ## Tools
