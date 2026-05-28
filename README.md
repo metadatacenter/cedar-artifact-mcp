@@ -255,6 +255,21 @@ downstream-queryable.
 
 ## Tools
 
+Each tool below is a thin wrapper over a corresponding operation in the
+[cedar-artifact-library](https://github.com/metadatacenter/cedar-artifact-library)
+— the same Java library CEDAR's own server-side tooling builds on. The
+library is where the heavy lifting lives: typed builders for every artifact
+kind, readers and renderers for both the canonical JSON Schema and the
+compact YAML serialization, and full CEDAR validation. The MCP exposes that
+machinery as MCP tools so an LLM can drive it directly: pulling a template
+in and out of YAML, attaching constraints, populating instance values,
+validating, and so on, without the calling LLM ever needing to know any
+Java. Each `*_from_yaml` / `*_to_yaml` pair routes through the library's
+reader / renderer; the `create_*` / `add_*` / `set_*` / `remove_*` tools
+wrap the library's typed builders; `validate_instance` calls the canonical
+CedarValidator. A non-error result from any tool is guaranteed to have
+round-tripped through the library and passed its structural validation.
+
 ### `create_template(name, description?, version?)`
 
 Creates a new, empty CEDAR template. Pass the returned template into
