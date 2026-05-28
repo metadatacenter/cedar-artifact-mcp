@@ -40,7 +40,11 @@ follow-on example adds the controlled-term piece by pairing this MCP with
 [`bioportal-term-mcp`](https://github.com/metadatacenter/bioportal-term-mcp).
 
 Each step shows the YAML the LLM is expected to display back after the matching
-tool call.
+tool call. The YAML shown is the **compact** form — the lean, LLM-friendly
+authoring view that drops provenance fields (status, version, modelVersion,
+created/modified timestamps, `@id`, etc.); an **expanded** form that preserves
+every field the renderer can emit is available by passing `isCompact: false`
+to any of the `*_to_yaml` tools.
 
 *Create a template called Patient Study.*
 
