@@ -34,10 +34,10 @@ See [DESIGN.md](./DESIGN.md) for the architectural principles and
 ## Example workflow
 
 A typical authoring session looks like the following — natural-language prompts
-the user gives the LLM, which the LLM translates into MCP tool calls. This
-example exercises the structural and instance tools end-to-end; controlled-term
-constraints are deliberately omitted (they're covered in a separate example set
-that pairs the artifact MCP with a terminology MCP).
+the user gives the LLM, which the LLM translates into MCP tool calls. The
+first example exercises the structural and instance tools end-to-end; a
+follow-on example adds the controlled-term piece by pairing this MCP with
+[`bioportal-term-mcp`](https://github.com/metadatacenter/bioportal-term-mcp).
 
 Each step shows the YAML the LLM is expected to display back after the matching
 tool call.
@@ -155,6 +155,94 @@ children:
     datatype: xsd:int
     value: 30
 ```
+
+### Controlled-term fields with BioPortal
+
+CEDAR's real value over a plain-JSON-Schema authoring tool is **controlled
+vocabularies**: a field can be bound to an ontology class, a whole ontology,
+a subtree of one, or a curated value set, so every value carries a stable
+IRI as well as a human label. Authoring those bindings by hand means looking
+up IRIs in BioPortal and pasting in the right `iri` / `acronym` /
+`ontologyName` / `termLabel` tuple — error-prone, and the IRI is the part
+the LLM is *least* likely to invent correctly.
+
+The companion
+[`bioportal-term-mcp`](https://github.com/metadatacenter/bioportal-term-mcp)
+exposes BioPortal search and lookup as tools an LLM can call —
+`find_ontology`, `find_class`, `find_value_set`, `get_class`, `get_ontology`,
+`get_value_set` — so the same LLM that's driving the artifact MCP can
+discover the IRIs and tuples it needs without leaving the conversation. The
+two MCPs are designed to pair: the bioportal one returns exactly the
+`iri` / `acronym` / `ontologyName` / `termLabel` shape the artifact MCP's
+`set_*_constraint` and `set_controlled_term_field_value` tools take as
+input.
+
+A typical pairing — both MCPs available at once:
+
+*Create a CEDAR field called Disease that takes its values from the Disease
+branch of the DOID ontology in BioPortal.*
+
+```yaml
+type: controlled-term-field
+name: Disease
+description: Disease term sourced from the Disease branch of the DOID ontology.
+datatype: iri
+values:
+  - type: branch
+    ontologyName: Human Disease Ontology
+    acronym: DOID
+    termLabel: disease
+    iri: http://purl.obolibrary.org/obo/DOID_4
+    maxDepth: 0
+```
+
+Under the hood the LLM looks up DOID and its `disease` root class (`DOID_4`)
+via `bioportal-term-mcp`, then calls `create_field` followed by
+`set_branch_constraint` on the CEDAR side. `maxDepth: 0` means unbounded —
+every descendant of `disease` in DOID is permitted.
+
+*Create a new template called Study and add this field to it.*
+
+```yaml
+type: template
+name: Study
+description: Study metadata template.
+children:
+  - key: Disease
+    type: controlled-term-field
+    name: Disease
+    description: Disease term sourced from the Disease branch of the DOID ontology.
+    datatype: iri
+    values:
+      - type: branch
+        ontologyName: Human Disease Ontology
+        acronym: DOID
+        termLabel: disease
+        iri: http://purl.obolibrary.org/obo/DOID_4
+        maxDepth: 0
+```
+
+*Create an instance of this template with a value of sickle cell anemia for
+the Disease field.*
+
+```yaml
+type: instance
+name: Study
+description: Study metadata template.
+isBasedOn: https://repo.metadatacenter.org/templates/study-placeholder
+children:
+  Disease:
+    id: http://purl.obolibrary.org/obo/DOID_10923
+    label: sickle cell anemia
+    prefLabel: sickle cell anemia
+```
+
+The LLM looks up `sickle cell anemia` in DOID via `bioportal-term-mcp`'s
+`find_class` (returning `DOID_10923`), confirms it sits under the branch the
+field constrains to, and calls `set_controlled_term_field_value` with the
+IRI + label tuple. The instance now carries the full identifier + label
+pair, not just a free-text string — which is what makes the data
+downstream-queryable.
 
 ## Tools
 
