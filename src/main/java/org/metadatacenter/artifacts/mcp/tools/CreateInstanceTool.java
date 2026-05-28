@@ -60,8 +60,8 @@ public final class CreateInstanceTool
     properties.put("description", Map.of(
         "type", "string",
         "description",
-        "Free-text instance description. Optional; defaults to \"Instance of <template "
-            + "name>\" so the result satisfies CedarValidator's required-field check."));
+        "Free-text instance description. Optional. Falls back to the template's own "
+            + "description when present; otherwise the instance carries no description."));
     properties.put("is_based_on", Map.of(
         "type", "string",
         "description",
@@ -134,17 +134,19 @@ public final class CreateInstanceTool
     }
 
     String name = nameOverride == null || nameOverride.isBlank() ? template.name() : nameOverride;
+    // No auto-stand-in: if the caller didn't supply a description and the template doesn't
+    // carry one, default to an empty string. The JSON Schema generated from the template
+    // requires schema:description to be present on the instance (the validator rejects its
+    // absence), so we have to emit *something*; the YAML renderer's compact mode then
+    // elides the empty value from the human-facing view. The previous "Instance of <name>"
+    // placeholder made every freshly created instance look like it had been thought about.
     String description;
-    if (descriptionOverride != null && !descriptionOverride.isBlank()) {
+    if (descriptionOverride != null && !descriptionOverride.isBlank())
       description = descriptionOverride;
-    } else if (!template.description().isEmpty()) {
+    else if (!template.description().isEmpty())
       description = template.description();
-    } else {
-      // The instance renderer only emits schema:description when description.isPresent();
-      // the template requires it. Default to a non-empty stand-in so validate_instance
-      // passes the structural check without forcing the LLM to think about it.
-      description = "Instance of " + template.name();
-    }
+    else
+      description = "";
 
     TemplateInstanceArtifact instance;
     try {

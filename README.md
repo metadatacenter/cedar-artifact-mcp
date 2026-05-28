@@ -128,7 +128,6 @@ children:
 ```yaml
 type: instance
 name: Patient Study
-description: Instance of Patient Study
 isBasedOn: https://repo.metadatacenter.org/templates/patient-study
 ```
 
@@ -137,7 +136,6 @@ isBasedOn: https://repo.metadatacenter.org/templates/patient-study
 ```yaml
 type: instance
 name: Patient Study
-description: Instance of Patient Study
 isBasedOn: https://repo.metadatacenter.org/templates/patient-study
 children:
   Patient Name:
@@ -149,7 +147,6 @@ children:
 ```yaml
 type: instance
 name: Patient Study
-description: Instance of Patient Study
 isBasedOn: https://repo.metadatacenter.org/templates/patient-study
 children:
   Patient Name:
