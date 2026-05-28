@@ -42,21 +42,21 @@ that pairs the artifact MCP with a terminology MCP).
 Each step shows the YAML the LLM is expected to display back after the matching
 tool call.
 
-**Create a template called Patient Study.**
+*Create a template called Patient Study.*
 
 ```yaml
 type: template
 name: Patient Study
 ```
 
-**Create a text field called Patient Name.**
+*Create a text field called Patient Name.*
 
 ```yaml
 type: text-field
 name: Patient Name
 ```
 
-**Create a numeric field called Age with type `xsd:int`.**
+*Create a numeric field called Age with type `xsd:int`.*
 
 ```yaml
 type: numeric-field
@@ -64,7 +64,7 @@ name: Age
 datatype: xsd:int
 ```
 
-**Set default value 42 on the Age field.**
+*Set default value 42 on the Age field.*
 
 ```yaml
 type: numeric-field
@@ -73,7 +73,7 @@ datatype: xsd:int
 default: 42
 ```
 
-**Add Patient Name and Age to Patient Study.**
+*Add Patient Name and Age to Patient Study.*
 
 ```yaml
 type: template
@@ -89,7 +89,7 @@ children:
     default: 42
 ```
 
-**Create an element called Address with a text field Street.**
+*Create an element called Address with a text field Street.*
 
 ```yaml
 type: element
@@ -100,7 +100,7 @@ children:
     name: Street
 ```
 
-**Add the Address element to Patient Study.**
+*Add the Address element to Patient Study.*
 
 ```yaml
 type: template
@@ -123,7 +123,7 @@ children:
         name: Street
 ```
 
-**Create an instance of Patient Study.**
+*Create an instance of Patient Study.*
 
 ```yaml
 type: instance
@@ -132,7 +132,7 @@ description: Instance of Patient Study
 isBasedOn: https://repo.metadatacenter.org/templates/patient-study
 ```
 
-**Set Patient Name to Alice in the instance.**
+*Set Patient Name to Alice in the instance.*
 
 ```yaml
 type: instance
@@ -144,7 +144,7 @@ children:
     value: Alice
 ```
 
-**Set Age to 30 in the instance.**
+*Set Age to 30 in the instance.*
 
 ```yaml
 type: instance
