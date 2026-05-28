@@ -164,7 +164,8 @@ children:
 
 CEDAR's defining feature is **controlled vocabularies**: a field can be
 bound to an ontology class, a whole ontology, a subtree of one, or a curated
-value set, so every value carries a stable IRI as well as a human label.
+value set, so every value carries a stable IRI as well as a human-readable
+label.
 Authoring those bindings by hand means looking up IRIs in BioPortal and
 pasting in the right `iri` / `acronym` / `ontologyName` / `termLabel` tuple
 — error-prone, and the IRI is the part the LLM is *least* likely to invent
@@ -205,14 +206,11 @@ via `bioportal-term-mcp`, then calls `create_field` followed by
 `set_branch_constraint` on the CEDAR side. `maxDepth: 0` means unbounded —
 every descendant of `disease` in DOID is permitted.
 
-*Create a new template called Study with id
-`https://repo.metadatacenter.org/templates/study-template` and add this
-field to it.*
+*Create a new template called Study.*
 
 ```yaml
 type: template
 name: Study
-description: Study metadata template.
 children:
   - key: Disease
     type: controlled-term-field
@@ -228,9 +226,10 @@ children:
         maxDepth: 0
 ```
 
-(Compact YAML doesn't display the template's `@id`; it lives on the
-underlying JSON Schema and is what the instance's `isBasedOn` references
-below.)
+The LLM adds the Disease field to the new template and gives the template
+an `@id` of `https://repo.metadatacenter.org/templates/study-template`.
+Compact YAML doesn't display the `@id` — it lives on the underlying JSON
+Schema and is what the instance's `isBasedOn` references below.
 
 *Create an instance of this template with a value of sickle cell anemia for
 the Disease field.*
@@ -238,7 +237,6 @@ the Disease field.*
 ```yaml
 type: instance
 name: Study
-description: Study metadata template.
 isBasedOn: https://repo.metadatacenter.org/templates/study-template
 children:
   Disease:
