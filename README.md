@@ -39,9 +39,7 @@ constraints are deliberately omitted (they're covered in a separate example set
 that pairs the artifact MCP with a terminology MCP).
 
 Each step shows the YAML the LLM is expected to display back after the matching
-tool call. (Under the hood the tools return JSON Schema; the LLM round-trips
-through `template_to_yaml` / `element_to_yaml` / `field_to_yaml` /
-`instance_to_yaml` before showing you anything — see DESIGN.md Principle 8.)
+tool call.
 
 **Create a template called Patient Study.**
 
