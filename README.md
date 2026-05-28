@@ -163,208 +163,156 @@ children:
 
 ### `create_template(name, description?, version?)`
 
-Builds an empty CEDAR template schema artifact and returns it as JSON. Validated
-with `CedarValidator.validateTemplate` before returning. The returned JSON is
-threaded into follow-up tools (`add_field`, `add_element`, `create_instance`, …)
-to compose a larger template.
+Creates a new, empty CEDAR template. The result is threaded into the
+composition tools (`add_field`, `add_element`, `create_instance`, …) to build
+something larger.
 
 ### `create_element(name, description?, version?)`
 
-Element variant of `create_template`. Returns an empty CEDAR element schema
-artifact as JSON, validated with `CedarValidator.validateTemplateElement`.
-Elements are first-class CEDAR artifacts, on equal footing with templates, and
-can be embedded inside other templates or elements.
+Creates a new, empty CEDAR element — a reusable sub-schema that can be embedded
+inside templates or other elements.
 
 ### `create_field(name, type, description?, version?, [type-specific config])`
 
-Builds a CEDAR field schema artifact of the requested kebab-case `type` — the
-same vocabulary `field_from_yaml` accepts (`text-field`, `controlled-term-field`,
-`numeric-field`, `temporal-field`, `radio-field`, `checkbox-field`, the list,
-static, and identifier variants — see the tool's input schema for the complete
-enum). Returns JSON validated with `CedarValidator.validateTemplateField`.
-
-For common literal-field cases the tool accepts type-specific configuration
-inline:
+Creates a new CEDAR field of the requested kind: text, text-area, numeric,
+temporal, radio, checkbox, single- or multi-select list, controlled-term, link,
+email, phone, the `ext-*` identifier fields (ROR, ORCID, PFAS, RRID, PubMed,
+NIH-grant-ID, DOI), attribute-value, and the static placeholders. For literal
+fields, common configuration is accepted inline:
 
 - numeric: `datatype`, `min_value`, `max_value`, `decimal_places`, `unit`
 - temporal: `datatype`, `granularity`, `input_time_format`, `input_time_zone`
 - text / text-area: `min_length`, `max_length`, `regex`
 
-Passing a param that doesn't apply to the chosen field type is rejected with a
-clear error. For shapes that need structured sub-objects (controlled-term
-values, radio/checkbox/list inline values, multi-instance bounds, default
-values) use `field_from_yaml` instead; constraints and default values can also
-be layered on via the `add_*_constraint` / `add_*_default_value` tools.
+For fields whose shape needs structured sub-objects (controlled-term values,
+inline radio/checkbox/list options, multi-instance configuration, default
+values), reach for `field_from_yaml` instead. Constraints and default values
+can also be layered on via the `add_*_constraint` and `add_*_default_value`
+tools.
 
 ### `add_field(parent_json, child_json, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
 
-Adds an existing CEDAR field (typically produced by `create_field` or
-`field_from_yaml`) as a child of a CEDAR template or element. Parent kind is
-inferred from its `@type` URI; the result is re-validated with the matching
-CedarValidator method.
-
-The optional per-add-site overrides:
-
-- `key` — JSON Schema property key in the parent; falls back to child's
-  `schema:name`. The library rejects duplicate keys, so supply an explicit `key`
-  when adding two children with the same name.
-- `name` — propertyLabel for the parent's `_ui` block; falls back to child's
-  `schema:name`.
-- `description` — propertyDescription for the parent's `_ui` block; falls back
-  to child's `schema:description`.
-- `isMultiInstance` (default `false`) — whether the child appears as an array
-  (multi) or a single object in instances of the parent.
-- `minItems` / `maxItems` — bounds on the array length when `isMultiInstance` is
-  true.
-
-All five are per-add-site because the same reusable child may be used
-differently in different parents (single-instance in one, bounded multi-instance
-in another, with distinct labels each time).
+Adds an existing field as a child of a template or element parent. The
+per-add-site overrides set how the field appears in *this* parent — the key it
+binds to, the label and description shown in the UI, whether it's
+single-instance or multi-instance (with optional `minItems` / `maxItems`).
+They're per-add-site because the same reusable field may be used differently in
+different parents.
 
 ### `add_element(parent_json, child_json, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
 
-Element variant of `add_field`: adds an existing CEDAR element (from
-`create_element` or `element_from_yaml`) as a child of a template or element.
-Same per-add-site overrides apply. The compose workflow is two-step by design
-— build the child first, then graft it onto the parent — to keep the MCP API
-surface small.
+Element variant of `add_field`: adds an existing element as a child of a
+template or element parent. Same per-add-site overrides apply.
 
 ### `remove_child(parent_json, key)`
 
-Removes a field or element child from a CEDAR template or element parent. Auto-detects
-whether the key names a field or element child by looking it up in the parent's
-`fieldSchemas` / `elementSchemas`; the parent's `_ui` `order`, `propertyLabels`, and
-`propertyDescriptions` entries are removed in lockstep. Returns the updated parent
-JSON, re-validated with CedarValidator.
+Removes a field or element child from a template or element parent by key.
 
 ### `add_class_constraint(field_json, class_iri, ontology_acronym, label, pref_label, value_type?)`
 
-Pins a controlled-term field to a single ontology class. The canonical input tuple
-matches what `bioportal-term-mcp`'s `get_class` returns. `value_type` is `"class"` by
-default (a real ontology class) or `"value"` for permissible-value entries.
+Pins a controlled-term field to a single ontology class. The input tuple
+matches what `bioportal-term-mcp`'s `get_class` returns. `value_type` defaults
+to `"class"` (a real ontology class) or `"value"` for permissible-value
+entries.
 
 ### `add_ontology_constraint(field_json, ontology_iri, ontology_acronym, ontology_name)`
 
-Scopes a controlled-term field's permissible values to all classes from a named
-ontology. The canonical input tuple matches `bioportal-term-mcp`'s `get_ontology`.
+Scopes a controlled-term field's permissible values to all classes from a
+named ontology. The input tuple matches `bioportal-term-mcp`'s `get_ontology`.
 
 ### `add_branch_constraint(field_json, ontology_name, ontology_acronym, branch_iri, branch_label, max_depth?)`
 
-Scopes a controlled-term field to a subtree rooted at a named class. `max_depth`
-defaults to `0` (the library's convention for unbounded depth).
+Scopes a controlled-term field to an ontology subtree rooted at a named class.
+`max_depth` defaults to `0` (unbounded).
 
 ### `add_valueset_constraint(field_json, value_set_iri, vs_collection, name)`
 
-Pins a controlled-term field to a curated value set hosted in BioPortal. Value sets
-live in special "value-set collection" ontologies (e.g. `CEDARVS`, `HRAVS`); the
-`vs_collection` arg names that collection.
+Pins a controlled-term field to a curated value set hosted in BioPortal (e.g.
+in `CEDARVS` or `HRAVS`).
 
-All four constraint tools accept any TEXTFIELD-shape field (text-field or
-controlled-term-field) and produce a controlled-term-field with the new constraint
-attached. The library's reader only classifies a TEXTFIELD as controlled-term once it
-carries a constraint, so an "empty controlled-term-field" and a "text-field" are JSON-
-indistinguishable on the wire — both are valid inputs here.
+All four constraint tools accept either an empty controlled-term field or a
+plain text-field as input — the library only classifies a field as
+controlled-term once it carries at least one constraint, so the two are wire-
+indistinguishable until then.
 
 ### `create_instance(template_json, name?, description?, is_based_on?)`
 
-Builds an empty (skeleton) CEDAR template instance from a template JSON. Walks the
-template's children and creates one empty `FieldInstance` per non-static,
-non-attribute-value field; multi-instance children start as empty arrays; nested
-elements are recursively populated. The `@context` mappings are populated from the
-template's child property URIs so the result passes `validate_instance` straight away.
-
-`is_based_on` defaults to the template's `@id` when present. For freshly built
-templates without an `@id` (e.g. just out of `create_template`) the caller must supply
-`is_based_on` explicitly.
+Creates an empty (skeleton) instance from a template, ready to be populated
+with field values. `is_based_on` defaults to the template's `@id` when
+present; for freshly built templates without an `@id` it must be supplied
+explicitly.
 
 ### `add_default_value(field_json, value)`
 
-Attaches a schema-level default value to a literal-valued CEDAR field (text,
-text-area, numeric, temporal, phone, email, radio, checkbox, list). The value
-type must match the field's input type. Returns the updated field JSON,
-re-validated with CedarValidator.
+Attaches a default value to a literal-valued field (text, text-area, numeric,
+temporal, phone, email, radio, checkbox, list). The value type must match the
+field's input type.
 
 ### `add_iri_default_value(field_json, iri)`
 
-Attaches a default URI to an IRI-valued CEDAR field (link, ROR, ORCID, PFAS,
-RRID, PubMed, NIH-grant-ID, DOI). The library's schema-level IRI default is a
-bare URI with no label — if a labelled default is needed, set it on the instance
-side via `set_iri_field_value`.
+Attaches a default URI to an IRI-valued field (link, ROR, ORCID, PFAS, RRID,
+PubMed, NIH-grant-ID, DOI). The schema-level default is a bare URI; if you want
+a default that carries a human label too, set it on the instance side via
+`set_iri_field_value`.
 
 ### `add_controlled_term_default_value(field_json, iri, label)`
 
-Attaches a default class IRI + human label to a CEDAR controlled-term field.
-Requires the field to already be classified as a ControlledTermField (carrying
-at least one `add_*_constraint` constraint); a plain text-field is refused with
-a redirect to the constraint tools.
+Attaches a default class IRI + human label to a controlled-term field. The
+field must already carry at least one `add_*_constraint` constraint; a plain
+text-field is refused with a redirect to the constraint tools.
 
 ### `instance_from_yaml(yaml)`
 
-Compiles a CEDAR template instance from YAML to its canonical JSON. Minimal
-instance YAML needs `type: instance`, `name`, and `isBasedOn` (the template's
-URI); per-field values live under a `children` map keyed by the schema's
-property keys.
+Compiles a template instance from YAML to its canonical JSON. Minimal instance
+YAML needs `type: instance`, `name`, and `isBasedOn` (the template's URI);
+field values live under a `children` map keyed by the template's child keys.
 
 ### `instance_to_yaml(json, isCompact?)`
 
-Reverse direction of `instance_from_yaml`: renders a canonical CEDAR template
-instance JSON as YAML. `isCompact` defaults to `true` (drops provenance metadata
-and elides empty fields for the LLM-friendly authoring view); pass `false` to
-keep every field the renderer can emit.
+Renders a template instance JSON back as YAML. `isCompact` defaults to `true`
+(the lean authoring view); pass `false` to keep every field including
+provenance.
 
 ### `set_field_value(template_json, instance_json, field_path, value)`
 
-Sets the `@value` of a literal-valued field instance (text, numeric, temporal,
-phone, email, radio, checkbox, list, text-area) at a slash-separated
-`field_path`. Value type must match the schema's input type. Returns the
-updated instance JSON.
+Sets the value of a literal-valued field on an instance — text, numeric,
+temporal, phone, email, radio, checkbox, list, or text-area. The value type
+must match the schema's input type.
 
 ### `set_iri_field_value(template_json, instance_json, field_path, iri, label?)`
 
-Sets the `@id` of an IRI-valued field instance (link, ROR, ORCID, PFAS, RRID,
-PubMed, NIH-grant-ID, DOI) at a slash-separated `field_path`. The optional
-`label` populates `rdfs:label` alongside the `@id` and is typically supplied
-(the terminology MCP returns it).
+Sets the URI (and optional human label) of an IRI-valued field on an instance
+— link, ROR, ORCID, PFAS, RRID, PubMed, NIH-grant-ID, or DOI. The label
+populates `rdfs:label` alongside the URI and is typically supplied.
 
 ### `set_controlled_term_field_value(template_json, instance_json, field_path, iri, label, pref_label?)`
 
-Sets the IRI + `rdfs:label` + `skos:prefLabel` of a controlled-term field
-instance at a slash-separated `field_path`. Both `iri` and `label` are required;
-`pref_label` defaults to `label` when omitted. The schema must declare the
-field as controlled-term (carrying at least one class/ontology/branch/value-set
-constraint) — see the note on the wire collision in the constraint docs above.
+Sets the URI, human label, and preferred label of a controlled-term field on
+an instance. The schema must declare the field as controlled-term (with at
+least one `add_*_constraint` already attached).
 
 #### Notes shared by the three `set_*` tools
 
 `field_path` uses slash-separated nesting and bracketed indices for
 multi-instance children: `address/street`, `addresses[2]/street`, `emails[0]`.
 For multi-instance fields at the leaf, an index equal to the current list size
-appends (extends the list by one); any larger index errors. Multi-instance
-element indices walking through intermediate steps must already exist.
+appends a new entry; any larger index errors.
 
-The `template_json` argument is required because the instance JSON loses field
-type info on round-trip — the schema is the source of truth for which kind of
-`FieldInstance` to build.
+`template_json` is required because the instance JSON loses field-type
+information on round-trip — the schema is the source of truth for which kind
+of field the value belongs to.
 
 ### `validate_instance(template_json, instance_json)`
 
-Validates a template instance against its template via
-`CedarValidator.validateTemplateInstance`. Returns a structured report:
-`{"valid": true}` on success, or `{"valid": false, "errors": [...]}` with the
-validator's diagnostics on failure.
+Validates a template instance against its template. Returns
+`{"valid": true}` on success, or `{"valid": false, "errors": [...]}` with
+diagnostics on failure.
 
 ### `template_from_yaml(yaml)`
 
-**The headline authoring tool.** Takes a CEDAR template described in the artifact
-library's YAML format (compact, hierarchical, LLM-friendly) and returns the canonical
-CEDAR JSON Schema. The four-stage pipeline is:
-
-1. SnakeYAML parses the input text to a map.
-2. `YamlArtifactReader` reads the map into the in-memory model.
-3. `JsonArtifactRenderer` renders the model to JSON Schema.
-4. `CedarValidator` validates the JSON Schema before it leaves the tool.
-
-A non-error result is a guaranteed-valid CEDAR template. Example YAML input:
+**The headline authoring tool.** Compiles a CEDAR template described in the
+artifact library's compact YAML into canonical CEDAR JSON. A non-error result
+is a guaranteed-valid template. Example YAML input:
 
 ```yaml
 type: template
@@ -382,41 +330,31 @@ children:
 
 ### `element_from_yaml(yaml)`
 
-Element variant of `template_from_yaml`. Same four-stage pipeline; validates
-with `validateTemplateElement`. Use this when authoring a reusable element that
-will later be embedded in a template by other tooling.
+Element variant of `template_from_yaml`: compiles a CEDAR element described in
+YAML into canonical JSON. Use this when authoring a reusable element that will
+later be embedded in a template.
 
 ### `field_from_yaml(yaml)`
 
-Field variant of `template_from_yaml`. Same four-stage pipeline; validates with
-`validateTemplateField`. Use this when authoring a standalone field with
-structured sub-objects (controlled-term values, inline radio/checkbox/list
-values, default values, multi-instance configuration) that the more compact
-`create_field` interface doesn't reach.
+Field variant of `template_from_yaml`: compiles a CEDAR field described in
+YAML into canonical JSON. Reach for this (vs. `create_field`) when the field
+needs structured sub-objects — controlled-term values, inline
+radio/checkbox/list options, default values, multi-instance configuration.
 
 ### `template_to_yaml(json, isCompact?)`
 
-Reverse direction of `template_from_yaml`: takes a CEDAR template JSON Schema
-and returns the artifact library's YAML serialization. `isCompact` defaults to
-`true`:
-
-- `isCompact: true` (default) — the lean, LLM-friendly authoring form. Provenance
-  fields, status, version, and `modelVersion` are all omitted. The matching
-  `*_from_yaml` tool runs the library reader in compact mode, which defaults an
-  absent `modelVersion` to the canonical value, so compact YAML round-trips
-  cleanly. Best for showing an LLM an artifact it should edit.
-- `isCompact: false` — every field the renderer can emit. Suitable for archival
-  and round-trip diffing where provenance and version metadata need to survive.
+Renders a CEDAR template JSON back as YAML. `isCompact` defaults to `true` —
+the lean, LLM-friendly authoring form, with provenance, status, version, and
+`modelVersion` omitted. Pass `false` to keep every field for archival or
+round-trip diffing.
 
 ### `element_to_yaml(json, isCompact?)`
 
-Element variant of `template_to_yaml`. Same `isCompact` semantics; renders a
-CEDAR element JSON Schema as YAML.
+Element variant of `template_to_yaml`. Same `isCompact` semantics.
 
 ### `field_to_yaml(json, isCompact?)`
 
-Field variant of `template_to_yaml`. Same `isCompact` semantics; renders a CEDAR
-field JSON Schema as YAML.
+Field variant of `template_to_yaml`. Same `isCompact` semantics.
 
 ### `ping(message)`
 
