@@ -125,20 +125,20 @@ final class EndToEndStdioIT
           "add_element tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("remove_child"),
           "remove_child tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("add_class_constraint"),
-          "add_class_constraint tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("add_ontology_constraint"),
-          "add_ontology_constraint tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("add_branch_constraint"),
-          "add_branch_constraint tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("add_valueset_constraint"),
-          "add_valueset_constraint tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("add_default_value"),
-          "add_default_value tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("add_iri_default_value"),
-          "add_iri_default_value tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("add_controlled_term_default_value"),
-          "add_controlled_term_default_value tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("set_class_constraint"),
+          "set_class_constraint tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("set_ontology_constraint"),
+          "set_ontology_constraint tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("set_branch_constraint"),
+          "set_branch_constraint tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("set_valueset_constraint"),
+          "set_valueset_constraint tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("set_default_value"),
+          "set_default_value tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("set_iri_default_value"),
+          "set_iri_default_value tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("set_controlled_term_default_value"),
+          "set_controlled_term_default_value tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("create_instance"),
           "create_instance tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("instance_from_yaml"),

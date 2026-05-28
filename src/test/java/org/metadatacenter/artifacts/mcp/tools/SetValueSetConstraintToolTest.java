@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-final class AddOntologyConstraintToolTest
+final class SetValueSetConstraintToolTest
 {
   private ModelValidator cedarValidator;
   private ObjectMapper jackson;
@@ -28,24 +28,24 @@ final class AddOntologyConstraintToolTest
     jackson = new ObjectMapper();
   }
 
-  @Test void adds_ontology_constraint_to_controlled_term_field() throws Exception
+  @Test void adds_valueset_constraint_to_controlled_term_field() throws Exception
   {
-    String fieldJson = createControlledTermField("Disease");
+    String fieldJson = createControlledTermField("Area unit");
 
     McpSchema.CallToolResult result = invoke(Map.of(
         "field_json", fieldJson,
-        "ontology_iri", "https://data.bioontology.org/ontologies/DOID",
-        "ontology_acronym", "DOID",
-        "ontology_name", "Human Disease Ontology"));
+        "value_set_iri", "https://example.org/cedarvs/area-units",
+        "vs_collection", "CEDARVS",
+        "name", "Area units"));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
 
-    JsonNode ontologies = rendered.path("_valueConstraints").path("ontologies");
-    assertTrue(ontologies.isArray() && ontologies.size() == 1,
-        "_valueConstraints.ontologies must carry one entry; got: "
+    JsonNode valueSets = rendered.path("_valueConstraints").path("valueSets");
+    assertTrue(valueSets.isArray() && valueSets.size() == 1,
+        "_valueConstraints.valueSets must carry one entry; got: "
             + rendered.path("_valueConstraints"));
-    assertEquals("DOID", ontologies.get(0).path("acronym").asText());
+    assertEquals("CEDARVS", valueSets.get(0).path("vsCollection").asText());
 
     ValidationReport report = cedarValidator.validateTemplateField(rendered);
     assertEquals("true", report.getValidationStatus(),
@@ -58,24 +58,17 @@ final class AddOntologyConstraintToolTest
 
     McpSchema.CallToolResult result = invoke(Map.of(
         "field_json", numericFieldJson,
-        "ontology_iri", "https://example.com/o",
-        "ontology_acronym", "X",
-        "ontology_name", "X"));
-    assertTrue(result.isError());
-  }
-
-  @Test void rejects_missing_required_args()
-  {
-    McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", createControlledTermField("X")));
+        "value_set_iri", "https://example.org/vs",
+        "vs_collection", "CEDARVS",
+        "name", "X"));
     assertTrue(result.isError());
   }
 
   // helpers
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
-    return AddOntologyConstraintTool.handler(null,
-        new McpSchema.CallToolRequest("add_ontology_constraint", args));
+    return SetValueSetConstraintTool.handler(null,
+        new McpSchema.CallToolRequest("set_valueset_constraint", args));
   }
 
   private String createControlledTermField(String name) { return createField(name, "controlled-term-field"); }

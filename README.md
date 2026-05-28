@@ -26,7 +26,7 @@ and instances, but it does not perform terminology lookups, talk to a CEDAR
 server, or do any other I/O. Terminology MCPs (e.g.
 [`bioportal-term-mcp`](https://github.com/metadatacenter/bioportal-term-mcp))
 supply the IRI/acronym/name tuples that controlled-term constraints need; the
-calling LLM passes those tuples into this MCP's `add_*_constraint` tools.
+calling LLM passes those tuples into this MCP's `set_*_constraint` tools.
 
 See [DESIGN.md](./DESIGN.md) for the architectural principles and
 [ROADMAP.md](./ROADMAP.md) for what's planned.
@@ -187,7 +187,7 @@ fields, common configuration is accepted inline:
 For fields whose shape needs structured sub-objects (controlled-term values,
 inline radio/checkbox/list options, multi-instance configuration, default
 values), reach for `field_from_yaml` instead. Constraints and default values
-can also be layered on via the `add_*_constraint` and `add_*_default_value`
+can also be layered on via the `set_*_constraint` and `set_*_default_value`
 tools.
 
 ### `add_field(parent_json, child_json, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
@@ -208,24 +208,24 @@ template or element parent. Same per-add-site overrides apply.
 
 Removes a field or element child from a template or element parent by key.
 
-### `add_class_constraint(field_json, class_iri, ontology_acronym, label, pref_label, value_type?)`
+### `set_class_constraint(field_json, class_iri, ontology_acronym, label, pref_label, value_type?)`
 
 Pins a controlled-term field to a single ontology class. The input tuple
 matches what `bioportal-term-mcp`'s `get_class` returns. `value_type` defaults
 to `"class"` (a real ontology class) or `"value"` for permissible-value
 entries.
 
-### `add_ontology_constraint(field_json, ontology_iri, ontology_acronym, ontology_name)`
+### `set_ontology_constraint(field_json, ontology_iri, ontology_acronym, ontology_name)`
 
 Scopes a controlled-term field's permissible values to all classes from a
 named ontology. The input tuple matches `bioportal-term-mcp`'s `get_ontology`.
 
-### `add_branch_constraint(field_json, ontology_name, ontology_acronym, branch_iri, branch_label, max_depth?)`
+### `set_branch_constraint(field_json, ontology_name, ontology_acronym, branch_iri, branch_label, max_depth?)`
 
 Scopes a controlled-term field to an ontology subtree rooted at a named class.
 `max_depth` defaults to `0` (unbounded).
 
-### `add_valueset_constraint(field_json, value_set_iri, vs_collection, name)`
+### `set_valueset_constraint(field_json, value_set_iri, vs_collection, name)`
 
 Pins a controlled-term field to a curated value set hosted in BioPortal (e.g.
 in `CEDARVS` or `HRAVS`).
@@ -235,31 +235,31 @@ plain text-field as input — the library only classifies a field as
 controlled-term once it carries at least one constraint, so the two are wire-
 indistinguishable until then.
 
-### `create_instance(template_json, name?, description?, is_based_on?)`
-
-Creates an empty (skeleton) instance from a template, ready to be populated
-with field values. `is_based_on` defaults to the template's `@id` when
-present; for freshly built templates without an `@id` it must be supplied
-explicitly.
-
-### `add_default_value(field_json, value)`
+### `set_default_value(field_json, value)`
 
 Attaches a default value to a literal-valued field (text, text-area, numeric,
 temporal, phone, email, radio, checkbox, list). The value type must match the
 field's input type.
 
-### `add_iri_default_value(field_json, iri)`
+### `set_iri_default_value(field_json, iri)`
 
 Attaches a default URI to an IRI-valued field (link, ROR, ORCID, PFAS, RRID,
 PubMed, NIH-grant-ID, DOI). The schema-level default is a bare URI; if you want
 a default that carries a human label too, set it on the instance side via
 `set_iri_field_value`.
 
-### `add_controlled_term_default_value(field_json, iri, label)`
+### `set_controlled_term_default_value(field_json, iri, label)`
 
 Attaches a default class IRI + human label to a controlled-term field. The
-field must already carry at least one `add_*_constraint` constraint; a plain
+field must already carry at least one `set_*_constraint` constraint; a plain
 text-field is refused with a redirect to the constraint tools.
+
+### `create_instance(template_json, name?, description?, is_based_on?)`
+
+Creates an empty (skeleton) instance from a template, ready to be populated
+with field values. `is_based_on` defaults to the template's `@id` when
+present; for freshly built templates without an `@id` it must be supplied
+explicitly.
 
 ### `instance_from_yaml(yaml)`
 
@@ -289,7 +289,7 @@ populates `rdfs:label` alongside the URI and is typically supplied.
 
 Sets the URI, human label, and preferred label of a controlled-term field on
 an instance. The schema must declare the field as controlled-term (with at
-least one `add_*_constraint` already attached).
+least one `set_*_constraint` already attached).
 
 #### Notes shared by the three `set_*` tools
 

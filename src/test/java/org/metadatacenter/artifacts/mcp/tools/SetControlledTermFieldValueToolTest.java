@@ -127,7 +127,7 @@ final class SetControlledTermFieldValueToolTest
         "label", "x"));
     assertTrue(result.isError());
     assertTrue(errorText(result).toLowerCase().contains("controlled-term")
-            && errorText(result).contains("add_class_constraint"),
+            && errorText(result).contains("set_class_constraint"),
         "error should mention controlled-term and add_*_constraint guidance; got: "
             + errorText(result));
   }

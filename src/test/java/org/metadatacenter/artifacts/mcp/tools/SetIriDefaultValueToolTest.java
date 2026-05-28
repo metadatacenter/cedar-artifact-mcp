@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-final class AddIriDefaultValueToolTest
+final class SetIriDefaultValueToolTest
 {
   private ModelValidator cedarValidator;
   private ObjectMapper jackson;
@@ -73,8 +73,8 @@ final class AddIriDefaultValueToolTest
   // helpers
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
-    return AddIriDefaultValueTool.handler(null,
-        new McpSchema.CallToolRequest("add_iri_default_value", args));
+    return SetIriDefaultValueTool.handler(null,
+        new McpSchema.CallToolRequest("set_iri_default_value", args));
   }
 
   private static String createField(String name, String type)

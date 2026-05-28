@@ -31,7 +31,7 @@ import java.util.Map;
  * plain text-field schema (the library only classifies a TEXTFIELD as
  * {@link ControlledTermField} once it carries a controlled-term constraint). This
  * tool refuses TEXTFIELD-without-constraint schemas — author the constraint first via
- * {@code add_class_constraint} / etc. so the schema declares itself as controlled-term.
+ * {@code set_class_constraint} / etc. so the schema declares itself as controlled-term.
  */
 public final class SetControlledTermFieldValueTool
 {
@@ -162,8 +162,8 @@ public final class SetControlledTermFieldValueTool
     if (!(schemaField instanceof ControlledTermField))
       return error("field at '" + fieldPath + "' is not a controlled-term field "
           + "(schema class: " + schemaField.getClass().getSimpleName() + "). Add a "
-          + "controlled-term constraint to the schema first via add_class_constraint / "
-          + "add_ontology_constraint / add_branch_constraint / add_valueset_constraint.");
+          + "controlled-term constraint to the schema first via set_class_constraint / "
+          + "set_ontology_constraint / set_branch_constraint / set_valueset_constraint.");
 
     FieldInputType inputType = schemaField.fieldUi().inputType();
     if (inputType != FieldInputType.TEXTFIELD)

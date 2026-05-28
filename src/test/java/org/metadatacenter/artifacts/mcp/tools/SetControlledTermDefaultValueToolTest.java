@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-final class AddBranchConstraintToolTest
+final class SetControlledTermDefaultValueToolTest
 {
   private ModelValidator cedarValidator;
   private ObjectMapper jackson;
@@ -28,77 +28,87 @@ final class AddBranchConstraintToolTest
     jackson = new ObjectMapper();
   }
 
-  @Test void adds_branch_constraint_to_controlled_term_field() throws Exception
+  @Test void sets_controlled_term_default() throws Exception
   {
-    String fieldJson = createControlledTermField("Disease");
+    String fieldJson = compileField(
+        "type: controlled-term-field\n"
+            + "name: Diagnosis\n"
+            + "description: ICD diagnosis\n"
+            + "modelVersion: 1.6.0\n"
+            + "datatype: iri\n"
+            + "values:\n"
+            + "  - type: class\n"
+            + "    label: disease\n"
+            + "    acronym: DOID\n"
+            + "    termType: class\n"
+            + "    termLabel: disease\n"
+            + "    iri: http://purl.obolibrary.org/obo/DOID_4\n");
 
     McpSchema.CallToolResult result = invoke(Map.of(
         "field_json", fieldJson,
-        "branch_iri", "http://purl.obolibrary.org/obo/DOID_4",
-        "ontology_name", "Human Disease Ontology",
-        "ontology_acronym", "DOID",
-        "branch_label", "Disease"));
+        "iri", "http://purl.obolibrary.org/obo/DOID_1612",
+        "label", "breast cancer"));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
-
-    JsonNode branches = rendered.path("_valueConstraints").path("branches");
-    assertTrue(branches.isArray() && branches.size() == 1,
-        "_valueConstraints.branches must carry one entry; got: "
-            + rendered.path("_valueConstraints"));
+    JsonNode def = rendered.path("_valueConstraints").path("defaultValue");
+    assertEquals("http://purl.obolibrary.org/obo/DOID_1612",
+        def.path("termUri").asText(),
+        "default IRI must appear; got: " + def);
+    assertEquals("breast cancer", def.path("rdfs:label").asText(),
+        "default label must appear; got: " + def);
 
     ValidationReport report = cedarValidator.validateTemplateField(rendered);
-    assertEquals("true", report.getValidationStatus(),
-        "constrained field must pass validateTemplateField");
+    assertEquals("true", report.getValidationStatus());
   }
 
-  @Test void max_depth_arg_is_optional_and_defaults_to_zero() throws Exception
+  @Test void rejects_text_field_without_constraint()
   {
-    String fieldJson = createControlledTermField("X");
+    // A plain text-field reads back as TextField (the wire collision); the tool must
+    // refuse and direct the user to add_*_constraint first.
+    String fieldJson = createField("Note", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
         "field_json", fieldJson,
-        "branch_iri", "http://purl.obolibrary.org/obo/DOID_4",
-        "ontology_name", "DOID",
-        "ontology_acronym", "DOID",
-        "branch_label", "Disease"));
-
-    assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-
-    assertEquals(0,
-        rendered.path("_valueConstraints").path("branches").get(0).path("maxDepth").asInt(),
-        "max_depth defaults to 0 when omitted; got: " + rendered.path("_valueConstraints"));
+        "iri", "https://example.org/x",
+        "label", "x"));
+    assertTrue(result.isError());
+    assertTrue(errorText(result).toLowerCase().contains("text-field")
+            || errorText(result).toLowerCase().contains("controlled-term"),
+        "error should redirect to constraint tools; got: " + errorText(result));
   }
 
-  @Test void rejects_non_textfield_shape()
+  @Test void rejects_missing_label()
   {
-    String numericFieldJson = createField("Count", "numeric-field");
-
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", numericFieldJson,
-        "branch_iri", "http://example.com/x",
-        "ontology_name", "X",
-        "ontology_acronym", "X",
-        "branch_label", "X"));
+        "field_json", "{}",
+        "iri", "https://x.example"));
     assertTrue(result.isError());
+    assertTrue(errorText(result).contains("label"));
   }
 
   // helpers
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
-    return AddBranchConstraintTool.handler(null,
-        new McpSchema.CallToolRequest("add_branch_constraint", args));
+    return SetControlledTermDefaultValueTool.handler(null,
+        new McpSchema.CallToolRequest("set_controlled_term_default_value", args));
   }
 
-  private String createControlledTermField(String name) { return createField(name, "controlled-term-field"); }
-
-  private String createField(String name, String type)
+  private static String createField(String name, String type)
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
         new McpSchema.CallToolRequest("create_field", Map.of("name", name, "type", type)));
     assertFalse(result.isError(),
         "fixture field must build cleanly; got: " + errorText(result));
+    return textOf(result);
+  }
+
+  private static String compileField(String yaml)
+  {
+    McpSchema.CallToolResult result = FieldFromYamlTool.handler(null,
+        new McpSchema.CallToolRequest("field_from_yaml", Map.of("yaml", yaml)));
+    assertFalse(result.isError(),
+        "fixture field YAML must compile cleanly; got: " + errorText(result));
     return textOf(result);
   }
 

@@ -5,16 +5,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
+import org.metadatacenter.artifacts.model.core.CheckboxField;
 import org.metadatacenter.artifacts.model.core.ControlledTermField;
-import org.metadatacenter.artifacts.model.core.DoiField;
+import org.metadatacenter.artifacts.model.core.EmailField;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
-import org.metadatacenter.artifacts.model.core.LinkField;
-import org.metadatacenter.artifacts.model.core.NihGrantIdField;
-import org.metadatacenter.artifacts.model.core.OrcidField;
-import org.metadatacenter.artifacts.model.core.PfasField;
-import org.metadatacenter.artifacts.model.core.PubMedField;
-import org.metadatacenter.artifacts.model.core.RorField;
-import org.metadatacenter.artifacts.model.core.RridField;
+import org.metadatacenter.artifacts.model.core.ListField;
+import org.metadatacenter.artifacts.model.core.NumericField;
+import org.metadatacenter.artifacts.model.core.PhoneNumberField;
+import org.metadatacenter.artifacts.model.core.RadioField;
+import org.metadatacenter.artifacts.model.core.TemporalField;
+import org.metadatacenter.artifacts.model.core.TextAreaField;
+import org.metadatacenter.artifacts.model.core.TextField;
 import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
 import org.metadatacenter.artifacts.model.reader.JsonArtifactReader;
 import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
@@ -23,29 +24,26 @@ import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ErrorItem;
 import org.metadatacenter.model.validation.report.ValidationReport;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code add_iri_default_value} — sets the schema-level default value on
- * an IRI-valued field (link, ROR, ORCID, PFAS, RRID, PubMed, NIH-grant-ID, DOI).
+ * MCP tool {@code set_default_value} — sets the schema-level default value on a
+ * literal-valued field (text, text-area, numeric, temporal, phone, email, radio,
+ * checkbox, list). For IRI fields use {@link SetIriDefaultValueTool}; for
+ * controlled-term fields use {@link SetControlledTermDefaultValueTool}.
  *
- * <p>The library's IRI-field schema defaults are bare URIs (no label) — distinct
- * from instance-level IRI values which carry an optional rdfs:label. If a default
- * with a label is needed, the LLM should set it on the instance side via
- * {@code set_iri_field_value} after instantiation.
  */
-public final class AddIriDefaultValueTool
+public final class SetDefaultValueTool
 {
   private static final ObjectMapper JACKSON2 = new ObjectMapper();
   private static final JsonArtifactReader READER = new JsonArtifactReader();
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
   private static final ModelValidator VALIDATOR = new CedarValidator();
 
-  private AddIriDefaultValueTool() {}
+  private SetDefaultValueTool() {}
 
   public static McpSchema.Tool tool()
   {
@@ -53,22 +51,25 @@ public final class AddIriDefaultValueTool
     properties.put("field_json", Map.of(
         "type", "string",
         "description",
-        "CEDAR IRI field as JSON Schema — link, ROR, ORCID, PFAS, RRID, PubMed, "
-            + "NIH-grant-ID, or DOI. The kind 'create_field' with one of those types or "
-            + "'field_from_yaml' returns."));
-    properties.put("iri", Map.of(
-        "type", "string",
-        "description", "Default URI value."));
+        "CEDAR field as JSON Schema (the kind 'create_field' with a literal-valued "
+            + "type or 'field_from_yaml' returns)."));
+    properties.put("value", Map.of(
+        "description",
+        "Default value to set. String for text/temporal/phone/email/radio/checkbox/"
+            + "list fields; number for numeric fields. Type must match the field's "
+            + "input type."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("field_json", "iri"), Boolean.FALSE, null, null);
+        "object", properties, List.of("field_json", "value"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
-        .name("add_iri_default_value")
-        .title("Set an IRI default value on a field")
+        .name("set_default_value")
+        .title("Set a literal default value on a field")
         .description(
-            "Attaches a default URI value to an IRI-valued CEDAR field schema. "
-                + "Returns the updated field JSON, re-validated with CedarValidator."
+            "Attaches a default value to a literal-valued CEDAR field schema. "
+                + "Returns the updated field JSON, re-validated with CedarValidator. "
+                + "Use set_iri_default_value for link/ROR/ORCID/etc. fields, or "
+                + "set_controlled_term_default_value for controlled-term fields."
                 + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
         .build();
@@ -83,16 +84,9 @@ public final class AddIriDefaultValueTool
     if (fieldJsonText == null || fieldJsonText.isBlank())
       return error("field_json is required and must not be blank");
 
-    String iriArg = stringArg(args, "iri");
-    if (iriArg == null || iriArg.isBlank())
-      return error("iri is required and must not be blank");
-
-    URI iri;
-    try {
-      iri = new URI(iriArg);
-    } catch (URISyntaxException e) {
-      return error("iri is not a valid URI: " + e.getMessage());
-    }
+    if (!args.containsKey("value"))
+      return error("value is required");
+    Object value = args.get("value");
 
     JsonNode parsed;
     try {
@@ -113,15 +107,15 @@ public final class AddIriDefaultValueTool
     }
 
     if (field instanceof ControlledTermField)
-      return error("field is a controlled-term field — use add_controlled_term_default_value");
+      return error("field is a controlled-term field — use set_controlled_term_default_value");
 
     FieldSchemaArtifact updated;
     try {
-      updated = rebuildWithDefault(field, iri);
+      updated = rebuildWithDefault(field, value);
     } catch (IllegalArgumentException e) {
       return error(e.getMessage());
     } catch (RuntimeException e) {
-      return error("add_iri_default_value failed: " + e.getClass().getSimpleName()
+      return error("set_default_value failed: " + e.getClass().getSimpleName()
           + ": " + e.getMessage());
     }
 
@@ -147,19 +141,54 @@ public final class AddIriDefaultValueTool
         .build();
   }
 
-  private static FieldSchemaArtifact rebuildWithDefault(FieldSchemaArtifact field, URI iri)
+  private static FieldSchemaArtifact rebuildWithDefault(FieldSchemaArtifact field, Object value)
   {
-    if (field instanceof LinkField lf) return LinkField.builder(lf).withDefaultValue(iri).build();
-    if (field instanceof RorField rf) return RorField.builder(rf).withDefaultValue(iri).build();
-    if (field instanceof OrcidField of) return OrcidField.builder(of).withDefaultValue(iri).build();
-    if (field instanceof PfasField pf) return PfasField.builder(pf).withDefaultValue(iri).build();
-    if (field instanceof RridField rf) return RridField.builder(rf).withDefaultValue(iri).build();
-    if (field instanceof PubMedField pmf) return PubMedField.builder(pmf).withDefaultValue(iri).build();
-    if (field instanceof NihGrantIdField nf) return NihGrantIdField.builder(nf).withDefaultValue(iri).build();
-    if (field instanceof DoiField df) return DoiField.builder(df).withDefaultValue(iri).build();
-    throw new IllegalArgumentException("add_iri_default_value works only on IRI fields "
-        + "(link, ROR, ORCID, PFAS, RRID, PubMed, NIH-grant-ID, DOI); got "
-        + field.getClass().getSimpleName());
+    if (field instanceof TextField tf)
+      return TextField.builder(tf).withDefaultValue(stringValue(value)).build();
+    if (field instanceof TextAreaField taf)
+      return TextAreaField.builder(taf).withDefaultValue(stringValue(value)).build();
+    if (field instanceof NumericField nf)
+      return NumericField.builder(nf).withDefaultValue(numericValue(value)).build();
+    if (field instanceof TemporalField tf)
+      return TemporalField.builder(tf).withDefaultValue(stringValue(value)).build();
+    if (field instanceof PhoneNumberField pf)
+      return PhoneNumberField.builder(pf).withDefaultValue(stringValue(value)).build();
+    if (field instanceof EmailField ef)
+      return EmailField.builder(ef).withDefaultValue(stringValue(value)).build();
+    if (field instanceof RadioField rf)
+      return RadioField.builder(rf).withDefaultValue(stringValue(value)).build();
+    if (field instanceof CheckboxField cf)
+      return CheckboxField.builder(cf).withDefaultValue(stringValue(value)).build();
+    if (field instanceof ListField lf)
+      return ListField.builder(lf).withDefaultValue(stringValue(value)).build();
+    throw new IllegalArgumentException("set_default_value does not support field class "
+        + field.getClass().getSimpleName() + " — use set_iri_default_value, "
+        + "set_controlled_term_default_value, or check whether the field type supports "
+        + "a default at all (text-area and static fields do not).");
+  }
+
+  private static String stringValue(Object value)
+  {
+    if (value == null)
+      throw new IllegalArgumentException("value must not be null");
+    return value.toString();
+  }
+
+  private static Number numericValue(Object value)
+  {
+    if (value == null)
+      throw new IllegalArgumentException("value must not be null");
+    if (value instanceof Number n) return n;
+    if (value instanceof String s) {
+      try {
+        return new BigDecimal(s);
+      } catch (NumberFormatException e) {
+        throw new IllegalArgumentException("numeric default value must be a number "
+            + "(or a numeric string); got '" + s + "'");
+      }
+    }
+    throw new IllegalArgumentException("numeric default value must be a number (got "
+        + value.getClass().getSimpleName() + ")");
   }
 
   private static String formatErrors(ValidationReport report)

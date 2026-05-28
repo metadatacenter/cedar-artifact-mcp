@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-final class AddValueSetConstraintToolTest
+final class SetBranchConstraintToolTest
 {
   private ModelValidator cedarValidator;
   private ObjectMapper jackson;
@@ -28,28 +28,47 @@ final class AddValueSetConstraintToolTest
     jackson = new ObjectMapper();
   }
 
-  @Test void adds_valueset_constraint_to_controlled_term_field() throws Exception
+  @Test void adds_branch_constraint_to_controlled_term_field() throws Exception
   {
-    String fieldJson = createControlledTermField("Area unit");
+    String fieldJson = createControlledTermField("Disease");
 
     McpSchema.CallToolResult result = invoke(Map.of(
         "field_json", fieldJson,
-        "value_set_iri", "https://example.org/cedarvs/area-units",
-        "vs_collection", "CEDARVS",
-        "name", "Area units"));
+        "branch_iri", "http://purl.obolibrary.org/obo/DOID_4",
+        "ontology_name", "Human Disease Ontology",
+        "ontology_acronym", "DOID",
+        "branch_label", "Disease"));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
 
-    JsonNode valueSets = rendered.path("_valueConstraints").path("valueSets");
-    assertTrue(valueSets.isArray() && valueSets.size() == 1,
-        "_valueConstraints.valueSets must carry one entry; got: "
+    JsonNode branches = rendered.path("_valueConstraints").path("branches");
+    assertTrue(branches.isArray() && branches.size() == 1,
+        "_valueConstraints.branches must carry one entry; got: "
             + rendered.path("_valueConstraints"));
-    assertEquals("CEDARVS", valueSets.get(0).path("vsCollection").asText());
 
     ValidationReport report = cedarValidator.validateTemplateField(rendered);
     assertEquals("true", report.getValidationStatus(),
         "constrained field must pass validateTemplateField");
+  }
+
+  @Test void max_depth_arg_is_optional_and_defaults_to_zero() throws Exception
+  {
+    String fieldJson = createControlledTermField("X");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "field_json", fieldJson,
+        "branch_iri", "http://purl.obolibrary.org/obo/DOID_4",
+        "ontology_name", "DOID",
+        "ontology_acronym", "DOID",
+        "branch_label", "Disease"));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+
+    assertEquals(0,
+        rendered.path("_valueConstraints").path("branches").get(0).path("maxDepth").asInt(),
+        "max_depth defaults to 0 when omitted; got: " + rendered.path("_valueConstraints"));
   }
 
   @Test void rejects_non_textfield_shape()
@@ -58,17 +77,18 @@ final class AddValueSetConstraintToolTest
 
     McpSchema.CallToolResult result = invoke(Map.of(
         "field_json", numericFieldJson,
-        "value_set_iri", "https://example.org/vs",
-        "vs_collection", "CEDARVS",
-        "name", "X"));
+        "branch_iri", "http://example.com/x",
+        "ontology_name", "X",
+        "ontology_acronym", "X",
+        "branch_label", "X"));
     assertTrue(result.isError());
   }
 
   // helpers
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
-    return AddValueSetConstraintTool.handler(null,
-        new McpSchema.CallToolRequest("add_valueset_constraint", args));
+    return SetBranchConstraintTool.handler(null,
+        new McpSchema.CallToolRequest("set_branch_constraint", args));
   }
 
   private String createControlledTermField(String name) { return createField(name, "controlled-term-field"); }

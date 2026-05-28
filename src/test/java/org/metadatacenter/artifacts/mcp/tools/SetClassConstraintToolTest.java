@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-final class AddClassConstraintToolTest
+final class SetClassConstraintToolTest
 {
   private ModelValidator cedarValidator;
   private ObjectMapper jackson;
@@ -118,8 +118,8 @@ final class AddClassConstraintToolTest
 
   private static McpSchema.CallToolResult invoke(Map<String, Object> arguments)
   {
-    return AddClassConstraintTool.handler(null,
-        new McpSchema.CallToolRequest("add_class_constraint", arguments));
+    return SetClassConstraintTool.handler(null,
+        new McpSchema.CallToolRequest("set_class_constraint", arguments));
   }
 
   private String createControlledTermField(String name)

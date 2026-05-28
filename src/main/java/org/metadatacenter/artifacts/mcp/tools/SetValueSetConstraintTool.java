@@ -10,14 +10,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code add_ontology_constraint} — pins a controlled-term field to all
- * classes from a named ontology. The canonical input tuple ({@code ontology_iri},
- * {@code ontology_acronym}, {@code ontology_name}) matches what
- * {@code bioportal-term-mcp}'s {@code get_ontology} returns.
+ * MCP tool {@code set_valueset_constraint} — pins a controlled-term field to a
+ * curated value set hosted in BioPortal. Value sets live in special "value-set
+ * collection" ontologies (e.g. CEDARVS, HRAVS); the {@code vs_collection} argument
+ * names that collection.
  */
-public final class AddOntologyConstraintTool
+public final class SetValueSetConstraintTool
 {
-  private AddOntologyConstraintTool() {}
+  private SetValueSetConstraintTool() {}
 
   public static McpSchema.Tool tool()
   {
@@ -27,27 +27,29 @@ public final class AddOntologyConstraintTool
         "description",
         "CEDAR controlled-term field as JSON Schema (the kind 'create_field' with "
             + "type='controlled-term-field' or 'field_from_yaml' returns)."));
-    properties.put("ontology_iri", Map.of(
+    properties.put("value_set_iri", Map.of(
         "type", "string",
-        "description", "Canonical IRI for the ontology."));
-    properties.put("ontology_acronym", Map.of(
+        "description", "Canonical IRI for the value set."));
+    properties.put("vs_collection", Map.of(
         "type", "string",
-        "description", "Ontology acronym (e.g. 'DOID')."));
-    properties.put("ontology_name", Map.of(
+        "description",
+        "Acronym of the value-set collection ontology (e.g. 'CEDARVS', 'HRAVS'). "
+            + "Behaves like an ontology acronym in BioPortal's URL structure."));
+    properties.put("name", Map.of(
         "type", "string",
-        "description", "Human-readable ontology name (e.g. 'Human Disease Ontology')."));
+        "description", "Human-readable name of the value set (skos:prefLabel)."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
-        List.of("field_json", "ontology_iri", "ontology_acronym", "ontology_name"),
+        List.of("field_json", "value_set_iri", "vs_collection", "name"),
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
-        .name("add_ontology_constraint")
-        .title("Pin a controlled-term field to an ontology")
+        .name("set_valueset_constraint")
+        .title("Pin a controlled-term field to a value set")
         .description(
-            "Attaches an ontology-level value constraint to a CEDAR controlled-term field, "
-                + "scoping its permissible values to all classes from a named ontology. "
+            "Attaches a value-set constraint to a CEDAR controlled-term field, scoping "
+                + "its permissible values to a curated value set hosted in BioPortal. "
                 + "Returns the updated field JSON, re-validated with CedarValidator."
                 + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
         .inputSchema(schema)
@@ -60,23 +62,23 @@ public final class AddOntologyConstraintTool
     Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
 
     String fieldJson = stringArg(args, "field_json");
-    String ontologyIri = stringArg(args, "ontology_iri");
-    String ontologyAcronym = stringArg(args, "ontology_acronym");
-    String ontologyName = stringArg(args, "ontology_name");
+    String valueSetIri = stringArg(args, "value_set_iri");
+    String vsCollection = stringArg(args, "vs_collection");
+    String name = stringArg(args, "name");
 
-    if (isBlank(ontologyIri)) return error("ontology_iri is required and must not be blank");
-    if (isBlank(ontologyAcronym)) return error("ontology_acronym is required and must not be blank");
-    if (isBlank(ontologyName)) return error("ontology_name is required and must not be blank");
+    if (isBlank(valueSetIri)) return error("value_set_iri is required and must not be blank");
+    if (isBlank(vsCollection)) return error("vs_collection is required and must not be blank");
+    if (isBlank(name)) return error("name is required and must not be blank");
 
     URI iri;
     try {
-      iri = new URI(ontologyIri);
+      iri = new URI(valueSetIri);
     } catch (URISyntaxException e) {
-      return error("ontology_iri is not a valid URI: " + e.getMessage());
+      return error("value_set_iri is not a valid URI: " + e.getMessage());
     }
 
     return ControlledTermConstraints.apply(fieldJson, builder ->
-        builder.withOntologyValueConstraint(iri, ontologyAcronym, ontologyName));
+        builder.withValueSetValueConstraint(iri, vsCollection, name));
   }
 
   private static String stringArg(Map<String, Object> args, String key)

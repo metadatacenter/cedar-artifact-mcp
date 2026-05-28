@@ -11,17 +11,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code add_class_constraint} — pins a controlled-term field to a single
+ * MCP tool {@code set_class_constraint} — pins a controlled-term field to a single
  * ontology class. The canonical input tuple ({@code class_iri}, {@code ontology_acronym},
  * {@code label}, {@code pref_label}) matches what a terminology MCP like
  * {@code bioportal-term-mcp}'s {@code get_class} returns.
  */
-public final class AddClassConstraintTool
+public final class SetClassConstraintTool
 {
   private static final String VALUE_TYPE_CLASS = "class";
   private static final String VALUE_TYPE_VALUE = "value";
 
-  private AddClassConstraintTool() {}
+  private SetClassConstraintTool() {}
 
   public static McpSchema.Tool tool()
   {
@@ -58,7 +58,7 @@ public final class AddClassConstraintTool
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
-        .name("add_class_constraint")
+        .name("set_class_constraint")
         .title("Pin a controlled-term field to an ontology class")
         .description(
             "Attaches a class-level value constraint to a CEDAR controlled-term field, "

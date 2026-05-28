@@ -5,15 +5,15 @@ import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
 import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
 import io.modelcontextprotocol.spec.McpSchema;
-import org.metadatacenter.artifacts.mcp.tools.AddBranchConstraintTool;
-import org.metadatacenter.artifacts.mcp.tools.AddClassConstraintTool;
-import org.metadatacenter.artifacts.mcp.tools.AddControlledTermDefaultValueTool;
-import org.metadatacenter.artifacts.mcp.tools.AddDefaultValueTool;
+import org.metadatacenter.artifacts.mcp.tools.SetBranchConstraintTool;
+import org.metadatacenter.artifacts.mcp.tools.SetClassConstraintTool;
+import org.metadatacenter.artifacts.mcp.tools.SetControlledTermDefaultValueTool;
+import org.metadatacenter.artifacts.mcp.tools.SetDefaultValueTool;
 import org.metadatacenter.artifacts.mcp.tools.AddElementTool;
 import org.metadatacenter.artifacts.mcp.tools.AddFieldTool;
-import org.metadatacenter.artifacts.mcp.tools.AddIriDefaultValueTool;
-import org.metadatacenter.artifacts.mcp.tools.AddOntologyConstraintTool;
-import org.metadatacenter.artifacts.mcp.tools.AddValueSetConstraintTool;
+import org.metadatacenter.artifacts.mcp.tools.SetIriDefaultValueTool;
+import org.metadatacenter.artifacts.mcp.tools.SetOntologyConstraintTool;
+import org.metadatacenter.artifacts.mcp.tools.SetValueSetConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateElementTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateFieldTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateInstanceTool;
@@ -69,13 +69,13 @@ public final class ArtifactMcpServer
         .toolCall(AddFieldTool.tool(), AddFieldTool::handler)
         .toolCall(AddElementTool.tool(), AddElementTool::handler)
         .toolCall(RemoveChildTool.tool(), RemoveChildTool::handler)
-        .toolCall(AddClassConstraintTool.tool(), AddClassConstraintTool::handler)
-        .toolCall(AddOntologyConstraintTool.tool(), AddOntologyConstraintTool::handler)
-        .toolCall(AddBranchConstraintTool.tool(), AddBranchConstraintTool::handler)
-        .toolCall(AddValueSetConstraintTool.tool(), AddValueSetConstraintTool::handler)
-        .toolCall(AddDefaultValueTool.tool(), AddDefaultValueTool::handler)
-        .toolCall(AddIriDefaultValueTool.tool(), AddIriDefaultValueTool::handler)
-        .toolCall(AddControlledTermDefaultValueTool.tool(), AddControlledTermDefaultValueTool::handler)
+        .toolCall(SetClassConstraintTool.tool(), SetClassConstraintTool::handler)
+        .toolCall(SetOntologyConstraintTool.tool(), SetOntologyConstraintTool::handler)
+        .toolCall(SetBranchConstraintTool.tool(), SetBranchConstraintTool::handler)
+        .toolCall(SetValueSetConstraintTool.tool(), SetValueSetConstraintTool::handler)
+        .toolCall(SetDefaultValueTool.tool(), SetDefaultValueTool::handler)
+        .toolCall(SetIriDefaultValueTool.tool(), SetIriDefaultValueTool::handler)
+        .toolCall(SetControlledTermDefaultValueTool.tool(), SetControlledTermDefaultValueTool::handler)
         .toolCall(CreateInstanceTool.tool(), CreateInstanceTool::handler)
         .toolCall(InstanceFromYamlTool.tool(), InstanceFromYamlTool::handler)
         .toolCall(InstanceToYamlTool.tool(), InstanceToYamlTool::handler)

@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code add_controlled_term_default_value} — sets the schema-level default
+ * MCP tool {@code set_controlled_term_default_value} — sets the schema-level default
  * value on a controlled-term field. Requires both the IRI and a human-readable label
  * because controlled-term defaults always carry both (mirrors the
  * {@code set_controlled_term_field_value} pattern on the instance side).
@@ -27,12 +27,12 @@ import java.util.Map;
  * collision as the rest of the controlled-term tooling: a TEXTFIELD without a
  * constraint isn't classified as ControlledTermField on JSON round-trip.
  */
-public final class AddControlledTermDefaultValueTool
+public final class SetControlledTermDefaultValueTool
 {
   private static final ObjectMapper JACKSON2 = new ObjectMapper();
   private static final JsonArtifactReader READER = new JsonArtifactReader();
 
-  private AddControlledTermDefaultValueTool() {}
+  private SetControlledTermDefaultValueTool() {}
 
   public static McpSchema.Tool tool()
   {
@@ -55,7 +55,7 @@ public final class AddControlledTermDefaultValueTool
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
-        .name("add_controlled_term_default_value")
+        .name("set_controlled_term_default_value")
         .title("Set a controlled-term default value on a field")
         .description(
             "Attaches a default value (class IRI + label) to a CEDAR controlled-term "
@@ -111,8 +111,8 @@ public final class AddControlledTermDefaultValueTool
     if (!(field instanceof ControlledTermField))
       return error("field is not a controlled-term field (got "
           + field.getClass().getSimpleName() + "). Add a controlled-term constraint "
-          + "to the field first via add_class_constraint / add_ontology_constraint / "
-          + "add_branch_constraint / add_valueset_constraint, then set the default.");
+          + "to the field first via set_class_constraint / set_ontology_constraint / "
+          + "set_branch_constraint / set_valueset_constraint, then set the default.");
 
     return ControlledTermConstraints.apply(fieldJson, builder ->
         builder.withDefaultValue(iri, label));

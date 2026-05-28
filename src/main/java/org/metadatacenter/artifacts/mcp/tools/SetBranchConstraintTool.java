@@ -10,13 +10,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code add_branch_constraint} — pins a controlled-term field to a subtree
+ * MCP tool {@code set_branch_constraint} — pins a controlled-term field to a subtree
  * rooted at a named class within an ontology. Use when the LLM wants "all diseases
  * under DOID:4" rather than the entire ontology or a single class.
  */
-public final class AddBranchConstraintTool
+public final class SetBranchConstraintTool
 {
-  private AddBranchConstraintTool() {}
+  private SetBranchConstraintTool() {}
 
   public static McpSchema.Tool tool()
   {
@@ -51,7 +51,7 @@ public final class AddBranchConstraintTool
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
-        .name("add_branch_constraint")
+        .name("set_branch_constraint")
         .title("Pin a controlled-term field to an ontology branch")
         .description(
             "Attaches a branch-level value constraint to a CEDAR controlled-term field, "

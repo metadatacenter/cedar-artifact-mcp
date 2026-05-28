@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-final class AddControlledTermDefaultValueToolTest
+final class SetOntologyConstraintToolTest
 {
   private ModelValidator cedarValidator;
   private ObjectMapper jackson;
@@ -28,87 +28,64 @@ final class AddControlledTermDefaultValueToolTest
     jackson = new ObjectMapper();
   }
 
-  @Test void sets_controlled_term_default() throws Exception
+  @Test void adds_ontology_constraint_to_controlled_term_field() throws Exception
   {
-    String fieldJson = compileField(
-        "type: controlled-term-field\n"
-            + "name: Diagnosis\n"
-            + "description: ICD diagnosis\n"
-            + "modelVersion: 1.6.0\n"
-            + "datatype: iri\n"
-            + "values:\n"
-            + "  - type: class\n"
-            + "    label: disease\n"
-            + "    acronym: DOID\n"
-            + "    termType: class\n"
-            + "    termLabel: disease\n"
-            + "    iri: http://purl.obolibrary.org/obo/DOID_4\n");
+    String fieldJson = createControlledTermField("Disease");
 
     McpSchema.CallToolResult result = invoke(Map.of(
         "field_json", fieldJson,
-        "iri", "http://purl.obolibrary.org/obo/DOID_1612",
-        "label", "breast cancer"));
+        "ontology_iri", "https://data.bioontology.org/ontologies/DOID",
+        "ontology_acronym", "DOID",
+        "ontology_name", "Human Disease Ontology"));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
-    JsonNode def = rendered.path("_valueConstraints").path("defaultValue");
-    assertEquals("http://purl.obolibrary.org/obo/DOID_1612",
-        def.path("termUri").asText(),
-        "default IRI must appear; got: " + def);
-    assertEquals("breast cancer", def.path("rdfs:label").asText(),
-        "default label must appear; got: " + def);
+
+    JsonNode ontologies = rendered.path("_valueConstraints").path("ontologies");
+    assertTrue(ontologies.isArray() && ontologies.size() == 1,
+        "_valueConstraints.ontologies must carry one entry; got: "
+            + rendered.path("_valueConstraints"));
+    assertEquals("DOID", ontologies.get(0).path("acronym").asText());
 
     ValidationReport report = cedarValidator.validateTemplateField(rendered);
-    assertEquals("true", report.getValidationStatus());
+    assertEquals("true", report.getValidationStatus(),
+        "constrained field must pass validateTemplateField");
   }
 
-  @Test void rejects_text_field_without_constraint()
+  @Test void rejects_non_textfield_shape()
   {
-    // A plain text-field reads back as TextField (the wire collision); the tool must
-    // refuse and direct the user to add_*_constraint first.
-    String fieldJson = createField("Note", "text-field");
+    String numericFieldJson = createField("Count", "numeric-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
-        "iri", "https://example.org/x",
-        "label", "x"));
+        "field_json", numericFieldJson,
+        "ontology_iri", "https://example.com/o",
+        "ontology_acronym", "X",
+        "ontology_name", "X"));
     assertTrue(result.isError());
-    assertTrue(errorText(result).toLowerCase().contains("text-field")
-            || errorText(result).toLowerCase().contains("controlled-term"),
-        "error should redirect to constraint tools; got: " + errorText(result));
   }
 
-  @Test void rejects_missing_label()
+  @Test void rejects_missing_required_args()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", "{}",
-        "iri", "https://x.example"));
+        "field_json", createControlledTermField("X")));
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("label"));
   }
 
   // helpers
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
-    return AddControlledTermDefaultValueTool.handler(null,
-        new McpSchema.CallToolRequest("add_controlled_term_default_value", args));
+    return SetOntologyConstraintTool.handler(null,
+        new McpSchema.CallToolRequest("set_ontology_constraint", args));
   }
 
-  private static String createField(String name, String type)
+  private String createControlledTermField(String name) { return createField(name, "controlled-term-field"); }
+
+  private String createField(String name, String type)
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
         new McpSchema.CallToolRequest("create_field", Map.of("name", name, "type", type)));
     assertFalse(result.isError(),
         "fixture field must build cleanly; got: " + errorText(result));
-    return textOf(result);
-  }
-
-  private static String compileField(String yaml)
-  {
-    McpSchema.CallToolResult result = FieldFromYamlTool.handler(null,
-        new McpSchema.CallToolRequest("field_from_yaml", Map.of("yaml", yaml)));
-    assertFalse(result.isError(),
-        "fixture field YAML must compile cleanly; got: " + errorText(result));
     return textOf(result);
   }
 

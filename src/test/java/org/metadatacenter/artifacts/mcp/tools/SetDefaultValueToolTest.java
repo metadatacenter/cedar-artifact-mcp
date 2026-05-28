@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-final class AddDefaultValueToolTest
+final class SetDefaultValueToolTest
 {
   private ModelValidator cedarValidator;
   private ObjectMapper jackson;
@@ -103,7 +103,7 @@ final class AddDefaultValueToolTest
 
   @Test void rejects_controlled_term_field()
   {
-    // Direct add_default_value on a controlled-term field must redirect to the
+    // Direct set_default_value on a controlled-term field must redirect to the
     // controlled-term default tool.
     String fieldJson = compileField(
         "type: controlled-term-field\n"
@@ -123,7 +123,7 @@ final class AddDefaultValueToolTest
         "field_json", fieldJson,
         "value", "x"));
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("add_controlled_term_default_value"),
+    assertTrue(errorText(result).contains("set_controlled_term_default_value"),
         "error should redirect; got: " + errorText(result));
   }
 
@@ -135,7 +135,7 @@ final class AddDefaultValueToolTest
         "field_json", fieldJson,
         "value", "https://ror.org/x"));
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("add_iri_default_value")
+    assertTrue(errorText(result).contains("set_iri_default_value")
             || errorText(result).contains("IRI"),
         "error should redirect to IRI variant; got: " + errorText(result));
   }
@@ -151,8 +151,8 @@ final class AddDefaultValueToolTest
   // helpers
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
-    return AddDefaultValueTool.handler(null,
-        new McpSchema.CallToolRequest("add_default_value", args));
+    return SetDefaultValueTool.handler(null,
+        new McpSchema.CallToolRequest("set_default_value", args));
   }
 
   private static String createField(String name, String type)
