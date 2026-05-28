@@ -102,16 +102,11 @@ would hit them.
   existing child; replacing in place still requires remove + add. A dedicated
   `replace_child` would be ergonomic if a workflow needs it.
 
-- **Library asymmetry: reader vs. builder defaulting for `version` / `status`**
-  — The Java builder path defaults a freshly-built template/element/field to
-  `version: 0.0.1` and `status: draft` (see `TemplateSchemaArtifact.java:83-84`,
-  flagged with a `// TODO`). The YAML reader path does not: a compact YAML
-  document with no `version:` and no `status:` parses to a model whose
-  `version()` and `status()` accessors return `Optional.empty()`. So
-  `create_template` (builder path) and `template_from_yaml` (reader path) hand
-  back models that aren't equivalent for the same logical input. Resolve in
-  the library, in either direction: either default in the reader to match the
-  builder, or strip the builder defaults to match the reader.
+Library-side items that surface through this MCP but whose fix lives in
+`cedar-artifact-library` are tracked in [the library's ROADMAP](https://github.com/metadatacenter/cedar-artifact-library/blob/develop/ROADMAP.md).
+At time of writing that includes the reader vs. builder defaulting asymmetry
+for `version` / `status` (a fresh `create_template` carries `0.0.1` / `draft`;
+a `template_from_yaml` with those keys absent carries `Optional.empty()`).
 
 ## Known limitation
 
