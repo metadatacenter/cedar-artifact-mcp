@@ -254,25 +254,6 @@ Attaches a default class IRI + human label to a controlled-term field. The
 field must already carry at least one `set_*_constraint` constraint; a plain
 text-field is refused with a redirect to the constraint tools.
 
-### `create_instance(template_json, name?, description?, is_based_on?)`
-
-Creates an empty (skeleton) instance from a template, ready to be populated
-with field values. `is_based_on` defaults to the template's `@id` when
-present; for freshly built templates without an `@id` it must be supplied
-explicitly.
-
-### `instance_from_yaml(yaml)`
-
-Compiles a template instance from YAML to its canonical JSON. Minimal instance
-YAML needs `type: instance`, `name`, and `isBasedOn` (the template's URI);
-field values live under a `children` map keyed by the template's child keys.
-
-### `instance_to_yaml(json, isCompact?)`
-
-Renders a template instance JSON back as YAML. `isCompact` defaults to `true`
-(the lean authoring view); pass `false` to keep every field including
-provenance.
-
 ### `set_field_value(template_json, instance_json, field_path, value)`
 
 Sets the value of a literal-valued field on an instance — text, numeric,
@@ -291,7 +272,7 @@ Sets the URI, human label, and preferred label of a controlled-term field on
 an instance. The schema must declare the field as controlled-term (with at
 least one `set_*_constraint` already attached).
 
-#### Notes shared by the three `set_*` tools
+#### Notes shared by the three instance-side `set_*_field_value` tools
 
 `field_path` uses slash-separated nesting and bracketed indices for
 multi-instance children: `address/street`, `addresses[2]/street`, `emails[0]`.
@@ -301,6 +282,25 @@ appends a new entry; any larger index errors.
 `template_json` is required because the instance JSON loses field-type
 information on round-trip — the schema is the source of truth for which kind
 of field the value belongs to.
+
+### `create_instance(template_json, name?, description?, is_based_on?)`
+
+Creates an empty (skeleton) instance from a template, ready to be populated
+with field values. `is_based_on` defaults to the template's `@id` when
+present; for freshly built templates without an `@id` it must be supplied
+explicitly.
+
+### `instance_from_yaml(yaml)`
+
+Compiles a template instance from YAML to its canonical JSON. Minimal instance
+YAML needs `type: instance`, `name`, and `isBasedOn` (the template's URI);
+field values live under a `children` map keyed by the template's child keys.
+
+### `instance_to_yaml(json, isCompact?)`
+
+Renders a template instance JSON back as YAML. `isCompact` defaults to `true`
+(the lean authoring view); pass `false` to keep every field including
+provenance.
 
 ### `validate_instance(template_json, instance_json)`
 
