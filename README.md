@@ -581,7 +581,7 @@ round-tripped through reader / renderer / validator — lives in
 `TemplateBatteryYamlRoundTripTest`, and `TemplateBatteryJsonRoundTripTest`.
 That's the right home for it: the tests exercise the library's
 reader/renderer/validator without any MCP wrapping, and the goldens are
-derived from the library's own round-trip. See the library's `develop` branch.
+derived from the library's own round-trip.
 
 ## License
 
