@@ -1,8 +1,8 @@
 # cedar-artifact-mcp
 
 [CEDAR](https://metadatacenter.org/) — the Center for Expanded Data Annotation
-and Retrieval, a Stanford BMIR project — builds tools for authoring and
-applying metadata templates over scientific datasets. The metadata-template
+and Retrieval — builds tools for authoring and applying metadata templates
+over scientific datasets. The metadata-template
 story is the data-side scaffolding behind the FAIR principles: every dataset
 is described by an instance of a shared, typed, controlled-vocabulary-aware
 template, so downstream tools can reason about the data without per-dataset
