@@ -87,6 +87,35 @@ final class FieldFromYamlToolTest
         "controlled-term field must pass CedarValidator");
   }
 
+  @Test void mints_top_level_id_when_omitted() throws Exception
+  {
+    // Fields are first-class, reusable CEDAR artifacts: a standalone field with no id
+    // gets a fresh template-fields IRI (DESIGN.md Principle 10).
+    String yaml =
+        "type: text-field\n"
+            + "name: No id supplied\n";
+
+    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+
+    assertFalse(result.isError(), errorText(result));
+    MintedIds.assertMintedId(parseJson(result).get("@id"), "template-fields");
+  }
+
+  @Test void preserves_supplied_id() throws Exception
+  {
+    String id = "https://repo.metadatacenter.org/template-fields/abc-123";
+    String yaml =
+        "type: text-field\n"
+            + "name: Has an id\n"
+            + "id: " + id + "\n";
+
+    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+
+    assertFalse(result.isError(), errorText(result));
+    assertEquals(id, parseJson(result).get("@id").asText(),
+        "a supplied id must be preserved, not overwritten by minting");
+  }
+
   @Test void rejects_yaml_whose_top_level_type_is_template()
   {
     String yaml =

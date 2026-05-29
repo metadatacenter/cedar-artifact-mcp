@@ -275,12 +275,55 @@ final class CreateInstanceToolTest
             + rendered.path("section"));
   }
 
-  @Test void rejects_template_without_at_id_and_no_is_based_on()
+  @Test void mints_instance_id_when_omitted() throws Exception
   {
-    // create_template returns a template with @id=null. Without an explicit
-    // is_based_on argument, the instance has no canonical reference to "the template"
-    // — surface that as a clean error rather than building a bogus instance.
-    String templateJson = createTemplate("Unsaved");
+    // The instance's own @id is auto-minted when absent (DESIGN.md Principle 10), distinct
+    // from is_based_on which points at the template.
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "template_json", createTemplate("Demographics"),
+        "is_based_on", FAKE_BASED_ON));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+    MintedIds.assertMintedId(rendered.get("@id"), "template-instances");
+    assertEquals(FAKE_BASED_ON, rendered.path("schema:isBasedOn").asText(),
+        "minting the instance @id must not disturb isBasedOn");
+  }
+
+  @Test void preserves_supplied_instance_id() throws Exception
+  {
+    String id = "https://repo.metadatacenter.org/template-instances/abc-123";
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "template_json", createTemplate("Demographics"),
+        "is_based_on", FAKE_BASED_ON,
+        "id", id));
+
+    assertFalse(result.isError(), errorText(result));
+    assertEquals(id, parseJson(result).get("@id").asText(),
+        "a supplied instance id must be preserved, not overwritten by minting");
+  }
+
+  @Test void rejects_relative_instance_id()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "template_json", createTemplate("Demographics"),
+        "is_based_on", FAKE_BASED_ON,
+        "id", "template-instances/abc-123"));
+
+    assertTrue(result.isError(), "a non-absolute instance id should produce an error result");
+    assertTrue(errorText(result).toLowerCase().contains("absolute"),
+        "error should explain the id must be absolute; got: " + errorText(result));
+  }
+
+  @Test void rejects_template_without_at_id_and_no_is_based_on() throws Exception
+  {
+    // create_template now mints an @id (DESIGN.md Principle 10), so we strip it here to
+    // reach the @id-less path — a hand-authored template_json may still carry a null @id.
+    // Without an explicit is_based_on argument, such an instance has no canonical reference
+    // to "the template" — surface that as a clean error rather than building a bogus instance.
+    ObjectNode template = (ObjectNode) jackson.readTree(createTemplate("Unsaved"));
+    template.putNull("@id");
+    String templateJson = jackson.writeValueAsString(template);
 
     McpSchema.CallToolResult result = invoke(Map.of("template_json", templateJson));
 

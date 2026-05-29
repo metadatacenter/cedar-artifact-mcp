@@ -64,6 +64,42 @@ final class ElementFromYamlToolTest
     assertTrue(street.isObject(), "street child must appear under properties");
   }
 
+  @Test void mints_top_level_id_but_not_nested_child_ids() throws Exception
+  {
+    // A standalone element gets a minted template-elements IRI; its nested fields stay
+    // id-less (DESIGN.md Principle 10 — top-level minting only).
+    String yaml =
+        "type: element\n"
+            + "name: Address\n"
+            + "children:\n"
+            + "  - key: street\n"
+            + "    type: text-field\n"
+            + "    name: Street\n";
+
+    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+    MintedIds.assertMintedId(rendered.get("@id"), "template-elements");
+    MintedIds.assertNoId(rendered.path("properties").path("street").path("@id"),
+        "nested field 'street'");
+  }
+
+  @Test void preserves_supplied_id() throws Exception
+  {
+    String id = "https://repo.metadatacenter.org/template-elements/abc-123";
+    String yaml =
+        "type: element\n"
+            + "name: Address\n"
+            + "id: " + id + "\n";
+
+    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+
+    assertFalse(result.isError(), errorText(result));
+    assertEquals(id, parseJson(result).get("@id").asText(),
+        "a supplied id must be preserved, not overwritten by minting");
+  }
+
   @Test void rejects_yaml_whose_top_level_type_is_template()
   {
     String yaml =

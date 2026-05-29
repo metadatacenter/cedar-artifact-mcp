@@ -146,6 +146,19 @@ final class CreateFieldToolTest
     assertEquals(id, rendered.get("@id").asText());
   }
 
+  @Test void createField_mintsIdWhenOmitted() throws Exception
+  {
+    // Fields are first-class, reusable CEDAR artifacts, so a standalone field minted with
+    // no id gets a fresh template-fields IRI like any other root (DESIGN.md Principle 10).
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "name", "Patient name",
+        "type", "text-field"));
+
+    assertFalse(result.isError(), "omitting id should still succeed");
+    ObjectNode rendered = parseJson(result);
+    MintedIds.assertMintedId(rendered.get("@id"), "template-fields");
+  }
+
   @Test void createField_rejectsRelativeIri()
   {
     McpSchema.CallToolResult result = invoke(Map.of(

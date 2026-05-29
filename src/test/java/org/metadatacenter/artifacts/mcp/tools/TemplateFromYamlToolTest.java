@@ -227,19 +227,96 @@ final class TemplateFromYamlToolTest
     // If two invocations with the same input produce different output, something
     // is reading wall-clock time, a random UUID, or a system property into the
     // rendered JSON. That would break caching, diffing, and idempotent workflows.
+    // The @id is pinned explicitly here: an omitted @id is auto-minted with a fresh
+    // UUID per call (DESIGN.md Principle 10), which is the one deliberate source of
+    // nondeterminism — see mints_a_fresh_id_per_call_when_omitted. Pinning it isolates
+    // the rest of the render, which must stay byte-identical.
     String yaml =
         "type: template\n"
             + "name: Deterministic\n"
             + "description: \n"
             + "version: 0.1.0\n"
             + "status: draft\n"
-            + "modelVersion: 1.6.0\n";
+            + "modelVersion: 1.6.0\n"
+            + "id: https://repo.metadatacenter.org/templates/deterministic-fixed-id\n";
 
     String first = textOf(invoke(Map.of("yaml", yaml)));
     String second = textOf(invoke(Map.of("yaml", yaml)));
 
     assertEquals(first, second,
-        "two invocations on identical input must produce byte-identical output");
+        "two invocations on identical fully-specified input must produce byte-identical output");
+  }
+
+  @Test void mints_top_level_id_when_omitted() throws Exception
+  {
+    // Auto-mint convenience (DESIGN.md Principle 10): a top-level artifact with no id
+    // gets a fresh CEDAR template IRI of the correct form.
+    String yaml =
+        "type: template\n"
+            + "name: No id supplied\n";
+
+    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+    MintedIds.assertMintedId(rendered.get("@id"), "templates");
+  }
+
+  @Test void mints_a_fresh_id_per_call_when_omitted() throws Exception
+  {
+    String yaml =
+        "type: template\n"
+            + "name: No id supplied\n";
+
+    String firstId = parseJson(invoke(Map.of("yaml", yaml))).get("@id").asText();
+    String secondId = parseJson(invoke(Map.of("yaml", yaml))).get("@id").asText();
+
+    assertFalse(firstId.equals(secondId),
+        "each id-less invocation must mint a distinct @id; got " + firstId + " twice");
+  }
+
+  @Test void preserves_supplied_top_level_id() throws Exception
+  {
+    String id = "https://repo.metadatacenter.org/templates/abc-123";
+    String yaml =
+        "type: template\n"
+            + "name: Has an id\n"
+            + "id: " + id + "\n";
+
+    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+
+    assertFalse(result.isError(), errorText(result));
+    assertEquals(id, parseJson(result).get("@id").asText(),
+        "a supplied top-level id must be preserved, not overwritten by minting");
+  }
+
+  @Test void does_not_mint_ids_for_nested_children() throws Exception
+  {
+    // The minting seam is top-level only: nested elements and fields stay id-less unless
+    // the author set one explicitly (DESIGN.md Principle 10).
+    String yaml =
+        "type: template\n"
+            + "name: Nested, no child ids\n"
+            + "children:\n"
+            + "  - key: address\n"
+            + "    type: element\n"
+            + "    name: Address\n"
+            + "    children:\n"
+            + "      - key: street\n"
+            + "        type: text-field\n"
+            + "        name: Street\n";
+
+    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+
+    MintedIds.assertMintedId(rendered.get("@id"), "templates");
+
+    JsonNode element = rendered.path("properties").path("address");
+    MintedIds.assertNoId(element.path("@id"), "nested element 'address'");
+    JsonNode field = element.path("properties").path("street");
+    MintedIds.assertNoId(field.path("@id"), "nested field 'street'");
   }
 
   @Test void propagates_field_name_to_ui_property_labels() throws Exception

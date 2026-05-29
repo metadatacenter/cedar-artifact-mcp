@@ -8,6 +8,7 @@ import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
 import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
 import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
 import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
+import org.metadatacenter.artifacts.model.yaml.YamlConstants;
 import org.metadatacenter.model.validation.CedarValidator;
 import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ErrorItem;
@@ -87,6 +88,12 @@ public final class FieldFromYamlTool
     } catch (RuntimeException e) {
       return error("YAML parse failed: " + e.getMessage());
     }
+
+    // Mint a top-level @id when the YAML omits one (DESIGN.md Principle 10). A standalone
+    // field is a first-class, reusable CEDAR artifact, so it gets an id like any other root.
+    Object suppliedId = yamlMap.get(YamlConstants.ID);
+    if (suppliedId == null || suppliedId.toString().isBlank())
+      yamlMap.put(YamlConstants.ID, IdMinter.mintFieldId().toString());
 
     FieldSchemaArtifact field;
     try {

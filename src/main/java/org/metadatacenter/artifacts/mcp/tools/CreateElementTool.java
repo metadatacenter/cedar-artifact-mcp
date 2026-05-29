@@ -47,10 +47,10 @@ public final class CreateElementTool
         "description", "Semantic version string in major.minor.patch form (e.g. \"0.0.1\"). Optional; defaults to 0.0.1."));
     properties.put("id", Map.of(
         "type", "string",
-        "description", "IRI that identifies the element itself (the @id). Optional. Must be an "
-            + "absolute IRI. If you do not have one assigned by a CEDAR repository, mint one by "
-            + "appending a fresh UUID to the template-elements base, e.g. "
-            + "https://repo.metadatacenter.org/template-elements/5c48700a-4163-436d-8daa-95af7311cded."));
+        "description", "IRI that identifies the element itself (the @id). Optional; if omitted, "
+            + "a fresh CEDAR element IRI is auto-minted "
+            + "(https://repo.metadatacenter.org/template-elements/<uuid>). Supply one only when you "
+            + "have an id assigned by a CEDAR repository. Must be an absolute IRI."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("name"), Boolean.FALSE, null, null);
@@ -98,6 +98,9 @@ public final class CreateElementTool
       if (!id.isAbsolute())
         return error("invalid id \"" + idText + "\": an id must be an absolute IRI "
             + "(e.g. https://repo.metadatacenter.org/template-elements/5c48700a-4163-436d-8daa-95af7311cded)");
+    } else {
+      // No caller-supplied id: mint a top-level CEDAR IRI (DESIGN.md Principle 10).
+      id = IdMinter.mintElementId();
     }
 
     ElementSchemaArtifact element;
@@ -105,9 +108,8 @@ public final class CreateElementTool
       ElementSchemaArtifact.Builder builder = ElementSchemaArtifact.builder()
           .withName(name)
           .withDescription(description)
-          .withVersion(version);
-      if (id != null)
-        builder.withJsonLdId(id);
+          .withVersion(version)
+          .withJsonLdId(id);
       element = builder.build();
     } catch (RuntimeException e) {
       return error("element build failed: " + e.getMessage());

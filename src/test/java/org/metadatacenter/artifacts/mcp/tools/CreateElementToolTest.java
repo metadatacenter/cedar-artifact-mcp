@@ -103,6 +103,17 @@ final class CreateElementToolTest
     assertEquals(id, rendered.get("@id").asText());
   }
 
+  @Test void createElement_mintsIdWhenOmitted() throws Exception
+  {
+    // Auto-mint convenience (DESIGN.md Principle 10): no id supplied -> a fresh CEDAR
+    // element IRI of the correct form.
+    McpSchema.CallToolResult result = invoke(Map.of("name", "Address"));
+
+    assertFalse(result.isError(), "omitting id should still succeed");
+    ObjectNode rendered = parseJson(result);
+    MintedIds.assertMintedId(rendered.get("@id"), "template-elements");
+  }
+
   @Test void createElement_rejectsRelativeIri()
   {
     McpSchema.CallToolResult result = invoke(Map.of(

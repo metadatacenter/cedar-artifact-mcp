@@ -68,6 +68,14 @@ public final class CreateInstanceTool
         "URI of the template the instance is based on. Optional; defaults to the "
             + "template's @id when present. Required when the template has no @id "
             + "(e.g. a freshly-built template from 'create_template')."));
+    properties.put("id", Map.of(
+        "type", "string",
+        "description",
+        "IRI that identifies the instance itself (the @id). Optional; if omitted, a fresh "
+            + "CEDAR instance IRI is auto-minted "
+            + "(https://repo.metadatacenter.org/template-instances/<uuid>). Supply one only "
+            + "when you have an id assigned by a CEDAR repository. Must be an absolute IRI. "
+            + "Distinct from is_based_on, which points to the template."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("template_json"), Boolean.FALSE, null, null);
@@ -99,6 +107,22 @@ public final class CreateInstanceTool
     String nameOverride = stringArg(args, "name");
     String descriptionOverride = stringArg(args, "description");
     String isBasedOnOverride = stringArg(args, "is_based_on");
+
+    String idText = stringArg(args, "id");
+    URI id;
+    if (idText != null && !idText.isBlank()) {
+      try {
+        id = new URI(idText);
+      } catch (URISyntaxException e) {
+        return error("invalid id \"" + idText + "\": not a valid IRI (" + e.getMessage() + ")");
+      }
+      if (!id.isAbsolute())
+        return error("invalid id \"" + idText + "\": an id must be an absolute IRI "
+            + "(e.g. https://repo.metadatacenter.org/template-instances/5c48700a-4163-436d-8daa-95af7311cded)");
+    } else {
+      // No caller-supplied id: mint a top-level CEDAR instance IRI (DESIGN.md Principle 10).
+      id = IdMinter.mintInstanceId();
+    }
 
     JsonNode parsed;
     try {
@@ -153,7 +177,8 @@ public final class CreateInstanceTool
       TemplateInstanceArtifact.Builder builder = TemplateInstanceArtifact.builder()
           .withName(name)
           .withDescription(description)
-          .withIsBasedOn(isBasedOn);
+          .withIsBasedOn(isBasedOn)
+          .withJsonLdId(id);
       // Mirror the template's child property-URI bindings into the instance's @context.
       // The validator requires every non-static, non-attribute-value child to appear
       // there; without this the instance fails the @context required-property check.

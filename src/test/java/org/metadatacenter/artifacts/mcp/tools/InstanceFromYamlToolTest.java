@@ -37,6 +37,41 @@ final class InstanceFromYamlToolTest
         rendered.path("schema:isBasedOn").asText());
   }
 
+  @Test void mints_instance_id_when_omitted() throws Exception
+  {
+    // The instance's own @id is auto-minted when absent (DESIGN.md Principle 10); it is
+    // distinct from isBasedOn, which still points at the template.
+    String yaml =
+        "type: instance\n"
+            + "name: Patient 42\n"
+            + "isBasedOn: https://repo.metadatacenter.org/templates/abc-123\n";
+
+    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+
+    assertFalse(result.isError(), errorText(result));
+    ObjectNode rendered = parseJson(result);
+    MintedIds.assertMintedId(rendered.get("@id"), "template-instances");
+    assertEquals("https://repo.metadatacenter.org/templates/abc-123",
+        rendered.path("schema:isBasedOn").asText(),
+        "minting the instance @id must not disturb isBasedOn");
+  }
+
+  @Test void preserves_supplied_instance_id() throws Exception
+  {
+    String id = "https://repo.metadatacenter.org/template-instances/abc-123";
+    String yaml =
+        "type: instance\n"
+            + "name: Patient 42\n"
+            + "isBasedOn: https://repo.metadatacenter.org/templates/abc-123\n"
+            + "id: " + id + "\n";
+
+    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+
+    assertFalse(result.isError(), errorText(result));
+    assertEquals(id, parseJson(result).get("@id").asText(),
+        "a supplied instance id must be preserved, not overwritten by minting");
+  }
+
   @Test void rejects_yaml_with_wrong_top_level_type()
   {
     String yaml =

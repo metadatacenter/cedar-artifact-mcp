@@ -35,8 +35,10 @@ final class YamlVocabulary
     "  version         optional   semantic version, e.g. 0.0.1",
     "  status          optional   draft | published",
     "  identifier      optional   schema.org identifier string",
-    "  id              optional   absolute IRI for the artifact itself. If none is assigned by a",
-    "                             CEDAR repository, mint one by appending a fresh UUID, e.g.",
+    "  id              optional   absolute IRI for the artifact itself. Omit it on a top-level",
+    "                             artifact and a fresh CEDAR IRI is auto-minted; nested children",
+    "                             are left without an id unless you set one explicitly. Supply one",
+    "                             only when assigned by a CEDAR repository, e.g.",
     "                             https://repo.metadatacenter.org/templates/5c48700a-4163-436d-8daa-95af7311cded");
 
   // -----------------------------------------------------------------------
@@ -174,7 +176,10 @@ final class YamlVocabulary
     "  type             (required) instance",
     "  name             optional   human-readable instance name",
     "  isBasedOn        (required) IRI of the template this instance is based on",
-    "  id               optional   absolute IRI of the instance itself, e.g.",
+    "  id               optional   absolute IRI of the instance itself. Omit it and a fresh",
+    "                              CEDAR instance IRI is auto-minted. Distinct from isBasedOn,",
+    "                              which points to the template. Supply one only when assigned",
+    "                              by a CEDAR repository, e.g.",
     "                              https://repo.metadatacenter.org/template-instances/5c48700a-4163-436d-8daa-95af7311cded",
     "  children:        (required) map of child-key → value, matching the template schema",
     "",

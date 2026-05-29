@@ -114,6 +114,17 @@ final class CreateTemplateToolTest
     assertEquals(id, rendered.get("@id").asText());
   }
 
+  @Test void createTemplate_mintsIdWhenOmitted() throws Exception
+  {
+    // Auto-mint convenience (DESIGN.md Principle 10): no id supplied -> a fresh CEDAR
+    // template IRI of the correct form.
+    McpSchema.CallToolResult result = invoke(Map.of("name", "No id supplied"));
+
+    assertFalse(result.isError(), "omitting id should still succeed");
+    ObjectNode rendered = parseTemplateJson(result);
+    MintedIds.assertMintedId(rendered.get("@id"), "templates");
+  }
+
   @Test void createTemplate_rejectsRelativeIri()
   {
     McpSchema.CallToolResult result = invoke(Map.of(

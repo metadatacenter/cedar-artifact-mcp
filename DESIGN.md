@@ -167,6 +167,39 @@ without redundantly testing what the library tests already cover. The exhaustive
 real-world battery lives in `cedar-artifact-library` as
 `HubmapTemplatesRoundTripTest`, where it tests reader/renderer/validator directly.
 
+## Principle 10 — Top-level @id is minted, not required
+
+A CEDAR artifact's `@id` is the IRI that identifies the artifact itself. The artifact
+library leaves it optional — the model, the reader, and the renderer all treat an absent
+`@id` as valid (a missing id simply isn't rendered). That purity stays in the library.
+
+This MCP, as the LLM-facing convenience layer, fills an absent `@id` in: when a caller
+creates a **top-level** template, element, field, or instance without supplying one, the
+tool mints a fresh IRI of the correct CEDAR form — `https://repo.metadatacenter.org/
+{templates,template-elements,template-fields,template-instances}/<uuid>` — via `IdMinter`.
+A caller-supplied `@id` is never touched (still validated as an absolute IRI).
+
+For instances the minted `@id` is the instance's own identity; it is independent of
+`isBasedOn`, which points to the template the instance is filled out against. The two are
+set and minted separately.
+
+Two boundaries make this safe:
+
+- **Top-level only.** The `create_*` tools mint the artifact they return. The `*_from_yaml`
+  tools mint only the top-level map's `id` key before handing it to the reader; nested
+  children under `children:` are never walked, so a template's fields and elements stay
+  id-less unless the author set one explicitly. Fields are first-class, reusable CEDAR
+  artifacts, so a *standalone* field minted via `create_field` / `field_from_yaml` gets an
+  id like any other root — a field that subsequently becomes a child via `add_field` simply
+  carries the id it was born with, which the renderer round-trips correctly.
+- **Absence only.** Like the compact-mode `modelVersion` defaulting in Principle 7, minting
+  fills an *absent optional*; it never overrides or coerces a value the caller provided.
+
+This is a deliberate, documented exception to "the MCP adds no defaults on top of the
+reader" (Principle 7). It is justified because a usable artifact almost always needs an id,
+the minted form is exactly what the tool descriptions already instructed callers to
+hand-mint, and the library model is left untouched so non-MCP callers keep full control.
+
 ## Adding a new tool
 
 1. Decide which library operation the tool wraps. If the operation isn't already

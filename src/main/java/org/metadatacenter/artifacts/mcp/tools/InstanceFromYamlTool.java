@@ -8,6 +8,7 @@ import org.metadatacenter.artifacts.model.core.TemplateInstanceArtifact;
 import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
 import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
 import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
+import org.metadatacenter.artifacts.model.yaml.YamlConstants;
 import org.yaml.snakeyaml.Yaml;
 
 import java.util.LinkedHashMap;
@@ -80,6 +81,12 @@ public final class InstanceFromYamlTool
     } catch (RuntimeException e) {
       return error("YAML parse failed: " + e.getMessage());
     }
+
+    // Mint the instance's own @id when the YAML omits one (DESIGN.md Principle 10). This is
+    // the instance's identity (the top-level 'id' key), distinct from 'isBasedOn'.
+    Object suppliedId = yamlMap.get(YamlConstants.ID);
+    if (suppliedId == null || suppliedId.toString().isBlank())
+      yamlMap.put(YamlConstants.ID, IdMinter.mintInstanceId().toString());
 
     TemplateInstanceArtifact instance;
     try {
