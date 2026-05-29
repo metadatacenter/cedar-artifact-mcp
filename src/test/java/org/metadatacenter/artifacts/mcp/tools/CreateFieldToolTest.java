@@ -133,6 +133,31 @@ final class CreateFieldToolTest
     assertTrue(errorText(result).contains("version"));
   }
 
+  @Test void createField_setsJsonLdIdWhenAbsoluteIriSupplied() throws Exception
+  {
+    String id = "https://repo.metadatacenter.org/template-fields/abc-123";
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "name", "Patient name",
+        "type", "text-field",
+        "id", id));
+
+    assertFalse(result.isError(), "a valid absolute IRI id should succeed");
+    ObjectNode rendered = parseJson(result);
+    assertEquals(id, rendered.get("@id").asText());
+  }
+
+  @Test void createField_rejectsRelativeIri()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "name", "Patient name",
+        "type", "text-field",
+        "id", "template-fields/abc-123"));
+
+    assertTrue(result.isError(), "a non-absolute IRI id should produce an error result");
+    assertTrue(errorText(result).toLowerCase().contains("absolute"),
+        "error message should explain the id must be absolute, got: " + errorText(result));
+  }
+
   // -----------------------------------------------------------------
   // Per-type configuration: numeric
   // -----------------------------------------------------------------

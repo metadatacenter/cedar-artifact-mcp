@@ -12,6 +12,8 @@ import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ErrorItem;
 import org.metadatacenter.model.validation.report.ValidationReport;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +53,12 @@ public final class CreateTemplateTool
     properties.put("version", Map.of(
         "type", "string",
         "description", "Semantic version string in major.minor.patch form (e.g. \"0.0.1\"). Optional; defaults to 0.0.1."));
+    properties.put("id", Map.of(
+        "type", "string",
+        "description", "IRI that identifies the template itself (the @id). Optional. Must be an "
+            + "absolute IRI. If you do not have one assigned by a CEDAR repository, mint one by "
+            + "appending a fresh UUID to the templates base, e.g. "
+            + "https://repo.metadatacenter.org/templates/5c48700a-4163-436d-8daa-95af7311cded."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("name"), Boolean.FALSE, null, null);
@@ -87,13 +95,28 @@ public final class CreateTemplateTool
       return error("invalid version \"" + versionText + "\": " + e.getMessage());
     }
 
+    String idText = stringArg(args, "id");
+    URI id = null;
+    if (idText != null && !idText.isBlank()) {
+      try {
+        id = new URI(idText);
+      } catch (URISyntaxException e) {
+        return error("invalid id \"" + idText + "\": not a valid IRI (" + e.getMessage() + ")");
+      }
+      if (!id.isAbsolute())
+        return error("invalid id \"" + idText + "\": an id must be an absolute IRI "
+            + "(e.g. https://repo.metadatacenter.org/templates/5c48700a-4163-436d-8daa-95af7311cded)");
+    }
+
     TemplateSchemaArtifact template;
     try {
-      template = TemplateSchemaArtifact.builder()
+      TemplateSchemaArtifact.Builder builder = TemplateSchemaArtifact.builder()
           .withName(name)
           .withDescription(description)
-          .withVersion(version)
-          .build();
+          .withVersion(version);
+      if (id != null)
+        builder.withJsonLdId(id);
+      template = builder.build();
     } catch (RuntimeException e) {
       return error("template build failed: " + e.getMessage());
     }

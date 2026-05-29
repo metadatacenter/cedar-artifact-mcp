@@ -102,6 +102,30 @@ final class CreateTemplateToolTest
         "error message should mention the offending field, got: " + text);
   }
 
+  @Test void createTemplate_setsJsonLdIdWhenAbsoluteIriSupplied() throws Exception
+  {
+    String id = "https://repo.metadatacenter.org/templates/abc-123";
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "name", "Patient demographics",
+        "id", id));
+
+    assertFalse(result.isError(), "a valid absolute IRI id should succeed");
+    ObjectNode rendered = parseTemplateJson(result);
+    assertEquals(id, rendered.get("@id").asText());
+  }
+
+  @Test void createTemplate_rejectsRelativeIri()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "name", "Patient demographics",
+        "id", "templates/abc-123"));
+
+    assertTrue(result.isError(), "a non-absolute IRI id should produce an error result");
+    String text = ((McpSchema.TextContent) result.content().get(0)).text();
+    assertTrue(text.toLowerCase().contains("absolute"),
+        "error message should explain the id must be absolute, got: " + text);
+  }
+
   // ---------------------------------------------------------------
   // helpers
   // ---------------------------------------------------------------

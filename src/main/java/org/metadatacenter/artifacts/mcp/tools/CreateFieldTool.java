@@ -22,6 +22,8 @@ import org.metadatacenter.model.validation.report.ErrorItem;
 import org.metadatacenter.model.validation.report.ValidationReport;
 
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +79,12 @@ public final class CreateFieldTool
     properties.put("version", Map.of(
         "type", "string",
         "description", "Semantic version string in major.minor.patch form (e.g. \"0.0.1\"). Optional; defaults to 0.0.1."));
+    properties.put("id", Map.of(
+        "type", "string",
+        "description", "IRI that identifies the field itself (the @id). Optional. Must be an "
+            + "absolute IRI. If you do not have one assigned by a CEDAR repository, mint one by "
+            + "appending a fresh UUID to the template-fields base, e.g. "
+            + "https://repo.metadatacenter.org/template-fields/5c48700a-4163-436d-8daa-95af7311cded."));
 
     // ---- Per-type configuration (all optional; applicable only to the matching type) ----
 
@@ -182,10 +190,25 @@ public final class CreateFieldTool
       return error("invalid version \"" + versionText + "\": " + e.getMessage());
     }
 
+    String idText = stringArg(args, "id");
+    URI id = null;
+    if (idText != null && !idText.isBlank()) {
+      try {
+        id = new URI(idText);
+      } catch (URISyntaxException e) {
+        return error("invalid id \"" + idText + "\": not a valid IRI (" + e.getMessage() + ")");
+      }
+      if (!id.isAbsolute())
+        return error("invalid id \"" + idText + "\": an id must be an absolute IRI "
+            + "(e.g. https://repo.metadatacenter.org/template-fields/5c48700a-4163-436d-8daa-95af7311cded)");
+    }
+
     FieldSchemaArtifact field;
     try {
       FieldSchemaArtifactBuilder<?> builder = FieldBuilders.builderFor(type);
       builder.withName(name).withDescription(description).withVersion(version);
+      if (id != null)
+        builder.withJsonLdId(id);
       String configError = applyTypeSpecificConfig(builder, type, args);
       if (configError != null) return error(configError);
       field = builder.build();

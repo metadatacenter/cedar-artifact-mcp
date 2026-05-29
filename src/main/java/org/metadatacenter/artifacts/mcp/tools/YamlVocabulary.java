@@ -35,7 +35,9 @@ final class YamlVocabulary
     "  version         optional   semantic version, e.g. 0.0.1",
     "  status          optional   draft | published",
     "  identifier      optional   schema.org identifier string",
-    "  id              optional   IRI for the artifact itself");
+    "  id              optional   absolute IRI for the artifact itself. If none is assigned by a",
+    "                             CEDAR repository, mint one by appending a fresh UUID, e.g.",
+    "                             https://repo.metadatacenter.org/templates/5c48700a-4163-436d-8daa-95af7311cded");
 
   // -----------------------------------------------------------------------
   // Field-type vocabulary — what each kebab-case 'type:' means + its keys.
@@ -172,7 +174,8 @@ final class YamlVocabulary
     "  type             (required) instance",
     "  name             optional   human-readable instance name",
     "  isBasedOn        (required) IRI of the template this instance is based on",
-    "  id               optional   IRI of the instance itself",
+    "  id               optional   absolute IRI of the instance itself, e.g.",
+    "                              https://repo.metadatacenter.org/template-instances/5c48700a-4163-436d-8daa-95af7311cded",
     "  children:        (required) map of child-key → value, matching the template schema",
     "",
     "Child value shapes (under 'children:' — keyed by the schema's child key):",
