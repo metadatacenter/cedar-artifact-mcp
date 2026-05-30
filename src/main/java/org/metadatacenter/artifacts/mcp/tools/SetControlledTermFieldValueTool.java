@@ -1,7 +1,5 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
@@ -35,7 +33,6 @@ import java.util.Map;
  */
 public final class SetControlledTermFieldValueTool
 {
-  private static final ObjectMapper JACKSON2 = new ObjectMapper();
   private static final JsonArtifactReader READER = new JsonArtifactReader();
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
 
@@ -47,13 +44,13 @@ public final class SetControlledTermFieldValueTool
     properties.put("template_json", Map.of(
         "type", "string",
         "description",
-        "CEDAR template JSON Schema. Must declare a controlled-term field at the "
+        "CEDAR template as YAML. Must declare a controlled-term field at the "
             + "given path — i.e. the schema field carries a class/ontology/branch/"
             + "value-set constraint."));
     properties.put("instance_json", Map.of(
         "type", "string",
         "description",
-        "CEDAR template instance JSON (the kind 'create_instance' or 'instance_from_yaml' returns)."));
+        "CEDAR template instance as YAML (the kind 'create_instance' returns)."));
     properties.put("field_path", Map.of(
         "type", "string",
         "description",
@@ -83,8 +80,7 @@ public final class SetControlledTermFieldValueTool
         .description(
             "Sets the value of a controlled-term field instance — the IRI (@id), the "
                 + "rdfs:label, and the skos:prefLabel — at a slash-separated field_path. "
-                + "Returns the updated instance JSON."
-                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
+                + "Returns the updated instance as expanded YAML.")
         .inputSchema(schema)
         .build();
   }
@@ -125,11 +121,15 @@ public final class SetControlledTermFieldValueTool
     if (prefLabel == null || prefLabel.isBlank())
       prefLabel = label;  // sensible default — most LLM workflows have both equal
 
+    ObjectNode templateObject;
+    try {
+      templateObject = ArtifactExchange.toObjectNode(templateJsonText);
+    } catch (RuntimeException e) {
+      return error("template parse failed: " + e.getMessage());
+    }
+
     TemplateSchemaArtifact template;
     try {
-      JsonNode parsedTemplate = JACKSON2.readTree(templateJsonText);
-      if (!(parsedTemplate instanceof ObjectNode templateObject))
-        return error("template_json must parse to a JSON object");
       template = READER.readTemplateSchemaArtifact(templateObject);
     } catch (ArtifactParseException e) {
       return error("template_json rejected by reader: " + e.getMessage());
@@ -137,11 +137,15 @@ public final class SetControlledTermFieldValueTool
       return error("template_json parse failed: " + e.getMessage());
     }
 
+    ObjectNode instanceObject;
+    try {
+      instanceObject = ArtifactExchange.toObjectNode(instanceJsonText);
+    } catch (RuntimeException e) {
+      return error("instance parse failed: " + e.getMessage());
+    }
+
     TemplateInstanceArtifact instance;
     try {
-      JsonNode parsedInstance = JACKSON2.readTree(instanceJsonText);
-      if (!(parsedInstance instanceof ObjectNode instanceObject))
-        return error("instance_json must parse to a JSON object");
       instance = READER.readTemplateInstanceArtifact(instanceObject);
     } catch (ArtifactParseException e) {
       return error("instance_json rejected by reader: " + e.getMessage());
@@ -187,15 +191,15 @@ public final class SetControlledTermFieldValueTool
     }
 
     ObjectNode rendered = RENDERER.renderTemplateInstanceArtifact(updated);
-    String json;
+    String yaml;
     try {
-      json = JACKSON2.writerWithDefaultPrettyPrinter().writeValueAsString(rendered);
-    } catch (Exception e) {
-      return error("failed to serialize updated instance: " + e.getMessage());
+      yaml = ArtifactExchange.jsonNodeToYaml(rendered);
+    } catch (RuntimeException e) {
+      return error("failed to render updated instance as YAML: " + e.getMessage());
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, json)))
+        .content(List.of(new McpSchema.TextContent(null, yaml)))
         .isError(false)
         .build();
   }

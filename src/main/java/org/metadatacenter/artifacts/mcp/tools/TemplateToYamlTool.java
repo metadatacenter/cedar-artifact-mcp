@@ -15,14 +15,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code template_to_yaml} — reverse direction of {@code template_from_yaml}.
+ * MCP tool {@code template_to_yaml} — reverse direction of {@code template_to_json}.
  *
  * <p>Takes a CEDAR template JSON Schema and returns the artifact library's YAML
  * serialization. The {@code isCompact} argument selects between the two forms the
  * {@link org.metadatacenter.artifacts.model.renderer.YamlArtifactRenderer} supports:
  * <ul>
  *   <li>{@code true} (default) — the lean, LLM-friendly authoring form. Provenance,
- *       status, version, and {@code modelVersion} are omitted. {@code template_from_yaml}
+ *       status, version, and {@code modelVersion} are omitted. {@code template_to_json}
  *       reads in compact mode and defaults the absent {@code modelVersion}, so the
  *       output round-trips cleanly.</li>
  *   <li>{@code false} — every field the renderer can emit, suitable for archival or
@@ -48,13 +48,13 @@ public final class TemplateToYamlTool
         "description",
         "CEDAR template as a JSON Schema string. Must parse to a JSON object that "
             + "the artifact library's JsonArtifactReader accepts as a template (i.e. "
-            + "the kind of JSON 'template_from_yaml' returns)."));
+            + "the kind of JSON 'template_to_json' returns)."));
     properties.put("isCompact", Map.of(
         "type", "boolean",
         "default", Boolean.TRUE,
         "description",
         "Whether to emit the lean, LLM-friendly compact form. true (default) omits "
-            + "provenance, status, version, and modelVersion — 'template_from_yaml' "
+            + "provenance, status, version, and modelVersion — 'template_to_json' "
             + "reads compact YAML cleanly (it defaults the absent modelVersion), so "
             + "the round-trip works without manual repair. false emits every field "
             + "the renderer can produce, suitable for archival workflows where "
@@ -69,7 +69,7 @@ public final class TemplateToYamlTool
         .description(
             "Renders a CEDAR template JSON Schema as YAML. The 'isCompact' argument "
                 + "selects compact (LLM-friendly, default) or full-fidelity output. "
-                + "Reverse direction of 'template_from_yaml'.")
+                + "Reverse direction of 'template_to_json'.")
         .inputSchema(schema)
         .build();
   }

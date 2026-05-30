@@ -39,7 +39,7 @@ final class InstanceToYamlToolTest
         "compact YAML must carry isBasedOn; got:\n" + yaml);
   }
 
-  @Test void compact_form_round_trips_through_instance_from_yaml() throws Exception
+  @Test void compact_form_round_trips_through_instance_to_json() throws Exception
   {
     String originalYaml =
         "type: instance\n"
@@ -84,8 +84,8 @@ final class InstanceToYamlToolTest
 
   private static String compileToJson(String yaml)
   {
-    McpSchema.CallToolResult result = InstanceFromYamlTool.handler(null,
-        new McpSchema.CallToolRequest("instance_from_yaml", Map.of("yaml", yaml)));
+    McpSchema.CallToolResult result = InstanceToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("instance_to_json", Map.of("yaml", yaml)));
     assertFalse(result.isError(),
         "fixture instance YAML must compile cleanly; got: " + errorText(result));
     return textOf(result);

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
-import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
+import org.metadatacenter.artifacts.model.core.ElementSchemaArtifact;
 import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
 import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
 import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
@@ -13,41 +13,27 @@ import org.metadatacenter.model.validation.CedarValidator;
 import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ErrorItem;
 import org.metadatacenter.model.validation.report.ValidationReport;
-import org.yaml.snakeyaml.Yaml;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code template_from_yaml} — the headline authoring path.
+ * MCP tool {@code element_to_json} — element variant of {@code template_to_json}.
  *
- * <p>Takes a CEDAR YAML template description (the compact, LLM-friendly serialization)
- * and returns the canonical CEDAR JSON Schema (what downstream CEDAR tooling consumes).
- * The pipeline is the four-stage triangle the artifact library is built around:
- * <ol>
- *   <li>Parse the YAML text into a {@code LinkedHashMap} (SnakeYAML).</li>
- *   <li>Read the map into the in-memory {@link TemplateSchemaArtifact} model
- *       ({@link YamlArtifactReader}).</li>
- *   <li>Validate the rendered JSON Schema with {@link CedarValidator} (DESIGN.md
- *       Principle 6).</li>
- *   <li>Serialize and return the JSON Schema string.</li>
- * </ol>
- *
- * <p>Any failure surfaces as an {@code isError=true} content block (DESIGN.md
- * Principle 5), never as a JSON-RPC protocol error.
+ * <p>Takes a CEDAR element described in YAML and returns the canonical CEDAR JSON Schema
+ * for an element artifact. Validates the rendered JSON with
+ * {@link CedarValidator#validateTemplateElement} before returning (DESIGN.md Principle 6).
  */
-public final class TemplateFromYamlTool
+public final class ElementToJsonTool
 {
   private static final ObjectMapper JACKSON2 = new ObjectMapper();
-  // Compact-mode reader: accepts the compact YAML form template_to_yaml emits — same
-  // YAML the LLM sees when editing a template. Missing modelVersion is defaulted, but
-  // a wrong-valued modelVersion is still rejected.
+  // Compact-mode reader — see TemplateToJsonTool for rationale.
   private static final YamlArtifactReader READER = new YamlArtifactReader(true);
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
   private static final ModelValidator VALIDATOR = new CedarValidator();
 
-  private TemplateFromYamlTool() {}
+  private ElementToJsonTool() {}
 
   public static McpSchema.Tool tool()
   {
@@ -55,24 +41,24 @@ public final class TemplateFromYamlTool
     properties.put("yaml", Map.of(
         "type", "string",
         "description",
-        "CEDAR template described in the artifact library's YAML format. The top-level "
-            + "'type:' must be 'template'. The 'children:' list carries field and element "
-            + "specifications. Full key vocabulary:\n\n"
+        "CEDAR element described in the artifact library's YAML format. The top-level "
+            + "'type:' must be 'element'. The 'children:' list carries field and (nested) "
+            + "element specifications. Full key vocabulary:\n\n"
             + YamlVocabulary.fullSchemaVocabulary()));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("yaml"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
-        .name("template_from_yaml")
-        .title("CEDAR template: YAML → JSON Schema")
+        .name("element_to_json")
+        .title("CEDAR element: YAML → JSON Schema")
         .description(
-            "Compiles a CEDAR template described in YAML (the compact authoring format) "
-                + "into the canonical CEDAR JSON Schema (what downstream CEDAR tooling "
-                + "consumes). The returned JSON has been round-tripped through the "
-                + "artifact library's reader/renderer and accepted by CedarValidator, so "
-                + "a non-error result is a guaranteed-valid CEDAR template."
-                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
+            "Compiles a CEDAR element described in YAML into the canonical CEDAR JSON "
+                + "Schema for an element artifact. The returned JSON has been round-tripped "
+                + "through the artifact library's reader/renderer and accepted by "
+                + "CedarValidator.validateTemplateElement, so a non-error result is a "
+                + "guaranteed-valid CEDAR element. Use this to export the canonical JSON Schema "
+                + "for cedar-server and other downstream consumers.")
         .inputSchema(schema)
         .build();
   }
@@ -89,18 +75,9 @@ public final class TemplateFromYamlTool
     if (yamlText.isBlank())
       return error("yaml argument must not be blank");
 
-    // Stage 1: parse YAML text -> LinkedHashMap. SnakeYAML throws YAMLException
-    // (a RuntimeException) for malformed input — catch broadly so we don't leak the
-    // parse-error stack trace into the LLM-facing content.
     LinkedHashMap<String, Object> yamlMap;
     try {
-      Object parsed = new Yaml().load(yamlText);
-      if (!(parsed instanceof Map<?, ?>))
-        return error("yaml must parse to a mapping at the top level (got "
-            + (parsed == null ? "null" : parsed.getClass().getSimpleName()) + ")");
-      yamlMap = new LinkedHashMap<>();
-      for (Map.Entry<?, ?> entry : ((Map<?, ?>) parsed).entrySet())
-        yamlMap.put(String.valueOf(entry.getKey()), entry.getValue());
+      yamlMap = ArtifactExchange.parseYamlMap(yamlText);
     } catch (RuntimeException e) {
       return error("YAML parse failed: " + e.getMessage());
     }
@@ -109,40 +86,33 @@ public final class TemplateFromYamlTool
     // top-level map is touched; nested children under 'children:' are never given an id.
     Object suppliedId = yamlMap.get(YamlConstants.ID);
     if (suppliedId == null || suppliedId.toString().isBlank())
-      yamlMap.put(YamlConstants.ID, IdMinter.mintTemplateId().toString());
+      yamlMap.put(YamlConstants.ID, IdMinter.mintElementId().toString());
 
-    // Stage 2: read map -> in-memory model. ArtifactParseException is the library's
-    // "this is structurally invalid CEDAR" signal — surface the field path / key it
-    // identifies because that's what the LLM needs to fix its input.
-    TemplateSchemaArtifact template;
+    ElementSchemaArtifact element;
     try {
-      template = READER.readTemplateSchemaArtifact(yamlMap);
+      element = READER.readElementSchemaArtifact(yamlMap);
     } catch (ArtifactParseException e) {
       return error("CEDAR YAML rejected by reader: " + e.getMessage());
     } catch (RuntimeException e) {
-      return error("template reader threw " + e.getClass().getSimpleName()
+      return error("element reader threw " + e.getClass().getSimpleName()
           + ": " + e.getMessage());
     }
 
-    // Stage 3: render JSON Schema. Validate with the canonical CedarValidator before
-    // returning, mirroring the artifact library's own renderer-test invariant
-    // (DESIGN.md Principle 6).
-    ObjectNode rendered = RENDERER.renderTemplateSchemaArtifact(template);
+    ObjectNode rendered = RENDERER.renderElementSchemaArtifact(element);
     try {
-      ValidationReport report = VALIDATOR.validateTemplate(rendered);
+      ValidationReport report = VALIDATOR.validateTemplateElement(rendered);
       if (!"true".equals(report.getValidationStatus()))
-        return error("rendered template failed CedarValidator: " + formatErrors(report));
+        return error("rendered element failed CedarValidator: " + formatErrors(report));
     } catch (Exception e) {
-      return error("CedarValidator threw while validating rendered template: "
+      return error("CedarValidator threw while validating rendered element: "
           + e.getMessage());
     }
 
-    // Stage 4: serialize and return.
     String json;
     try {
       json = JACKSON2.writerWithDefaultPrettyPrinter().writeValueAsString(rendered);
     } catch (Exception e) {
-      return error("failed to serialize rendered template: " + e.getMessage());
+      return error("failed to serialize rendered element: " + e.getMessage());
     }
 
     return McpSchema.CallToolResult.builder()

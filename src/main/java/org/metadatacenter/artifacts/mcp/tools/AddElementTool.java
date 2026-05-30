@@ -1,7 +1,5 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
@@ -20,16 +18,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code add_element} — adds an existing element (passed as JSON) as a child
- * of an existing parent (template or element) JSON Schema artifact.
+ * MCP tool {@code add_element} — adds an existing element (passed as YAML) as a child
+ * of an existing parent (template or element) artifact.
  *
  * <p>Pairs with {@link AddFieldTool}: this is the "add an entire sub-tree" path where
  * the child element has already been composed (likely by an earlier
- * {@code create_element} / {@code element_from_yaml} call).
+ * {@code create_element} call).
  */
 public final class AddElementTool
 {
-  private static final ObjectMapper JACKSON2 = new ObjectMapper();
   private static final JsonArtifactReader READER = new JsonArtifactReader();
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
   private static final ModelValidator VALIDATOR = new CedarValidator();
@@ -42,12 +39,13 @@ public final class AddElementTool
     properties.put("parent_json", Map.of(
         "type", "string",
         "description",
-        "Parent CEDAR template or element JSON Schema. Kind is inferred from the @type URI."));
+        "Parent CEDAR template or element as YAML (the exchange form). Kind is inferred "
+            + "from the artifact. JSON Schema is also accepted."));
     properties.put("child_json", Map.of(
         "type", "string",
         "description",
-        "Child CEDAR element JSON Schema to add — the kind of JSON 'create_element' "
-            + "or 'element_from_yaml' returns."));
+        "Child CEDAR element as YAML to add — the kind of artifact 'create_element' "
+            + "returns. JSON Schema is also accepted."));
     properties.put("key", Map.of(
         "type", "string",
         "description",
@@ -94,10 +92,9 @@ public final class AddElementTool
         .name("add_element")
         .title("Add a CEDAR element to a template or element parent")
         .description(
-            "Adds an existing CEDAR element (as JSON) as a child of a CEDAR template or "
-                + "element. Parent kind is inferred from its @type URI. Returns the "
-                + "updated parent JSON, re-validated with CedarValidator."
-                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
+            "Adds an existing CEDAR element (as YAML) as a child of a CEDAR template or "
+                + "element. Parent kind is inferred from the artifact. Returns the "
+                + "updated parent as expanded YAML, re-validated with CedarValidator.")
         .inputSchema(schema)
         .build();
   }
@@ -143,23 +140,19 @@ public final class AddElementTool
       return error(e.getMessage());
     }
 
-    JsonNode parsedParent;
+    ObjectNode parentObject;
     try {
-      parsedParent = JACKSON2.readTree(parentJsonText);
-    } catch (Exception e) {
-      return error("parent_json parse failed: " + e.getMessage());
+      parentObject = ArtifactExchange.toObjectNode(parentJsonText);
+    } catch (RuntimeException e) {
+      return error("parent parse failed: " + e.getMessage());
     }
-    if (!(parsedParent instanceof ObjectNode parentObject))
-      return error("parent_json must parse to a JSON object");
 
-    JsonNode parsedChild;
+    ObjectNode childObject;
     try {
-      parsedChild = JACKSON2.readTree(childJsonText);
-    } catch (Exception e) {
-      return error("child_json parse failed: " + e.getMessage());
+      childObject = ArtifactExchange.toObjectNode(childJsonText);
+    } catch (RuntimeException e) {
+      return error("child parse failed: " + e.getMessage());
     }
-    if (!(parsedChild instanceof ObjectNode childObject))
-      return error("child_json must parse to a JSON object");
 
     ParentKinds.ParentKind parentKind;
     try {
@@ -226,15 +219,15 @@ public final class AddElementTool
       return error("CedarValidator threw while validating updated parent: " + e.getMessage());
     }
 
-    String json;
+    String yaml;
     try {
-      json = JACKSON2.writerWithDefaultPrettyPrinter().writeValueAsString(rendered);
-    } catch (Exception e) {
-      return error("failed to serialize updated parent: " + e.getMessage());
+      yaml = ArtifactExchange.jsonNodeToYaml(rendered);
+    } catch (RuntimeException e) {
+      return error("failed to render updated parent as YAML: " + e.getMessage());
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, json)))
+        .content(List.of(new McpSchema.TextContent(null, yaml)))
         .isError(false)
         .build();
   }

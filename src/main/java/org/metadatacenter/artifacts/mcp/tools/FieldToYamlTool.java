@@ -20,7 +20,7 @@ import java.util.Map;
  * <p>Takes a CEDAR field JSON Schema and returns the artifact library's YAML
  * serialization. The {@code isCompact} flag matches the same contract as
  * {@code template_to_yaml}: compact YAML round-trips through
- * {@code field_from_yaml} via the reader's compact mode.
+ * {@code field_to_json} via the reader's compact mode.
  */
 public final class FieldToYamlTool
 {
@@ -37,13 +37,13 @@ public final class FieldToYamlTool
         "description",
         "CEDAR field as a JSON Schema string. Must parse to a JSON object that "
             + "the artifact library's JsonArtifactReader accepts as a field (i.e. "
-            + "the kind of JSON 'field_from_yaml' returns)."));
+            + "the kind of JSON 'field_to_json' returns)."));
     properties.put("isCompact", Map.of(
         "type", "boolean",
         "default", Boolean.TRUE,
         "description",
         "Whether to emit the lean, LLM-friendly compact form. true (default) omits "
-            + "provenance, status, version, and modelVersion — 'field_from_yaml' "
+            + "provenance, status, version, and modelVersion — 'field_to_json' "
             + "reads compact YAML cleanly (it defaults the absent modelVersion), so "
             + "the round-trip works without manual repair. false emits every field "
             + "the renderer can produce."));
@@ -56,7 +56,7 @@ public final class FieldToYamlTool
         .title("CEDAR field: JSON Schema → YAML")
         .description(
             "Renders a CEDAR field JSON Schema as YAML. Reverse direction of "
-                + "'field_from_yaml'. See 'template_to_yaml' for the form contract.")
+                + "'field_to_json'. See 'template_to_yaml' for the form contract.")
         .inputSchema(schema)
         .build();
   }

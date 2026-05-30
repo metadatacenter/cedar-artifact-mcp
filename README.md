@@ -304,11 +304,14 @@ compact YAML serialization, and full CEDAR validation. The MCP exposes that
 machinery as MCP tools so an LLM can drive it directly: pulling a template
 in and out of YAML, attaching constraints, populating instance values,
 validating, and so on, without the calling LLM ever needing to know any
-Java. Each `*_from_yaml` / `*_to_yaml` pair routes through the library's
-reader / renderer; the `create_*` / `add_*` / `set_*` / `remove_*` tools
-wrap the library's typed builders; `validate_instance` calls the canonical
-CedarValidator. A non-error result from any tool is guaranteed to have
-round-tripped through the library and passed its structural validation.
+Java. Artifacts move between tools as **expanded YAML** — the compact, lossless
+exchange form (DESIGN.md Principle 8). The `create_*` / `add_*` / `set_*` /
+`remove_*` tools wrap the library's typed builders and return YAML; the
+`*_to_json` tools export the canonical JSON Schema (for cedar-server and other
+downstream consumers) and `*_to_yaml` imports an external JSON Schema artifact
+back into the YAML loop; `validate_instance` calls the canonical CedarValidator.
+A non-error result from any tool is guaranteed to have round-tripped through the
+library and passed its structural validation.
 
 ### `create_template(name, description?, version?, id?)`
 
@@ -337,8 +340,9 @@ fields, common configuration is accepted inline:
 
 For fields whose shape needs structured sub-objects (controlled-term values,
 inline radio/checkbox/list options, multi-instance configuration, default
-values), reach for `field_from_yaml` instead. Constraints and default values
-can also be layered on via the `set_*_constraint` and `set_*_default_value`
+values), author the field directly as YAML and pass it to whatever consumes it
+(`add_field`, the `set_*` tools, …) — the threading tools accept YAML. Constraints
+and default values can also be layered on via the `set_*_constraint` and `set_*_default_value`
 tools. `id` is optional; omit it and a fresh `template-fields` IRI is
 auto-minted (a field is a first-class, reusable CEDAR artifact, so a standalone
 one gets an id like any other top-level artifact).
@@ -441,37 +445,34 @@ of field the value belongs to.
 Creates an empty (skeleton) instance from a template, ready to be populated
 with field values. `is_based_on` defaults to the template's `@id` when
 present; supply it explicitly only if the template has no `@id` (templates from
-`create_template` / `template_from_yaml` now always carry a minted one). `id` is
+`create_template` / `template_to_json` now always carry a minted one). `id` is
 the instance's own identity — optional, and auto-minted as a fresh
-`template-instances` IRI when omitted; it is independent of `is_based_on`.
-
-### `instance_from_yaml(yaml)`
-
-Compiles a template instance from YAML to its canonical JSON. Minimal instance
-YAML needs `type: instance`, `name`, and `isBasedOn` (the template's URI);
-field values live under a `children` map keyed by the template's child keys. If
-the top-level `id` (the instance's own identity, distinct from `isBasedOn`) is
-omitted, a fresh `template-instances` IRI is minted onto the result.
-
-### `instance_to_yaml(json, isCompact?)`
-
-Renders a template instance JSON back as YAML. `isCompact` defaults to `true`
-(the lean authoring view); pass `false` to keep every field including
-provenance.
+`template-instances` IRI when omitted; it is independent of `is_based_on`. Returns
+the instance as YAML.
 
 ### `validate_instance(template_json, instance_json)`
 
-Validates a template instance against its template. Returns
+Validates a template instance (YAML) against its template (YAML). Returns
 `{"valid": true}` on success, or `{"valid": false, "errors": [...]}` with
 diagnostics on failure.
 
-### `template_from_yaml(yaml)`
+### Export and import: `*_to_json` / `*_to_yaml`
 
-**The headline authoring tool.** Compiles a CEDAR template described in the
-artifact library's compact YAML into canonical CEDAR JSON. A non-error result
-is a guaranteed-valid template. If the top-level YAML omits `id`, a fresh
-`templates` IRI is minted onto the result (nested children are left untouched);
-the same holds for `element_from_yaml` and `field_from_yaml`. Example YAML input:
+Artifacts thread between tools as YAML. Two families bridge to and from the
+canonical JSON Schema:
+
+- **`template_to_json` / `element_to_json` / `field_to_json` / `instance_to_json`** —
+  **export.** Take an artifact (YAML) and return the canonical CEDAR JSON Schema for
+  cedar-server and other downstream consumers. The result is round-tripped through the
+  library reader/renderer and validated (`CedarValidator`), so a non-error result is a
+  guaranteed-valid artifact. If a top-level `id` is omitted, a fresh IRI is minted onto
+  the result (nested children untouched).
+- **`template_to_yaml` / `element_to_yaml` / `field_to_yaml` / `instance_to_yaml`
+  `(json, isCompact?)`** — **import.** Convert an externally-sourced JSON Schema artifact
+  into YAML so it can re-enter the authoring loop. `isCompact` defaults to `true` (the
+  lean view); pass `false` for the full, provenance-preserving form.
+
+Example YAML an export tool accepts (and the create/add/set tools emit):
 
 ```yaml
 type: template
@@ -486,34 +487,6 @@ children:
     name: Patient name
     description: Free-text patient name
 ```
-
-### `element_from_yaml(yaml)`
-
-Element variant of `template_from_yaml`: compiles a CEDAR element described in
-YAML into canonical JSON. Use this when authoring a reusable element that will
-later be embedded in a template.
-
-### `field_from_yaml(yaml)`
-
-Field variant of `template_from_yaml`: compiles a CEDAR field described in
-YAML into canonical JSON. Reach for this (vs. `create_field`) when the field
-needs structured sub-objects — controlled-term values, inline
-radio/checkbox/list options, default values, multi-instance configuration.
-
-### `template_to_yaml(json, isCompact?)`
-
-Renders a CEDAR template JSON back as YAML. `isCompact` defaults to `true` —
-the lean, LLM-friendly authoring form, with provenance, status, version, and
-`modelVersion` omitted. Pass `false` to keep every field for archival or
-round-trip diffing.
-
-### `element_to_yaml(json, isCompact?)`
-
-Element variant of `template_to_yaml`. Same `isCompact` semantics.
-
-### `field_to_yaml(json, isCompact?)`
-
-Field variant of `template_to_yaml`. Same `isCompact` semantics.
 
 ### `ping(message)`
 

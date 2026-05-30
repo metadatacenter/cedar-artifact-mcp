@@ -1,7 +1,5 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
@@ -38,7 +36,6 @@ import java.util.Map;
  */
 public final class SetDefaultValueTool
 {
-  private static final ObjectMapper JACKSON2 = new ObjectMapper();
   private static final JsonArtifactReader READER = new JsonArtifactReader();
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
   private static final ModelValidator VALIDATOR = new CedarValidator();
@@ -51,8 +48,8 @@ public final class SetDefaultValueTool
     properties.put("field_json", Map.of(
         "type", "string",
         "description",
-        "CEDAR field as JSON Schema (the kind 'create_field' with a literal-valued "
-            + "type or 'field_from_yaml' returns)."));
+        "CEDAR field as YAML (the kind 'create_field' with a literal-valued "
+            + "type returns). JSON Schema is also accepted."));
     properties.put("value", Map.of(
         "description",
         "Default value to set. String for text/temporal/phone/email/radio/checkbox/"
@@ -67,10 +64,9 @@ public final class SetDefaultValueTool
         .title("Set a literal default value on a field")
         .description(
             "Attaches a default value to a literal-valued CEDAR field schema. "
-                + "Returns the updated field JSON, re-validated with CedarValidator. "
-                + "Use set_iri_default_value for link/ROR/ORCID/etc. fields, or "
-                + "set_controlled_term_default_value for controlled-term fields."
-                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
+                + "Returns the updated field as expanded YAML, re-validated with "
+                + "CedarValidator. Use set_iri_default_value for link/ROR/ORCID/etc. "
+                + "fields, or set_controlled_term_default_value for controlled-term fields.")
         .inputSchema(schema)
         .build();
   }
@@ -88,14 +84,12 @@ public final class SetDefaultValueTool
       return error("value is required");
     Object value = args.get("value");
 
-    JsonNode parsed;
+    ObjectNode fieldObject;
     try {
-      parsed = JACKSON2.readTree(fieldJsonText);
-    } catch (Exception e) {
-      return error("field_json parse failed: " + e.getMessage());
+      fieldObject = ArtifactExchange.toObjectNode(fieldJsonText);
+    } catch (RuntimeException e) {
+      return error("field parse failed: " + e.getMessage());
     }
-    if (!(parsed instanceof ObjectNode fieldObject))
-      return error("field_json must parse to a JSON object");
 
     FieldSchemaArtifact field;
     try {
@@ -128,15 +122,15 @@ public final class SetDefaultValueTool
       return error("CedarValidator threw while validating updated field: " + e.getMessage());
     }
 
-    String json;
+    String yaml;
     try {
-      json = JACKSON2.writerWithDefaultPrettyPrinter().writeValueAsString(rendered);
-    } catch (Exception e) {
-      return error("failed to serialize updated field: " + e.getMessage());
+      yaml = ArtifactExchange.jsonNodeToYaml(rendered);
+    } catch (RuntimeException e) {
+      return error("failed to render updated field as YAML: " + e.getMessage());
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, json)))
+        .content(List.of(new McpSchema.TextContent(null, yaml)))
         .isError(false)
         .build();
   }

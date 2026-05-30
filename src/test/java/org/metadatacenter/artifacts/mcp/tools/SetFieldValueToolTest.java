@@ -1,12 +1,18 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.spec.McpSchema;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.metadatacenter.artifacts.model.core.TemplateInstanceArtifact;
+import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
+import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
+import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
+import org.metadatacenter.model.validation.CedarValidator;
+import org.metadatacenter.model.validation.report.ValidationReport;
+import org.yaml.snakeyaml.Yaml;
 
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,27 +20,20 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Tests for {@code set_field_value}. The tool now exchanges artifacts as expanded YAML:
+ * fixtures are built via {@code create_template} / {@code create_field} / {@code add_field}
+ * / {@code create_instance} (all YAML), and the tool's output is the updated instance as
+ * expanded YAML — parsed here with SnakeYAML and, where structural correctness matters,
+ * re-read and revalidated against the template with {@link CedarValidator}.
+ */
 final class SetFieldValueToolTest
 {
   private static final String FAKE_BASED_ON = "https://example.org/templates/test-fixture";
 
-  private ObjectMapper jackson;
-
-  @BeforeEach void setUp() { jackson = new ObjectMapper(); }
-
-  @Test void sets_text_field_value_at_top_level() throws Exception
+  @Test void sets_text_field_value_at_top_level()
   {
-    String templateJson = compileTemplate(
-        "type: template\n"
-            + "name: Patient\n"
-            + "description: Patient template\n"
-            + "version: 0.0.1\n"
-            + "status: draft\n"
-            + "modelVersion: 1.6.0\n"
-            + "children:\n"
-            + "  - key: patient_name\n"
-            + "    type: text-field\n"
-            + "    name: Patient name\n");
+    String templateJson = templateWithField(createField("Patient name", "text-field"), "patient_name");
     String instanceJson = createInstance(templateJson, "Patient 42");
 
     McpSchema.CallToolResult result = invoke(Map.of(
@@ -44,24 +43,14 @@ final class SetFieldValueToolTest
         "value", "Alice"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-    assertEquals("Alice", rendered.path("patient_name").path("@value").asText(),
-        "patient_name's @value must equal the supplied string");
+    Map<String, Object> child = child(parseYaml(result), "patient_name");
+    assertEquals("Alice", child.get("value"),
+        "patient_name's value must equal the supplied string; got: " + child);
   }
 
-  @Test void sets_numeric_field_value() throws Exception
+  @Test void sets_numeric_field_value()
   {
-    String templateJson = compileTemplate(
-        "type: template\n"
-            + "name: Patient\n"
-            + "description: T\n"
-            + "version: 0.0.1\n"
-            + "status: draft\n"
-            + "modelVersion: 1.6.0\n"
-            + "children:\n"
-            + "  - key: age\n"
-            + "    type: numeric-field\n"
-            + "    name: Age\n");
+    String templateJson = templateWithField(createField("Age", "numeric-field"), "age");
     String instanceJson = createInstance(templateJson, "Patient");
 
     McpSchema.CallToolResult result = invoke(Map.of(
@@ -71,29 +60,19 @@ final class SetFieldValueToolTest
         "value", 42));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-    // The library renders the @value as a string. The important thing is round-trip
-    // correctness — the value is preserved.
-    assertEquals("42", rendered.path("age").path("@value").asText());
+    Map<String, Object> child = child(parseYaml(result), "age");
+    assertEquals("42", String.valueOf(child.get("value")),
+        "numeric value must be preserved; got: " + child);
   }
 
-  @Test void numeric_set_preserves_xsd_type_so_instance_still_validates() throws Exception
+  @Test void numeric_set_preserves_xsd_type_so_instance_still_validates()
   {
-    // The template's per-field sub-schema for numeric fields requires both @value
-    // and @type. set_field_value rebuilds the FieldInstance — if it forgets to
-    // thread the declared XsdNumericDatatype, @type vanishes and the instance
-    // fails CedarValidator with "object has missing required properties (['@type'])".
-    String templateJson = compileTemplate(
-        "type: template\n"
-            + "name: NumericTypePreserved\n"
-            + "version: 0.0.1\n"
-            + "status: draft\n"
-            + "modelVersion: 1.6.0\n"
-            + "children:\n"
-            + "  - key: age\n"
-            + "    type: numeric-field\n"
-            + "    name: Age\n"
-            + "    datatype: xsd:int\n");
+    // The template's per-field sub-schema for numeric fields requires both @value and
+    // @type. set_field_value rebuilds the FieldInstance — if it forgets to thread the
+    // declared XsdNumericDatatype, @type vanishes and the instance fails CedarValidator
+    // with "object has missing required properties (['@type'])".
+    String fieldJson = createField("Age", "numeric-field", Map.of("datatype", "xsd:int"));
+    String templateJson = templateWithField(fieldJson, "age");
     String instanceJson = createInstance(templateJson, "P1");
 
     McpSchema.CallToolResult result = invoke(Map.of(
@@ -103,34 +82,25 @@ final class SetFieldValueToolTest
         "value", 30));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-    JsonNode age = rendered.path("age");
-    assertEquals("30", age.path("@value").asText());
-    assertEquals("xsd:int", age.path("@type").asText(),
-        "@type must survive set_field_value; rendered: " + age);
+    String instanceYaml = textOf(result);
+    Map<String, Object> child = child(parseYaml(instanceYaml), "age");
+    assertEquals("30", String.valueOf(child.get("value")));
+    assertEquals("xsd:int", child.get("datatype"),
+        "datatype must survive set_field_value; rendered child: " + child);
 
-    assertValidatesAgainst(rendered, templateJson);
+    assertValidatesAgainst(instanceYaml, templateJson);
   }
 
-  @Test void set_value_does_not_drop_other_fields_null_value() throws Exception
+  @Test void set_value_does_not_drop_other_fields()
   {
-    // Setting one field's value re-renders the whole instance. If the renderer
-    // elides @value: null on sibling untouched literal fields, those fields
-    // become {} on output and the template's sub-schema rejects them with
-    // "object has missing required properties (['@value'])".
-    String templateJson = compileTemplate(
-        "type: template\n"
-            + "name: SiblingPreserved\n"
-            + "version: 0.0.1\n"
-            + "status: draft\n"
-            + "modelVersion: 1.6.0\n"
-            + "children:\n"
-            + "  - key: patient_name\n"
-            + "    type: text-field\n"
-            + "    name: Patient name\n"
-            + "  - key: notes\n"
-            + "    type: text-field\n"
-            + "    name: Notes\n");
+    // Setting one field's value re-renders the whole instance. If the renderer drops the
+    // sibling untouched literal field, the template's sub-schema rejects the result with
+    // "object has missing required properties (['@value'])". Validation against the
+    // template is the load-bearing check (compact YAML elides value-less children from
+    // the human view, so the sibling's absence in the YAML is expected).
+    String templateJson = templateWithFields(
+        List.of(createField("Patient name", "text-field"), createField("Notes", "text-field")),
+        List.of("patient_name", "notes"));
     String instanceJson = createInstance(templateJson, "P1");
 
     McpSchema.CallToolResult result = invoke(Map.of(
@@ -140,36 +110,22 @@ final class SetFieldValueToolTest
         "value", "Alice"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-    assertEquals("Alice", rendered.path("patient_name").path("@value").asText());
-    JsonNode notes = rendered.path("notes");
-    assertTrue(notes.isObject(), "untouched sibling must remain an object; got: " + notes);
-    assertTrue(notes.has("@value"),
-        "untouched sibling must keep @value (possibly null) so the template's sub-schema "
-            + "still accepts it; rendered: " + notes);
-
-    assertValidatesAgainst(rendered, templateJson);
+    String instanceYaml = textOf(result);
+    assertEquals("Alice", child(parseYaml(instanceYaml), "patient_name").get("value"));
+    assertValidatesAgainst(instanceYaml, templateJson);
   }
 
-  @Test void sets_field_value_inside_nested_element() throws Exception
+  @Test void sets_field_value_inside_nested_element()
   {
-    String templateJson = compileTemplate(
-        "type: template\n"
-            + "name: With address\n"
-            + "description: Nested\n"
-            + "version: 0.0.1\n"
-            + "status: draft\n"
-            + "modelVersion: 1.6.0\n"
-            + "children:\n"
-            + "  - key: address\n"
-            + "    type: element\n"
-            + "    name: Address\n"
-            + "    description: Postal address\n"
-            + "    modelVersion: 1.6.0\n"
-            + "    children:\n"
-            + "      - key: street\n"
-            + "        type: text-field\n"
-            + "        name: Street\n");
+    String streetField = createField("Street", "text-field");
+    String element = textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
+        "parent_json", createElement("Address"),
+        "child_json", streetField,
+        "key", "street")));
+    String templateJson = textOf(invokeTool(AddElementTool::handler, "add_element", Map.of(
+        "parent_json", createTemplate("With address"),
+        "child_json", element,
+        "key", "address")));
     String instanceJson = createInstance(templateJson, "P");
 
     McpSchema.CallToolResult result = invoke(Map.of(
@@ -179,30 +135,18 @@ final class SetFieldValueToolTest
         "value", "221B Baker St"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-    assertEquals("221B Baker St",
-        rendered.path("address").path("street").path("@value").asText(),
-        "nested field value must be set; got address:\n" + rendered.path("address"));
+    Map<String, Object> address = child(parseYaml(result), "address");
+    Map<String, Object> street = child(address, "street");
+    assertEquals("221B Baker St", street.get("value"),
+        "nested field value must be set; got address: " + address);
   }
 
-  @Test void appends_value_to_multi_instance_field() throws Exception
+  @Test void appends_value_to_multi_instance_field()
   {
-    String templateJson = compileTemplate(
-        "type: template\n"
-            + "name: With tags\n"
-            + "description: T\n"
-            + "version: 0.0.1\n"
-            + "status: draft\n"
-            + "modelVersion: 1.6.0\n"
-            + "children:\n"
-            + "  - key: tags\n"
-            + "    type: text-field\n"
-            + "    name: Tag\n"
-            + "    configuration:\n"
-            + "      multiple: true\n");
+    String templateJson = templateWithMultiField(createField("Tag", "text-field"), "tags");
     String instanceJson = createInstance(templateJson, "P");
 
-    // First append: index 0 on an empty list = append "alpha"
+    // First append: index 0 on an empty list = append "alpha".
     McpSchema.CallToolResult first = invoke(Map.of(
         "template_json", templateJson,
         "instance_json", instanceJson,
@@ -210,7 +154,7 @@ final class SetFieldValueToolTest
         "value", "alpha"));
     assertFalse(first.isError(), errorText(first));
 
-    // Second append: index 1 on a 1-length list = append "beta"
+    // Second append: index 1 on a 1-length list = append "beta".
     McpSchema.CallToolResult second = invoke(Map.of(
         "template_json", templateJson,
         "instance_json", textOf(first),
@@ -218,28 +162,15 @@ final class SetFieldValueToolTest
         "value", "beta"));
     assertFalse(second.isError(), errorText(second));
 
-    ObjectNode rendered = parseJson(second);
-    JsonNode tags = rendered.path("tags");
-    assertTrue(tags.isArray() && tags.size() == 2, "tags should be a 2-element array; got: " + tags);
-    assertEquals("alpha", tags.get(0).path("@value").asText());
-    assertEquals("beta", tags.get(1).path("@value").asText());
+    List<?> tags = childList(parseYaml(second), "tags");
+    assertEquals(2, tags.size(), "tags should be a 2-element list; got: " + tags);
+    assertEquals("alpha", ((Map<?, ?>) tags.get(0)).get("value"));
+    assertEquals("beta", ((Map<?, ?>) tags.get(1)).get("value"));
   }
 
-  @Test void replaces_existing_multi_instance_field_value() throws Exception
+  @Test void replaces_existing_multi_instance_field_value()
   {
-    String templateJson = compileTemplate(
-        "type: template\n"
-            + "name: T\n"
-            + "description: T\n"
-            + "version: 0.0.1\n"
-            + "status: draft\n"
-            + "modelVersion: 1.6.0\n"
-            + "children:\n"
-            + "  - key: tags\n"
-            + "    type: text-field\n"
-            + "    name: Tag\n"
-            + "    configuration:\n"
-            + "      multiple: true\n");
+    String templateJson = templateWithMultiField(createField("Tag", "text-field"), "tags");
     String instanceJson = createInstance(templateJson, "P");
 
     // Append then replace at index 0.
@@ -255,27 +186,14 @@ final class SetFieldValueToolTest
         "value", "ALPHA"));
 
     assertFalse(replaced.isError(), errorText(replaced));
-    ObjectNode rendered = parseJson(replaced);
-    JsonNode tags = rendered.path("tags");
+    List<?> tags = childList(parseYaml(replaced), "tags");
     assertEquals(1, tags.size(), "list length should still be 1 after replace");
-    assertEquals("ALPHA", tags.get(0).path("@value").asText());
+    assertEquals("ALPHA", ((Map<?, ?>) tags.get(0)).get("value"));
   }
 
   @Test void rejects_multi_instance_field_index_out_of_range()
   {
-    String templateJson = compileTemplate(
-        "type: template\n"
-            + "name: T\n"
-            + "description: T\n"
-            + "version: 0.0.1\n"
-            + "status: draft\n"
-            + "modelVersion: 1.6.0\n"
-            + "children:\n"
-            + "  - key: tags\n"
-            + "    type: text-field\n"
-            + "    name: Tag\n"
-            + "    configuration:\n"
-            + "      multiple: true\n");
+    String templateJson = templateWithMultiField(createField("Tag", "text-field"), "tags");
     String instanceJson = createInstance(templateJson, "P");
 
     // Index 5 on an empty list is out of range (> size).
@@ -291,17 +209,7 @@ final class SetFieldValueToolTest
 
   @Test void rejects_path_to_iri_field()
   {
-    String templateJson = compileTemplate(
-        "type: template\n"
-            + "name: P\n"
-            + "description: T\n"
-            + "version: 0.0.1\n"
-            + "status: draft\n"
-            + "modelVersion: 1.6.0\n"
-            + "children:\n"
-            + "  - key: ror\n"
-            + "    type: ext-ror-field\n"
-            + "    name: ROR\n");
+    String templateJson = templateWithField(createField("ROR", "ext-ror-field"), "ror");
     String instanceJson = createInstance(templateJson, "P");
 
     McpSchema.CallToolResult result = invoke(Map.of(
@@ -316,17 +224,7 @@ final class SetFieldValueToolTest
 
   @Test void rejects_unknown_field_path()
   {
-    String templateJson = compileTemplate(
-        "type: template\n"
-            + "name: P\n"
-            + "description: T\n"
-            + "version: 0.0.1\n"
-            + "status: draft\n"
-            + "modelVersion: 1.6.0\n"
-            + "children:\n"
-            + "  - key: a\n"
-            + "    type: text-field\n"
-            + "    name: A\n");
+    String templateJson = templateWithField(createField("A", "text-field"), "a");
     String instanceJson = createInstance(templateJson, "P");
 
     McpSchema.CallToolResult result = invoke(Map.of(
@@ -340,13 +238,7 @@ final class SetFieldValueToolTest
 
   @Test void rejects_missing_value()
   {
-    String templateJson = compileTemplate(
-        "type: template\n"
-            + "name: P\n"
-            + "description: T\n"
-            + "version: 0.0.1\n"
-            + "status: draft\n"
-            + "modelVersion: 1.6.0\n");
+    String templateJson = createTemplate("P");
     McpSchema.CallToolResult result = invoke(Map.of(
         "template_json", templateJson,
         "instance_json", "{}",
@@ -365,33 +257,117 @@ final class SetFieldValueToolTest
         new McpSchema.CallToolRequest("set_field_value", arguments));
   }
 
-  private static String compileTemplate(String yaml)
+  private interface Handler
   {
-    McpSchema.CallToolResult result = TemplateFromYamlTool.handler(null,
-        new McpSchema.CallToolRequest("template_from_yaml", Map.of("yaml", yaml)));
-    assertFalse(result.isError(),
-        "fixture template YAML must compile cleanly; got: " + errorText(result));
-    return textOf(result);
+    McpSchema.CallToolResult handle(io.modelcontextprotocol.server.McpSyncServerExchange e,
+        McpSchema.CallToolRequest r);
+  }
+
+  private static McpSchema.CallToolResult invokeTool(Handler handler, String name, Map<String, Object> args)
+  {
+    McpSchema.CallToolResult result = handler.handle(null, new McpSchema.CallToolRequest(name, args));
+    assertFalse(result.isError(), "fixture step '" + name + "' must succeed; got: " + errorText(result));
+    return result;
+  }
+
+  private static String createTemplate(String name)
+  {
+    return textOf(invokeTool(CreateTemplateTool::handler, "create_template", Map.of("name", name)));
+  }
+
+  private static String createElement(String name)
+  {
+    return textOf(invokeTool(CreateElementTool::handler, "create_element", Map.of("name", name)));
+  }
+
+  private static String createField(String name, String type)
+  {
+    return createField(name, type, Map.of());
+  }
+
+  private static String createField(String name, String type, Map<String, Object> extra)
+  {
+    Map<String, Object> args = new LinkedHashMap<>();
+    args.put("name", name);
+    args.put("type", type);
+    args.putAll(extra);
+    return textOf(invokeTool(CreateFieldTool::handler, "create_field", args));
+  }
+
+  /** Build a single-field template: create_template + add_field(child, key). */
+  private static String templateWithField(String fieldYaml, String key)
+  {
+    return textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
+        "parent_json", createTemplate("Fixture"),
+        "child_json", fieldYaml,
+        "key", key)));
+  }
+
+  /** Build a multi-instance single-field template. */
+  private static String templateWithMultiField(String fieldYaml, String key)
+  {
+    return textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
+        "parent_json", createTemplate("Fixture"),
+        "child_json", fieldYaml,
+        "key", key,
+        "isMultiInstance", true)));
+  }
+
+  /** Build a template with several fields added in order. */
+  private static String templateWithFields(List<String> fieldYamls, List<String> keys)
+  {
+    String parent = createTemplate("Fixture");
+    for (int i = 0; i < fieldYamls.size(); i++)
+      parent = textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
+          "parent_json", parent,
+          "child_json", fieldYamls.get(i),
+          "key", keys.get(i))));
+    return parent;
   }
 
   private static String createInstance(String templateJson, String name)
   {
-    McpSchema.CallToolResult result = CreateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_instance", Map.of(
-            "template_json", templateJson,
-            "is_based_on", FAKE_BASED_ON,
-            "name", name)));
-    assertFalse(result.isError(),
-        "fixture instance must build cleanly; got: " + errorText(result));
-    return textOf(result);
+    return textOf(invokeTool(CreateInstanceTool::handler, "create_instance", Map.of(
+        "template_json", templateJson,
+        "is_based_on", FAKE_BASED_ON,
+        "name", name)));
   }
 
-  private ObjectNode parseJson(McpSchema.CallToolResult result) throws Exception
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> parseYaml(McpSchema.CallToolResult result)
   {
-    String text = textOf(result);
-    JsonNode node = jackson.readTree(text);
-    assertTrue(node.isObject(), "result must be a JSON object; got: " + text);
-    return (ObjectNode) node;
+    return parseYaml(textOf(result));
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> parseYaml(String yamlText)
+  {
+    Object parsed = new Yaml().load(yamlText);
+    assertTrue(parsed instanceof Map, "result must be a YAML mapping; got: " + yamlText);
+    Map<String, Object> map = (Map<String, Object>) parsed;
+    assertEquals("instance", map.get("type"), "result must be an instance; got: " + yamlText);
+    return map;
+  }
+
+  /** The value-map for a single-instance child under the instance's (or element's) children map. */
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> child(Map<String, Object> parent, String key)
+  {
+    Object children = parent.get("children");
+    assertTrue(children instanceof Map, "expected a children map; got: " + children);
+    Object node = ((Map<String, Object>) children).get(key);
+    assertTrue(node instanceof Map, "child '" + key + "' must be a value-map; got: " + node);
+    return (Map<String, Object>) node;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static List<?> childList(Map<String, Object> parent, String key)
+  {
+    Object children = parent.get("children");
+    assertTrue(children instanceof Map, "expected a children map; got: " + children);
+    Object node = ((Map<String, Object>) children).get(key);
+    assertTrue(node instanceof List, "child '" + key + "' must be a list; got: " + node);
+    return (List<?>) node;
   }
 
   private static String textOf(McpSchema.CallToolResult result)
@@ -408,18 +384,33 @@ final class SetFieldValueToolTest
   }
 
   /**
-   * Calls validate_instance and asserts the report says valid:true. Mirrors the helper
-   * in CreateInstanceToolTest — keep them in sync.
+   * Reads the template and instance YAML back to the model, renders both to JSON, and runs
+   * CedarValidator.validateTemplateInstance — mirroring how {@code ValidateInstanceTool}
+   * drives the validator (its contract is with the JSON Schema serialization).
    */
-  private void assertValidatesAgainst(JsonNode instanceJson, String templateJson) throws Exception
+  private static void assertValidatesAgainst(String instanceYaml, String templateYaml)
   {
-    McpSchema.CallToolResult result = ValidateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("validate_instance", Map.of(
-            "template_json", templateJson,
-            "instance_json", jackson.writeValueAsString(instanceJson))));
-    assertFalse(result.isError(), errorText(result));
-    JsonNode report = jackson.readTree(textOf(result));
-    assertTrue(report.path("valid").asBoolean(),
-        "instance must validate against its template; got report:\n" + report.toPrettyString());
+    YamlArtifactReader reader = new YamlArtifactReader(true);
+    JsonArtifactRenderer renderer = new JsonArtifactRenderer();
+    TemplateSchemaArtifact template = reader.readTemplateSchemaArtifact(yamlMap(templateYaml));
+    TemplateInstanceArtifact instance = reader.readTemplateInstanceArtifact(yamlMap(instanceYaml));
+    ObjectNode templateNode = renderer.renderTemplateSchemaArtifact(template);
+    ObjectNode instanceNode = renderer.renderTemplateInstanceArtifact(instance);
+    ValidationReport report;
+    try {
+      report = new CedarValidator().validateTemplateInstance(instanceNode, templateNode);
+    } catch (Exception e) {
+      throw new AssertionError("CedarValidator threw while validating instance: " + e.getMessage(), e);
+    }
+    assertEquals("true", report.getValidationStatus(),
+        "instance must validate against its template; errors: " + report.getErrors());
+  }
+
+  @SuppressWarnings("unchecked")
+  private static LinkedHashMap<String, Object> yamlMap(String yamlText)
+  {
+    Object parsed = new Yaml().load(yamlText);
+    assertTrue(parsed instanceof Map, "YAML must be a mapping; got: " + yamlText);
+    return new LinkedHashMap<>((Map<String, Object>) parsed);
   }
 }

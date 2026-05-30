@@ -1,7 +1,5 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
@@ -30,7 +28,7 @@ import java.util.Map;
  * non-static, non-attribute-value child; recurses on elements; multi-instance children
  * start as empty arrays. The result is structurally complete and ready for the LLM to
  * populate field-by-field (a future {@code set_field_value} tool, or by hand-editing
- * the YAML via {@code instance_from_yaml}).
+ * the YAML via {@code instance_to_json}).
  *
  * <p>The {@code isBasedOn} URI defaults to the template's {@code @id} when present;
  * for freshly-built templates without an {@code @id} the caller must supply
@@ -38,7 +36,6 @@ import java.util.Map;
  */
 public final class CreateInstanceTool
 {
-  private static final ObjectMapper JACKSON2 = new ObjectMapper();
   private static final JsonArtifactReader READER = new JsonArtifactReader();
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
 
@@ -50,8 +47,8 @@ public final class CreateInstanceTool
     properties.put("template_json", Map.of(
         "type", "string",
         "description",
-        "CEDAR template JSON Schema (the kind 'template_from_yaml' or 'create_template' "
-            + "returns) to build the skeleton instance against."));
+        "CEDAR template as YAML (the kind 'create_template' returns) to build the skeleton "
+            + "instance against. JSON Schema is also accepted."));
     properties.put("name", Map.of(
         "type", "string",
         "description",
@@ -89,8 +86,8 @@ public final class CreateInstanceTool
                 + "FieldInstance; multi-instance children start as empty arrays; "
                 + "elements are recursively populated. The result is structurally complete "
                 + "and validates against the template; the caller fills in field values "
-                + "via subsequent edits (e.g. round-trip through 'instance_to_yaml')."
-                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
+                + "via subsequent edits (set_field_value, ...). Returns the instance as "
+                + "expanded YAML; use 'instance_to_json' to export canonical JSON.")
         .inputSchema(schema)
         .build();
   }
@@ -124,14 +121,12 @@ public final class CreateInstanceTool
       id = IdMinter.mintInstanceId();
     }
 
-    JsonNode parsed;
+    ObjectNode templateObject;
     try {
-      parsed = JACKSON2.readTree(templateJsonText);
-    } catch (Exception e) {
-      return error("template_json parse failed: " + e.getMessage());
+      templateObject = ArtifactExchange.toObjectNode(templateJsonText);
+    } catch (RuntimeException e) {
+      return error("template parse failed: " + e.getMessage());
     }
-    if (!(parsed instanceof ObjectNode templateObject))
-      return error("template_json must parse to a JSON object");
 
     TemplateSchemaArtifact template;
     try {
@@ -196,15 +191,15 @@ public final class CreateInstanceTool
 
     ObjectNode rendered = RENDERER.renderTemplateInstanceArtifact(instance);
 
-    String json;
+    String yaml;
     try {
-      json = JACKSON2.writerWithDefaultPrettyPrinter().writeValueAsString(rendered);
-    } catch (Exception e) {
-      return error("failed to serialize rendered instance: " + e.getMessage());
+      yaml = ArtifactExchange.jsonNodeToYaml(rendered);
+    } catch (RuntimeException e) {
+      return error("failed to render instance as YAML: " + e.getMessage());
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, json)))
+        .content(List.of(new McpSchema.TextContent(null, yaml)))
         .isError(false)
         .build();
   }

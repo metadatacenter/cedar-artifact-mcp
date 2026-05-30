@@ -1,7 +1,5 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
@@ -15,11 +13,6 @@ import org.metadatacenter.artifacts.model.core.fields.InputTimeFormat;
 import org.metadatacenter.artifacts.model.core.fields.TemporalGranularity;
 import org.metadatacenter.artifacts.model.core.fields.XsdNumericDatatype;
 import org.metadatacenter.artifacts.model.core.fields.XsdTemporalDatatype;
-import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
-import org.metadatacenter.model.validation.CedarValidator;
-import org.metadatacenter.model.validation.ModelValidator;
-import org.metadatacenter.model.validation.report.ErrorItem;
-import org.metadatacenter.model.validation.report.ValidationReport;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -44,14 +37,10 @@ import static org.metadatacenter.artifacts.model.yaml.YamlConstants.TEXT_FIELD;
  *
  * <p>The full list of {@code type} values comes from the library's
  * {@link org.metadatacenter.artifacts.model.yaml.YamlConstants#FIELD_TYPES} — the same
- * vocabulary {@code field_from_yaml} accepts in YAML {@code type:} discriminators.
+ * vocabulary {@code field_to_json} accepts in YAML {@code type:} discriminators.
  */
 public final class CreateFieldTool
 {
-  private static final ObjectMapper JACKSON2 = new ObjectMapper();
-  private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
-  private static final ModelValidator VALIDATOR = new CedarValidator();
-
   private CreateFieldTool() {}
 
   public static McpSchema.Tool tool()
@@ -64,7 +53,7 @@ public final class CreateFieldTool
         "type", "string",
         "enum", List.copyOf(FIELD_TYPES),
         "description",
-        "Kebab-case CEDAR field type. The same vocabulary 'field_from_yaml' accepts: "
+        "Kebab-case CEDAR field type. The same vocabulary 'field_to_json' accepts: "
             + "text-field, controlled-term-field, text-area-field, numeric-field, "
             + "temporal-field, radio-field, checkbox-field, single-select-list-field, "
             + "multi-select-list-field, phone-number-field, email-field, link-field, "
@@ -144,7 +133,9 @@ public final class CreateFieldTool
         .description(
             "Builds a CEDAR field schema artifact of the supplied kebab-case type "
                 + "(e.g. text-field, controlled-term-field, numeric-field). Returns the "
-                + "artifact serialized as JSON Schema, validated by CedarValidator.\n\n"
+                + "artifact as expanded YAML (the exchange form), validated by CedarValidator. "
+                + "A field is a first-class, reusable CEDAR artifact; use 'field_to_json' to "
+                + "export the canonical JSON Schema.\n\n"
                 + "Beyond name/type/description/version, the tool accepts type-specific "
                 + "configuration for the common literal-field cases: numeric-field "
                 + "(datatype, min_value, max_value, decimal_places, unit), temporal-field "
@@ -155,12 +146,11 @@ public final class CreateFieldTool
                 + "For shapes that need structured sub-objects — controlled-term values "
                 + "(class/branch/ontology/valueSet constraints), radio/checkbox/list inline "
                 + "values, multi-instance configuration, default values — use "
-                + "'field_from_yaml' instead. Constraints and default values can also be "
+                + "'field_to_json' instead. Constraints and default values can also be "
                 + "layered onto a created field via 'set_class_constraint', "
                 + "'set_branch_constraint', 'set_ontology_constraint', "
                 + "'set_valueset_constraint', 'set_default_value', 'set_iri_default_value', "
-                + "and 'set_controlled_term_default_value'."
-                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
+                + "and 'set_controlled_term_default_value'.")
         .inputSchema(schema)
         .build();
   }
@@ -218,42 +208,14 @@ public final class CreateFieldTool
       return error("field build failed: " + e.getMessage());
     }
 
-    ObjectNode rendered = RENDERER.renderFieldSchemaArtifact(field);
-
-    try {
-      ValidationReport report = VALIDATOR.validateTemplateField(rendered);
-      if (!"true".equals(report.getValidationStatus()))
-        return error("rendered field failed CedarValidator: " + formatErrors(report));
-    } catch (Exception e) {
-      return error("CedarValidator threw while validating rendered field: " + e.getMessage());
-    }
-
-    String json;
-    try {
-      json = JACKSON2.writerWithDefaultPrettyPrinter().writeValueAsString(rendered);
-    } catch (Exception e) {
-      return error("failed to serialize rendered field: " + e.getMessage());
-    }
+    String validationError = ArtifactExchange.validateField(field);
+    if (validationError != null)
+      return error("rendered field failed CedarValidator: " + validationError);
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, json)))
+        .content(List.of(new McpSchema.TextContent(null, ArtifactExchange.toYaml(field))))
         .isError(false)
         .build();
-  }
-
-  private static String formatErrors(ValidationReport report)
-  {
-    StringBuilder sb = new StringBuilder();
-    int i = 0;
-    for (ErrorItem err : report.getErrors()) {
-      if (i++ > 0) sb.append("; ");
-      sb.append(err.toString());
-      if (i >= 5) {
-        sb.append("; ... (").append(report.getErrors().size() - i).append(" more)");
-        break;
-      }
-    }
-    return sb.length() == 0 ? "(no error details)" : sb.toString();
   }
 
   private static String stringArg(Map<String, Object> args, String key)

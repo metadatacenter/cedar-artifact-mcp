@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code instance_to_yaml} — reverse direction of {@code instance_from_yaml}.
+ * MCP tool {@code instance_to_yaml} — reverse direction of {@code instance_to_json}.
  * Takes a CEDAR JSON instance and returns YAML, with the same {@code isCompact} flag
  * as the schema-side {@code *_to_yaml} tools.
  */
@@ -32,14 +32,14 @@ public final class InstanceToYamlTool
     properties.put("json", Map.of(
         "type", "string",
         "description",
-        "CEDAR template instance as a JSON string (the kind 'instance_from_yaml' "
+        "CEDAR template instance as a JSON string (the kind 'instance_to_json' "
             + "returns, or what a CEDAR repository serves for a saved instance)."));
     properties.put("isCompact", Map.of(
         "type", "boolean",
         "default", Boolean.TRUE,
         "description",
         "Whether to emit the lean, LLM-friendly compact form. true (default) omits "
-            + "provenance fields; 'instance_from_yaml' reads compact YAML cleanly. "
+            + "provenance fields; 'instance_to_json' reads compact YAML cleanly. "
             + "false emits every field the renderer can produce."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
@@ -51,7 +51,7 @@ public final class InstanceToYamlTool
         .description(
             "Renders a CEDAR template instance JSON as YAML. The 'isCompact' argument "
                 + "selects compact (LLM-friendly, default) or full-fidelity output. "
-                + "Reverse direction of 'instance_from_yaml'.")
+                + "Reverse direction of 'instance_to_json'.")
         .inputSchema(schema)
         .build();
   }

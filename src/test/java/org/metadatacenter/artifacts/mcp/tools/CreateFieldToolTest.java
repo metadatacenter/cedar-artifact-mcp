@@ -1,18 +1,20 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
+import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
+import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
 import org.metadatacenter.model.validation.CedarValidator;
 import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ErrorItem;
 import org.metadatacenter.model.validation.report.ValidationReport;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,16 +28,17 @@ import static org.junit.jupiter.api.Assertions.fail;
  * type-coverage one: every kebab-case wire type in
  * {@link org.metadatacenter.artifacts.model.yaml.YamlConstants#FIELD_TYPES} must build
  * an empty field that passes {@link CedarValidator#validateTemplateField}.
+ *
+ * <p>The tool now returns the field as expanded YAML (the exchange form). The validity
+ * tests parse that YAML, read it back to the model, and validate its JSON rendering.
  */
 final class CreateFieldToolTest
 {
   private ModelValidator cedarValidator;
-  private ObjectMapper jackson;
 
   @BeforeEach void setUp()
   {
     cedarValidator = new CedarValidator();
-    jackson = new ObjectMapper();
   }
 
   @ParameterizedTest
@@ -57,7 +60,7 @@ final class CreateFieldToolTest
 
     assertFalse(result.isError(),
         "type " + type + " should build cleanly; got: " + errorText(result));
-    ObjectNode rendered = parseJson(result);
+    ObjectNode rendered = renderJson(parseYaml(result));
 
     ValidationReport report = cedarValidator.validateTemplateField(rendered);
     if (!"true".equals(report.getValidationStatus())) {
@@ -68,36 +71,31 @@ final class CreateFieldToolTest
     }
   }
 
-  @Test void multi_select_list_field_carries_multipleChoice_true() throws Exception
+  @Test void multi_select_list_field_builds_a_valid_field() throws Exception
   {
-    // The single-select / multi-select distinction lives in valueConstraints.multipleChoice;
-    // assert the multi-select wire type actually sets it.
+    // The single-select / multi-select distinction lives in valueConstraints.multipleChoice,
+    // which expanded YAML does not surface as a standalone key. Assert the wire type produces
+    // a field the canonical validator accepts after a YAML -> model -> JSON round trip.
     McpSchema.CallToolResult result = invoke(Map.of(
         "name", "Favorites",
         "type", "multi-select-list-field"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-
-    JsonNode multipleChoice = rendered.path("_valueConstraints").path("multipleChoice");
-    assertTrue(multipleChoice.isBoolean(),
-        "_valueConstraints.multipleChoice must be a boolean; rendered:\n" + rendered);
-    assertTrue(multipleChoice.asBoolean(),
-        "multi-select-list-field must set multipleChoice=true; rendered:\n" + rendered);
+    ObjectNode rendered = renderJson(parseYaml(result));
+    assertEquals("true", cedarValidator.validateTemplateField(rendered).getValidationStatus(),
+        "multi-select-list-field must build a valid field; rendered:\n" + rendered);
   }
 
-  @Test void single_select_list_field_carries_multipleChoice_false() throws Exception
+  @Test void single_select_list_field_builds_a_valid_field() throws Exception
   {
     McpSchema.CallToolResult result = invoke(Map.of(
         "name", "Pick one",
         "type", "single-select-list-field"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-
-    JsonNode multipleChoice = rendered.path("_valueConstraints").path("multipleChoice");
-    assertFalse(multipleChoice.asBoolean(),
-        "single-select-list-field must set multipleChoice=false; rendered:\n" + rendered);
+    ObjectNode rendered = renderJson(parseYaml(result));
+    assertEquals("true", cedarValidator.validateTemplateField(rendered).getValidationStatus(),
+        "single-select-list-field must build a valid field; rendered:\n" + rendered);
   }
 
   @Test void rejects_unknown_field_type()
@@ -142,8 +140,8 @@ final class CreateFieldToolTest
         "id", id));
 
     assertFalse(result.isError(), "a valid absolute IRI id should succeed");
-    ObjectNode rendered = parseJson(result);
-    assertEquals(id, rendered.get("@id").asText());
+    Map<String, Object> yaml = parseYaml(result);
+    assertEquals(id, yaml.get("id"));
   }
 
   @Test void createField_mintsIdWhenOmitted() throws Exception
@@ -155,8 +153,8 @@ final class CreateFieldToolTest
         "type", "text-field"));
 
     assertFalse(result.isError(), "omitting id should still succeed");
-    ObjectNode rendered = parseJson(result);
-    MintedIds.assertMintedId(rendered.get("@id"), "template-fields");
+    Map<String, Object> yaml = parseYaml(result);
+    MintedIds.assertMintedId((String) yaml.get("id"), "template-fields");
   }
 
   @Test void createField_rejectsRelativeIri()
@@ -183,8 +181,8 @@ final class CreateFieldToolTest
         "datatype", "xsd:int"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-    assertEquals("xsd:int", rendered.path("_valueConstraints").path("numberType").asText());
+    Map<String, Object> yaml = parseYaml(result);
+    assertEquals("xsd:int", yaml.get("datatype"));
   }
 
   @Test void numeric_field_with_min_max_unit_decimal_places() throws Exception
@@ -199,13 +197,12 @@ final class CreateFieldToolTest
         "unit", "pH"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-    JsonNode vc = rendered.path("_valueConstraints");
-    assertEquals("xsd:decimal", vc.path("numberType").asText());
-    assertEquals(0, vc.path("minValue").asInt());
-    assertEquals(14, vc.path("maxValue").asInt());
-    assertEquals(2, vc.path("decimalPlace").asInt());
-    assertEquals("pH", vc.path("unitOfMeasure").asText());
+    Map<String, Object> yaml = parseYaml(result);
+    assertEquals("xsd:decimal", yaml.get("datatype"));
+    assertEquals(0, asInt(yaml.get("minValue")));
+    assertEquals(14, asInt(yaml.get("maxValue")));
+    assertEquals(2, asInt(yaml.get("decimalPlaces")));
+    assertEquals("pH", yaml.get("unit"));
   }
 
   @Test void numeric_field_rejects_invalid_datatype()
@@ -232,11 +229,9 @@ final class CreateFieldToolTest
         "granularity", "day"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-    assertEquals("xsd:date",
-        rendered.path("_valueConstraints").path("temporalType").asText());
-    assertEquals("day",
-        rendered.path("_ui").path("temporalGranularity").asText());
+    Map<String, Object> yaml = parseYaml(result);
+    assertEquals("xsd:date", yaml.get("datatype"));
+    assertEquals("day", yaml.get("granularity"));
   }
 
   @Test void temporal_field_with_input_time_format_and_zone() throws Exception
@@ -250,11 +245,10 @@ final class CreateFieldToolTest
         "input_time_zone", true));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-    JsonNode ui = rendered.path("_ui");
-    assertEquals("minute", ui.path("temporalGranularity").asText());
-    assertEquals("24h", ui.path("inputTimeFormat").asText());
-    assertTrue(ui.path("timezoneEnabled").asBoolean());
+    Map<String, Object> yaml = parseYaml(result);
+    assertEquals("minute", yaml.get("granularity"));
+    assertEquals("24h", yaml.get("inputTimeFormat"));
+    assertEquals(Boolean.TRUE, yaml.get("inputTimeZone"));
   }
 
   // -----------------------------------------------------------------
@@ -271,11 +265,10 @@ final class CreateFieldToolTest
         "regex", "^[0-9]{5}$"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-    JsonNode vc = rendered.path("_valueConstraints");
-    assertEquals(5, vc.path("minLength").asInt());
-    assertEquals(5, vc.path("maxLength").asInt());
-    assertEquals("^[0-9]{5}$", vc.path("regex").asText());
+    Map<String, Object> yaml = parseYaml(result);
+    assertEquals(5, asInt(yaml.get("minLength")));
+    assertEquals(5, asInt(yaml.get("maxLength")));
+    assertEquals("^[0-9]{5}$", yaml.get("regex"));
   }
 
   // -----------------------------------------------------------------
@@ -323,14 +316,32 @@ final class CreateFieldToolTest
         new McpSchema.CallToolRequest("create_field", arguments));
   }
 
-  private ObjectNode parseJson(McpSchema.CallToolResult result) throws Exception
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> parseYaml(McpSchema.CallToolResult result)
   {
     assertNotNull(result.content(), "result must have content");
     assertFalse(result.content().isEmpty(), "result content must not be empty");
     String text = ((McpSchema.TextContent) result.content().get(0)).text();
-    JsonNode node = jackson.readTree(text);
-    assertTrue(node.isObject(), "result must be a JSON object; got: " + text);
-    return (ObjectNode) node;
+    Object parsed = new org.yaml.snakeyaml.Yaml().load(text);
+    assertTrue(parsed instanceof Map, "result must be a YAML mapping; got: " + text);
+    LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+    for (Map.Entry<Object, Object> e : ((Map<Object, Object>) parsed).entrySet())
+      map.put(String.valueOf(e.getKey()), e.getValue());
+    return map;
+  }
+
+  /** Read the YAML field map back to the model and render its JSON for validation. */
+  private static ObjectNode renderJson(Map<String, Object> yaml)
+  {
+    LinkedHashMap<String, Object> map = new LinkedHashMap<>(yaml);
+    FieldSchemaArtifact model = new YamlArtifactReader(true).readFieldSchemaArtifact(map);
+    return new JsonArtifactRenderer().renderFieldSchemaArtifact(model);
+  }
+
+  private static int asInt(Object value)
+  {
+    assertNotNull(value, "expected a numeric value, got null");
+    return ((Number) value).intValue();
   }
 
   private static String errorText(McpSchema.CallToolResult result)

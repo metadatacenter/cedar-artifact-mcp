@@ -1,16 +1,9 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.model.core.ElementSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.Version;
-import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
-import org.metadatacenter.model.validation.CedarValidator;
-import org.metadatacenter.model.validation.ModelValidator;
-import org.metadatacenter.model.validation.report.ErrorItem;
-import org.metadatacenter.model.validation.report.ValidationReport;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -22,15 +15,12 @@ import java.util.Map;
  * MCP tool {@code create_element} — element variant of {@code create_template}.
  *
  * <p>Builds an empty CEDAR element schema artifact with the supplied name, description,
- * and version, and returns it as JSON Schema. Validates with
- * {@link CedarValidator#validateTemplateElement} before returning (DESIGN.md Principle 6).
+ * and version, and returns it as expanded YAML (the exchange form — DESIGN.md Principle 8).
+ * Validates with {@link org.metadatacenter.model.validation.CedarValidator} before returning
+ * (DESIGN.md Principle 6).
  */
 public final class CreateElementTool
 {
-  private static final ObjectMapper JACKSON2 = new ObjectMapper();
-  private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
-  private static final ModelValidator VALIDATOR = new CedarValidator();
-
   private CreateElementTool() {}
 
   public static McpSchema.Tool tool()
@@ -60,10 +50,10 @@ public final class CreateElementTool
         .title("Create CEDAR element")
         .description(
             "Builds an empty CEDAR element schema artifact with the supplied name, description, "
-                + "and version. Returns the artifact serialized as JSON. Reusable elements are "
-                + "first-class CEDAR artifacts; the returned JSON can be referenced by templates "
-                + "or composed via other tools."
-                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
+                + "and version. Returns the artifact as expanded YAML — the exchange form. Reusable "
+                + "elements are first-class CEDAR artifacts; the returned YAML can be added to "
+                + "templates (add_element) or composed via other tools. Use 'element_to_json' to "
+                + "export the canonical JSON Schema.")
         .inputSchema(schema)
         .build();
   }
@@ -88,7 +78,7 @@ public final class CreateElementTool
     }
 
     String idText = stringArg(args, "id");
-    URI id = null;
+    URI id;
     if (idText != null && !idText.isBlank()) {
       try {
         id = new URI(idText);
@@ -105,52 +95,24 @@ public final class CreateElementTool
 
     ElementSchemaArtifact element;
     try {
-      ElementSchemaArtifact.Builder builder = ElementSchemaArtifact.builder()
+      element = ElementSchemaArtifact.builder()
           .withName(name)
           .withDescription(description)
           .withVersion(version)
-          .withJsonLdId(id);
-      element = builder.build();
+          .withJsonLdId(id)
+          .build();
     } catch (RuntimeException e) {
       return error("element build failed: " + e.getMessage());
     }
 
-    ObjectNode rendered = RENDERER.renderElementSchemaArtifact(element);
-
-    try {
-      ValidationReport report = VALIDATOR.validateTemplateElement(rendered);
-      if (!"true".equals(report.getValidationStatus()))
-        return error("rendered element failed CedarValidator: " + formatErrors(report));
-    } catch (Exception e) {
-      return error("CedarValidator threw while validating rendered element: " + e.getMessage());
-    }
-
-    String json;
-    try {
-      json = JACKSON2.writerWithDefaultPrettyPrinter().writeValueAsString(rendered);
-    } catch (Exception e) {
-      return error("failed to serialize rendered element: " + e.getMessage());
-    }
+    String validationError = ArtifactExchange.validateElement(element);
+    if (validationError != null)
+      return error("rendered element failed CedarValidator: " + validationError);
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, json)))
+        .content(List.of(new McpSchema.TextContent(null, ArtifactExchange.toYaml(element))))
         .isError(false)
         .build();
-  }
-
-  private static String formatErrors(ValidationReport report)
-  {
-    StringBuilder sb = new StringBuilder();
-    int i = 0;
-    for (ErrorItem err : report.getErrors()) {
-      if (i++ > 0) sb.append("; ");
-      sb.append(err.toString());
-      if (i >= 5) {
-        sb.append("; ... (").append(report.getErrors().size() - i).append(" more)");
-        break;
-      }
-    }
-    return sb.length() == 0 ? "(no error details)" : sb.toString();
   }
 
   private static String stringArg(Map<String, Object> args, String key)

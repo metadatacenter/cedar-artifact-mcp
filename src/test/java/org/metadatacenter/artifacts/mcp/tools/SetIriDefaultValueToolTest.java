@@ -1,15 +1,18 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
+import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
+import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
 import org.metadatacenter.model.validation.CedarValidator;
 import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ValidationReport;
+import org.yaml.snakeyaml.Yaml;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,24 +23,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 final class SetIriDefaultValueToolTest
 {
   private ModelValidator cedarValidator;
-  private ObjectMapper jackson;
 
   @BeforeEach void setUp()
   {
     cedarValidator = new CedarValidator();
-    jackson = new ObjectMapper();
   }
 
   @Test void sets_ror_default() throws Exception
   {
-    String fieldJson = createField("Affiliation", "ext-ror-field");
+    String fieldYaml = createField("Affiliation", "ext-ror-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
+        "field_json", fieldYaml,
         "iri", "https://ror.org/00f54p054"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    ObjectNode rendered = renderJson(result);
     assertEquals("https://ror.org/00f54p054",
         rendered.path("_valueConstraints").path("defaultValue").asText(),
         "default IRI must appear under _valueConstraints; got: "
@@ -49,10 +50,10 @@ final class SetIriDefaultValueToolTest
 
   @Test void rejects_text_field()
   {
-    String fieldJson = createField("Note", "text-field");
+    String fieldYaml = createField("Note", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
+        "field_json", fieldYaml,
         "iri", "https://example.org/x"));
     assertTrue(result.isError());
     assertTrue(errorText(result).toLowerCase().contains("iri field")
@@ -62,9 +63,9 @@ final class SetIriDefaultValueToolTest
 
   @Test void rejects_invalid_iri()
   {
-    String fieldJson = createField("ROR", "ext-ror-field");
+    String fieldYaml = createField("ROR", "ext-ror-field");
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
+        "field_json", fieldYaml,
         "iri", "not a uri with spaces"));
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("iri"));
@@ -86,12 +87,17 @@ final class SetIriDefaultValueToolTest
     return textOf(result);
   }
 
-  private ObjectNode parseJson(McpSchema.CallToolResult result) throws Exception
+  /** Read the tool's YAML output back to the model, then render JSON for assertions. */
+  private static ObjectNode renderJson(McpSchema.CallToolResult result)
   {
-    String text = textOf(result);
-    JsonNode node = jackson.readTree(text);
-    assertTrue(node.isObject(), "result must be a JSON object; got: " + text);
-    return (ObjectNode) node;
+    String yaml = textOf(result);
+    Object parsed = new Yaml().load(yaml);
+    assertTrue(parsed instanceof Map, "result must be a YAML mapping; got: " + yaml);
+    LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+    for (Map.Entry<?, ?> e : ((Map<?, ?>) parsed).entrySet())
+      map.put(String.valueOf(e.getKey()), e.getValue());
+    FieldSchemaArtifact field = new YamlArtifactReader(true).readFieldSchemaArtifact(map);
+    return new JsonArtifactRenderer().renderFieldSchemaArtifact(field);
   }
 
   private static String textOf(McpSchema.CallToolResult result)

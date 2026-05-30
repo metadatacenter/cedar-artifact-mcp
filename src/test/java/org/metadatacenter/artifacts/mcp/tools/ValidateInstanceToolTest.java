@@ -24,13 +24,10 @@ final class ValidateInstanceToolTest
     // and a matching minimal instance. The instance carries the required JSON-LD
     // skeleton; the template has no child properties to enforce.
     String templateJson = createTemplate("Demographics");
-    // Template's required[] includes schema:description, which the instance renderer only
-    // emits when description.isPresent() — so the YAML must provide one explicitly here.
-    String instanceJson = compileInstance(
-        "type: instance\n"
-            + "name: Patient 42\n"
-            + "description: One patient record\n"
-            + "isBasedOn: https://repo.metadatacenter.org/templates/abc\n");
+    // Build the matching instance from the same template. A freshly created template has
+    // no @id, so is_based_on must be supplied explicitly.
+    String instanceJson = createInstance(templateJson, "Patient 42", "One patient record",
+        "https://repo.metadatacenter.org/templates/abc");
 
     McpSchema.CallToolResult result = invoke(Map.of(
         "template_json", templateJson,
@@ -103,12 +100,17 @@ final class ValidateInstanceToolTest
     return textOf(result);
   }
 
-  private static String compileInstance(String yaml)
+  private static String createInstance(
+      String templateJson, String name, String description, String isBasedOn)
   {
-    McpSchema.CallToolResult result = InstanceFromYamlTool.handler(null,
-        new McpSchema.CallToolRequest("instance_from_yaml", Map.of("yaml", yaml)));
+    McpSchema.CallToolResult result = CreateInstanceTool.handler(null,
+        new McpSchema.CallToolRequest("create_instance", Map.of(
+            "template_json", templateJson,
+            "name", name,
+            "description", description,
+            "is_based_on", isBasedOn)));
     assertFalse(result.isError(),
-        "fixture instance must compile cleanly; got: " + errorText(result));
+        "fixture instance must build cleanly; got: " + errorText(result));
     return textOf(result);
   }
 

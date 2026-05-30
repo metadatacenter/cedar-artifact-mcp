@@ -1,15 +1,14 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.spec.McpSchema;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
+import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
 import org.metadatacenter.model.validation.CedarValidator;
-import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ValidationReport;
 
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,160 +18,159 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for the {@code add_element} tool. Inputs are produced by the existing
- * {@code create_*} tools so the fixtures are real CEDAR JSON Schema.
+ * {@code create_*} tools (which now return expanded YAML), and the tool itself returns
+ * the updated parent as expanded YAML.
  */
 final class AddElementToolTest
 {
-  private ModelValidator cedarValidator;
-  private ObjectMapper jackson;
-
-  @BeforeEach void setUp()
+  @Test void adds_element_to_template_parent()
   {
-    cedarValidator = new CedarValidator();
-    jackson = new ObjectMapper();
-  }
-
-  @Test void adds_element_to_template_parent() throws Exception
-  {
-    String templateJson = createTemplate("Demographics");
-    String elementJson = createElement("Address");
+    String templateYaml = createTemplate("Demographics");
+    String elementYaml = createElement("Address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateJson,
-        "child_json", elementJson,
+        "parent_json", templateYaml,
+        "child_json", elementYaml,
         "key", "address"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    Map<String, Object> rendered = parseYaml(result);
 
-    JsonNode child = rendered.path("properties").path("address");
-    assertTrue(child.isObject(),
-        "address element must appear under the template's properties; got: "
-            + rendered.path("properties"));
+    Map<String, Object> child = childByKey(rendered, "address");
+    assertNotNull(child,
+        "address element must appear in the template's children; got: "
+            + rendered.get("children"));
 
-    ValidationReport report = cedarValidator.validateTemplate(rendered);
-    assertEquals("true", report.getValidationStatus(),
-        "updated template must pass validateTemplate");
+    assertTemplateValidates(textOf(result));
   }
 
-  @Test void adds_element_to_element_parent_nested() throws Exception
+  @Test void adds_element_to_element_parent_nested()
   {
     // Nested element-in-element is a valid composition shape (e.g. Person containing
     // Address). The tool must support it via the element parent branch.
-    String outerJson = createElement("Person");
-    String innerJson = createElement("Address");
+    String outerYaml = createElement("Person");
+    String innerYaml = createElement("Address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", outerJson,
-        "child_json", innerJson,
+        "parent_json", outerYaml,
+        "child_json", innerYaml,
         "key", "address"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    Map<String, Object> rendered = parseYaml(result);
 
-    assertTrue(rendered.path("properties").path("address").isObject(),
-        "address must appear under Person's properties");
+    assertNotNull(childByKey(rendered, "address"),
+        "address must appear in Person's children");
 
-    ValidationReport report = cedarValidator.validateTemplateElement(rendered);
-    assertEquals("true", report.getValidationStatus(),
-        "updated element must pass validateTemplateElement");
+    assertElementValidates(textOf(result));
   }
 
-  @Test void name_override_appears_in_propertyLabels() throws Exception
+  @Test void name_override_appears_in_child_configuration()
   {
-    String templateJson = createTemplate("Demographics");
-    String elementJson = createElement("Address");
+    String templateYaml = createTemplate("Demographics");
+    String elementYaml = createElement("Address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateJson,
-        "child_json", elementJson,
+        "parent_json", templateYaml,
+        "child_json", elementYaml,
         "key", "home_address",
         "name", "Home address"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    Map<String, Object> rendered = parseYaml(result);
 
-    JsonNode label = rendered.path("_ui").path("propertyLabels").path("home_address");
-    assertEquals("Home address", label.asText(),
-        "name override must surface in _ui.propertyLabels; got _ui: " + rendered.path("_ui"));
+    Map<String, Object> child = childByKey(rendered, "home_address");
+    assertNotNull(child, "home_address child must be present; got: " + rendered.get("children"));
+    Map<String, Object> configuration = asMap(child.get("configuration"));
+    assertEquals("Home address", configuration.get("overrideLabel"),
+        "name override must surface in the child's configuration.overrideLabel; got: " + child);
   }
 
-  @Test void isMultiInstance_true_renders_element_as_array() throws Exception
+  @Test void isMultiInstance_true_marks_child_multiple()
   {
-    String templateJson = createTemplate("Multi");
-    String elementJson = createElement("Address");
+    String templateYaml = createTemplate("Multi");
+    String elementYaml = createElement("Address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateJson,
-        "child_json", elementJson,
+        "parent_json", templateYaml,
+        "child_json", elementYaml,
         "key", "addresses",
         "isMultiInstance", true));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    Map<String, Object> rendered = parseYaml(result);
 
-    assertEquals("array", rendered.path("properties").path("addresses").path("type").asText(),
-        "multi-instance element must render as an array; got: "
-            + rendered.path("properties").path("addresses"));
+    Map<String, Object> child = childByKey(rendered, "addresses");
+    assertNotNull(child, "addresses child must be present; got: " + rendered.get("children"));
+    Map<String, Object> configuration = asMap(child.get("configuration"));
+    assertEquals(Boolean.TRUE, configuration.get("multiple"),
+        "multi-instance element must carry configuration.multiple=true; got: " + child);
   }
 
-  @Test void isMultiInstance_default_false_renders_element_as_object() throws Exception
+  @Test void isMultiInstance_default_false_leaves_child_single()
   {
-    String templateJson = createTemplate("Single");
-    String elementJson = createElement("Address");
+    String templateYaml = createTemplate("Single");
+    String elementYaml = createElement("Address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateJson,
-        "child_json", elementJson,
+        "parent_json", templateYaml,
+        "child_json", elementYaml,
         "key", "address"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    Map<String, Object> rendered = parseYaml(result);
 
-    assertEquals("object", rendered.path("properties").path("address").path("type").asText(),
-        "default (isMultiInstance unset) must render as a bare object");
+    Map<String, Object> child = childByKey(rendered, "address");
+    assertNotNull(child, "address child must be present");
+    Map<String, Object> configuration = asMap(child.get("configuration"));
+    assertFalse(configuration.containsKey("multiple"),
+        "default (isMultiInstance unset) must not mark the child multiple; got: " + child);
   }
 
-  @Test void description_override_appears_in_propertyDescriptions() throws Exception
+  @Test void description_override_appears_in_child_configuration()
   {
-    String templateJson = createTemplate("Demographics");
-    String elementJson = createElement("Address");
+    String templateYaml = createTemplate("Demographics");
+    String elementYaml = createElement("Address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateJson,
-        "child_json", elementJson,
+        "parent_json", templateYaml,
+        "child_json", elementYaml,
         "key", "addr",
         "description", "Override description"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    Map<String, Object> rendered = parseYaml(result);
 
-    assertEquals("Override description",
-        rendered.path("_ui").path("propertyDescriptions").path("addr").asText(),
-        "description override must surface in _ui.propertyDescriptions");
+    Map<String, Object> child = childByKey(rendered, "addr");
+    assertNotNull(child, "addr child must be present");
+    Map<String, Object> configuration = asMap(child.get("configuration"));
+    assertEquals("Override description", configuration.get("overrideDescription"),
+        "description override must surface in the child's configuration.overrideDescription");
   }
 
-  @Test void minItems_and_maxItems_apply_to_multi_instance_element() throws Exception
+  @Test void minItems_and_maxItems_apply_to_multi_instance_element()
   {
-    String templateJson = createTemplate("Bounded");
-    String elementJson = createElement("Address");
+    String templateYaml = createTemplate("Bounded");
+    String elementYaml = createElement("Address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateJson,
-        "child_json", elementJson,
+        "parent_json", templateYaml,
+        "child_json", elementYaml,
         "key", "addresses",
         "isMultiInstance", true,
         "minItems", 1,
         "maxItems", 3));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    Map<String, Object> rendered = parseYaml(result);
 
-    JsonNode addresses = rendered.path("properties").path("addresses");
-    assertEquals("array", addresses.path("type").asText(),
-        "multi-instance element must render as an array");
-    assertEquals(1, addresses.path("minItems").asInt());
-    assertEquals(3, addresses.path("maxItems").asInt());
+    Map<String, Object> child = childByKey(rendered, "addresses");
+    assertNotNull(child, "addresses child must be present");
+    Map<String, Object> configuration = asMap(child.get("configuration"));
+    assertEquals(Boolean.TRUE, configuration.get("multiple"),
+        "multi-instance element must carry configuration.multiple=true");
+    assertEquals(1, configuration.get("minItems"));
+    assertEquals(3, configuration.get("maxItems"));
   }
 
   @Test void rejects_non_integer_minItems()
@@ -197,53 +195,53 @@ final class AddElementToolTest
     assertTrue(errorText(result).contains("isMultiInstance"));
   }
 
-  @Test void key_defaults_to_childs_schema_name() throws Exception
+  @Test void key_defaults_to_childs_schema_name()
   {
-    String templateJson = createTemplate("Demographics");
-    String elementJson = createElement("address");
+    String templateYaml = createTemplate("Demographics");
+    String elementYaml = createElement("address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateJson,
-        "child_json", elementJson));
+        "parent_json", templateYaml,
+        "child_json", elementYaml));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    Map<String, Object> rendered = parseYaml(result);
 
-    assertTrue(rendered.path("properties").path("address").isObject(),
+    assertNotNull(childByKey(rendered, "address"),
         "element should appear under the default key (child's schema:name); got: "
-            + rendered.path("properties"));
+            + rendered.get("children"));
   }
 
-  @Test void rejects_duplicate_default_key() throws Exception
+  @Test void rejects_duplicate_default_key()
   {
-    String templateJson = createTemplate("Dup");
-    String elementJson = createElement("address");
+    String templateYaml = createTemplate("Dup");
+    String elementYaml = createElement("address");
 
     McpSchema.CallToolResult first = invoke(Map.of(
-        "parent_json", templateJson,
-        "child_json", elementJson));
+        "parent_json", templateYaml,
+        "child_json", elementYaml));
     assertFalse(first.isError(), errorText(first));
 
     McpSchema.CallToolResult second = invoke(Map.of(
         "parent_json", textOf(first),
-        "child_json", elementJson));
+        "child_json", elementYaml));
     assertTrue(second.isError(),
         "duplicate key (default) must produce isError=true; got: " + second);
     assertTrue(errorText(second).toLowerCase().contains("address"),
         "error should mention the conflicting key; got: " + errorText(second));
   }
 
-  @Test void rejects_child_json_that_is_not_an_element() throws Exception
+  @Test void rejects_child_json_that_is_not_an_element()
   {
-    String templateJson = createTemplate("X");
-    String fieldJson = createFieldJson("standalone", "text-field");
+    String templateYaml = createTemplate("X");
+    String fieldYaml = createFieldYaml("standalone", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateJson,
-        "child_json", fieldJson,
+        "parent_json", templateYaml,
+        "child_json", fieldYaml,
         "key", "x"));
     assertTrue(result.isError(),
-        "a field JSON must not be accepted as a child element; got: " + result);
+        "a field must not be accepted as a child element; got: " + result);
   }
 
   @Test void rejects_parent_without_at_type()
@@ -291,7 +289,7 @@ final class AddElementToolTest
     return textOf(result);
   }
 
-  private String createFieldJson(String name, String type)
+  private String createFieldYaml(String name, String type)
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
         new McpSchema.CallToolRequest("create_field", Map.of("name", name, "type", type)));
@@ -300,12 +298,74 @@ final class AddElementToolTest
     return textOf(result);
   }
 
-  private ObjectNode parseJson(McpSchema.CallToolResult result) throws Exception
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> parseYaml(McpSchema.CallToolResult result)
   {
     String text = textOf(result);
-    JsonNode node = jackson.readTree(text);
-    assertTrue(node.isObject(), "result must be a JSON object; got: " + text);
-    return (ObjectNode) node;
+    Object parsed = new org.yaml.snakeyaml.Yaml().load(text);
+    assertTrue(parsed instanceof Map, "result must be a YAML mapping; got: " + text);
+    LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+    ((Map<Object, Object>) parsed).forEach((k, v) -> map.put(String.valueOf(k), v));
+    return map;
+  }
+
+  /** Finds the entry in the parent's {@code children} list whose {@code key} equals {@code key}. */
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> childByKey(Map<String, Object> parent, String key)
+  {
+    Object children = parent.get("children");
+    if (!(children instanceof List)) return null;
+    for (Object entry : (List<Object>) children) {
+      if (entry instanceof Map<?, ?> m && key.equals(String.valueOf(m.get("key"))))
+        return asMap(m);
+    }
+    return null;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> asMap(Object raw)
+  {
+    if (!(raw instanceof Map)) return Map.of();
+    LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+    ((Map<Object, Object>) raw).forEach((k, v) -> map.put(String.valueOf(k), v));
+    return map;
+  }
+
+  private static void assertTemplateValidates(String yaml)
+  {
+    var model = new YamlArtifactReader(true).readTemplateSchemaArtifact(toReaderMap(yaml));
+    var json = new JsonArtifactRenderer().renderTemplateSchemaArtifact(model);
+    ValidationReport report;
+    try {
+      report = new CedarValidator().validateTemplate(json);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    assertEquals("true", report.getValidationStatus(),
+        "updated template must pass validateTemplate");
+  }
+
+  private static void assertElementValidates(String yaml)
+  {
+    var model = new YamlArtifactReader(true).readElementSchemaArtifact(toReaderMap(yaml));
+    var json = new JsonArtifactRenderer().renderElementSchemaArtifact(model);
+    ValidationReport report;
+    try {
+      report = new CedarValidator().validateTemplateElement(json);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    assertEquals("true", report.getValidationStatus(),
+        "updated element must pass validateTemplateElement");
+  }
+
+  @SuppressWarnings("unchecked")
+  private static LinkedHashMap<String, Object> toReaderMap(String yaml)
+  {
+    Object parsed = new org.yaml.snakeyaml.Yaml().load(yaml);
+    LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+    ((Map<Object, Object>) parsed).forEach((k, v) -> map.put(String.valueOf(k), v));
+    return map;
   }
 
   private static String textOf(McpSchema.CallToolResult result)

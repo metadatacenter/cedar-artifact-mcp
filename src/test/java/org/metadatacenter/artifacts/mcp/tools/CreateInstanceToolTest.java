@@ -317,13 +317,11 @@ final class CreateInstanceToolTest
 
   @Test void rejects_template_without_at_id_and_no_is_based_on() throws Exception
   {
-    // create_template now mints an @id (DESIGN.md Principle 10), so we strip it here to
-    // reach the @id-less path — a hand-authored template_json may still carry a null @id.
-    // Without an explicit is_based_on argument, such an instance has no canonical reference
-    // to "the template" — surface that as a clean error rather than building a bogus instance.
-    ObjectNode template = (ObjectNode) jackson.readTree(createTemplate("Unsaved"));
-    template.putNull("@id");
-    String templateJson = jackson.writeValueAsString(template);
+    // create_template now mints an @id (DESIGN.md Principle 10), so we use a hand-authored
+    // template YAML with no id to reach the @id-less path. Without an explicit is_based_on
+    // argument, such an instance has no canonical reference to "the template" — surface that
+    // as a clean error rather than building a bogus instance.
+    String templateJson = "type: template\nname: Unsaved\n";
 
     McpSchema.CallToolResult result = invoke(Map.of("template_json", templateJson));
 
@@ -370,8 +368,8 @@ final class CreateInstanceToolTest
 
   private static String compileTemplate(String yaml)
   {
-    McpSchema.CallToolResult result = TemplateFromYamlTool.handler(null,
-        new McpSchema.CallToolRequest("template_from_yaml", Map.of("yaml", yaml)));
+    McpSchema.CallToolResult result = TemplateToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("template_to_json", Map.of("yaml", yaml)));
     assertFalse(result.isError(),
         "fixture template YAML must compile cleanly; got: " + errorText(result));
     return textOf(result);
@@ -390,12 +388,23 @@ final class CreateInstanceToolTest
             + report.toPrettyString());
   }
 
-  private ObjectNode parseJson(McpSchema.CallToolResult result) throws Exception
+  /**
+   * The tool now returns the instance as expanded YAML. Read it back to the model and render
+   * its JSON so the existing JSON-key assertions (schema:name, child objects, @type, arrays)
+   * still apply — and so this exercises the instance YAML round trip end to end.
+   */
+  @SuppressWarnings("unchecked")
+  private ObjectNode parseJson(McpSchema.CallToolResult result)
   {
     String text = textOf(result);
-    JsonNode node = jackson.readTree(text);
-    assertTrue(node.isObject(), "result must be a JSON object; got: " + text);
-    return (ObjectNode) node;
+    Object parsed = new org.yaml.snakeyaml.Yaml().load(text);
+    assertTrue(parsed instanceof java.util.Map, "result must be a YAML mapping; got: " + text);
+    java.util.LinkedHashMap<String, Object> map = new java.util.LinkedHashMap<>();
+    ((java.util.Map<Object, Object>) parsed).forEach((k, v) -> map.put(String.valueOf(k), v));
+    var instance = new org.metadatacenter.artifacts.model.reader.YamlArtifactReader(true)
+        .readTemplateInstanceArtifact(map);
+    return new org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer()
+        .renderTemplateInstanceArtifact(instance);
   }
 
   private static String textOf(McpSchema.CallToolResult result)

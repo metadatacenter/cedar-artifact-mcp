@@ -26,7 +26,13 @@ final class MintedIds
   {
     assertNotNull(idNode, "@id node should be present");
     assertTrue(idNode.isTextual(), "@id should be a string; got: " + idNode);
-    String id = idNode.asText();
+    assertMintedId(idNode.asText(), collection);
+  }
+
+  /** Asserts {@code id} is a freshly-minted id string under the given collection. */
+  static void assertMintedId(String id, String collection)
+  {
+    assertNotNull(id, "id should be present");
     String prefix = BASE + collection + "/";
     assertTrue(id.startsWith(prefix),
         "@id should start with " + prefix + "; got: " + id);

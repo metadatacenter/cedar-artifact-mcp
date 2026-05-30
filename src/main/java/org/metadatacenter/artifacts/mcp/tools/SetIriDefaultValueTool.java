@@ -1,7 +1,5 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
@@ -40,7 +38,6 @@ import java.util.Map;
  */
 public final class SetIriDefaultValueTool
 {
-  private static final ObjectMapper JACKSON2 = new ObjectMapper();
   private static final JsonArtifactReader READER = new JsonArtifactReader();
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
   private static final ModelValidator VALIDATOR = new CedarValidator();
@@ -53,9 +50,9 @@ public final class SetIriDefaultValueTool
     properties.put("field_json", Map.of(
         "type", "string",
         "description",
-        "CEDAR IRI field as JSON Schema — link, ROR, ORCID, PFAS, RRID, PubMed, "
-            + "NIH-grant-ID, or DOI. The kind 'create_field' with one of those types or "
-            + "'field_from_yaml' returns."));
+        "CEDAR IRI field as YAML — link, ROR, ORCID, PFAS, RRID, PubMed, "
+            + "NIH-grant-ID, or DOI. The kind 'create_field' with one of those types "
+            + "returns. JSON Schema is also accepted."));
     properties.put("iri", Map.of(
         "type", "string",
         "description", "Default URI value."));
@@ -68,8 +65,8 @@ public final class SetIriDefaultValueTool
         .title("Set an IRI default value on a field")
         .description(
             "Attaches a default URI value to an IRI-valued CEDAR field schema. "
-                + "Returns the updated field JSON, re-validated with CedarValidator."
-                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
+                + "Returns the updated field as expanded YAML, re-validated with "
+                + "CedarValidator.")
         .inputSchema(schema)
         .build();
   }
@@ -94,14 +91,12 @@ public final class SetIriDefaultValueTool
       return error("iri is not a valid URI: " + e.getMessage());
     }
 
-    JsonNode parsed;
+    ObjectNode fieldObject;
     try {
-      parsed = JACKSON2.readTree(fieldJsonText);
-    } catch (Exception e) {
-      return error("field_json parse failed: " + e.getMessage());
+      fieldObject = ArtifactExchange.toObjectNode(fieldJsonText);
+    } catch (RuntimeException e) {
+      return error("field parse failed: " + e.getMessage());
     }
-    if (!(parsed instanceof ObjectNode fieldObject))
-      return error("field_json must parse to a JSON object");
 
     FieldSchemaArtifact field;
     try {
@@ -134,15 +129,15 @@ public final class SetIriDefaultValueTool
       return error("CedarValidator threw while validating updated field: " + e.getMessage());
     }
 
-    String json;
+    String yaml;
     try {
-      json = JACKSON2.writerWithDefaultPrettyPrinter().writeValueAsString(rendered);
-    } catch (Exception e) {
-      return error("failed to serialize updated field: " + e.getMessage());
+      yaml = ArtifactExchange.jsonNodeToYaml(rendered);
+    } catch (RuntimeException e) {
+      return error("failed to render updated field as YAML: " + e.getMessage());
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, json)))
+        .content(List.of(new McpSchema.TextContent(null, yaml)))
         .isError(false)
         .build();
   }

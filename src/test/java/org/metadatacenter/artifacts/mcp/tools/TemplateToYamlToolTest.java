@@ -15,10 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for the {@code template_to_yaml} tool — the reverse direction of
- * {@code template_from_yaml}.
+ * {@code template_to_json}.
  *
  * <p>Each test sources its input JSON by first compiling YAML through the existing
- * {@code template_from_yaml} tool. That keeps the test inputs realistic (real CEDAR
+ * {@code template_to_json} tool. That keeps the test inputs realistic (real CEDAR
  * JSON Schema, not hand-rolled approximations) and incidentally exercises the
  * full YAML → JSON → YAML round-trip the library is built around.
  */
@@ -81,9 +81,9 @@ final class TemplateToYamlToolTest
         "compact YAML must omit the status field; got:\n" + compactYaml);
   }
 
-  @Test void compact_form_round_trips_through_template_from_yaml() throws Exception
+  @Test void compact_form_round_trips_through_template_to_json() throws Exception
   {
-    // template_from_yaml(template_to_yaml(template_from_yaml(yaml), isCompact=true))
+    // template_to_json(template_to_yaml(template_to_json(yaml), isCompact=true))
     // must succeed and preserve structural content. Compact intentionally drops
     // provenance, status, and version metadata; those are *not* expected to survive
     // (use isCompact=false if they need to). The reader's compact mode defaults
@@ -189,8 +189,8 @@ final class TemplateToYamlToolTest
 
   private static String compileToJson(String yaml)
   {
-    McpSchema.CallToolResult result = TemplateFromYamlTool.handler(null,
-        new McpSchema.CallToolRequest("template_from_yaml", Map.of("yaml", yaml)));
+    McpSchema.CallToolResult result = TemplateToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("template_to_json", Map.of("yaml", yaml)));
     assertFalse(result.isError(), "test fixture YAML must compile cleanly; got: " + errorText(result));
     return textOf(result);
   }

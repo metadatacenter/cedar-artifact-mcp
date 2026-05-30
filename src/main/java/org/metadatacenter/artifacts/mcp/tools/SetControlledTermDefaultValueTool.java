@@ -1,7 +1,5 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
@@ -29,7 +27,6 @@ import java.util.Map;
  */
 public final class SetControlledTermDefaultValueTool
 {
-  private static final ObjectMapper JACKSON2 = new ObjectMapper();
   private static final JsonArtifactReader READER = new JsonArtifactReader();
 
   private SetControlledTermDefaultValueTool() {}
@@ -40,9 +37,10 @@ public final class SetControlledTermDefaultValueTool
     properties.put("field_json", Map.of(
         "type", "string",
         "description",
-        "CEDAR controlled-term field as JSON Schema. Must already carry at least "
+        "CEDAR controlled-term field as YAML. Must already carry at least "
             + "one constraint (class/ontology/branch/value-set) — without one the "
-            + "library doesn't classify it as a controlled-term field."));
+            + "library doesn't classify it as a controlled-term field. JSON Schema "
+            + "is also accepted."));
     properties.put("iri", Map.of(
         "type", "string",
         "description", "Default class IRI."));
@@ -59,9 +57,8 @@ public final class SetControlledTermDefaultValueTool
         .title("Set a controlled-term default value on a field")
         .description(
             "Attaches a default value (class IRI + label) to a CEDAR controlled-term "
-                + "field schema. Returns the updated field JSON, re-validated with "
-                + "CedarValidator."
-                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
+                + "field schema. Returns the updated field as expanded YAML, "
+                + "re-validated with CedarValidator.")
         .inputSchema(schema)
         .build();
   }
@@ -94,14 +91,12 @@ public final class SetControlledTermDefaultValueTool
     // at the constraint tools.
     if (fieldJson == null || fieldJson.isBlank())
       return error("field_json is required and must not be blank");
-    JsonNode parsed;
+    ObjectNode fieldObject;
     try {
-      parsed = JACKSON2.readTree(fieldJson);
-    } catch (Exception e) {
-      return error("field_json parse failed: " + e.getMessage());
+      fieldObject = ArtifactExchange.toObjectNode(fieldJson);
+    } catch (RuntimeException e) {
+      return error("field parse failed: " + e.getMessage());
     }
-    if (!(parsed instanceof ObjectNode fieldObject))
-      return error("field_json must parse to a JSON object");
     FieldSchemaArtifact field;
     try {
       field = READER.readFieldSchemaArtifact(fieldObject);

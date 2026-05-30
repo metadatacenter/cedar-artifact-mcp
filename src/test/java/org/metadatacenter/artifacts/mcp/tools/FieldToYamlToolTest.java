@@ -15,8 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for the {@code field_to_yaml} tool. Mirrors {@link TemplateToYamlToolTest}'s
- * shape: source the input JSON by compiling YAML through {@code field_from_yaml}
- * and round-trip back through {@code field_from_yaml}.
+ * shape: source the input JSON by compiling YAML through {@code field_to_json}
+ * and round-trip back through {@code field_to_json}.
  */
 final class FieldToYamlToolTest
 {
@@ -48,7 +48,7 @@ final class FieldToYamlToolTest
         "compact YAML must omit the status field; got:\n" + yaml);
   }
 
-  @Test void compact_form_round_trips_through_field_from_yaml() throws Exception
+  @Test void compact_form_round_trips_through_field_to_json() throws Exception
   {
     String originalYaml =
         "type: controlled-term-field\n"
@@ -110,8 +110,8 @@ final class FieldToYamlToolTest
 
   private static String compileToJson(String yaml)
   {
-    McpSchema.CallToolResult result = FieldFromYamlTool.handler(null,
-        new McpSchema.CallToolRequest("field_from_yaml", Map.of("yaml", yaml)));
+    McpSchema.CallToolResult result = FieldToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("field_to_json", Map.of("yaml", yaml)));
     assertFalse(result.isError(),
         "test fixture YAML must compile cleanly; got: " + errorText(result));
     return textOf(result);

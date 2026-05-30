@@ -15,9 +15,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for the {@code element_to_yaml} tool. Mirrors {@link TemplateToYamlToolTest}'s
- * shape: source the input JSON by compiling YAML through {@code element_from_yaml}
+ * shape: source the input JSON by compiling YAML through {@code element_to_json}
  * (so the inputs are real CEDAR JSON Schema, not hand-rolled approximations) and
- * round-trip back through {@code element_from_yaml} to prove the contract holds.
+ * round-trip back through {@code element_to_json} to prove the contract holds.
  */
 final class ElementToYamlToolTest
 {
@@ -53,7 +53,7 @@ final class ElementToYamlToolTest
         "compact YAML must omit the status field; got:\n" + yaml);
   }
 
-  @Test void compact_form_round_trips_through_element_from_yaml() throws Exception
+  @Test void compact_form_round_trips_through_element_to_json() throws Exception
   {
     String originalYaml =
         "type: element\n"
@@ -114,8 +114,8 @@ final class ElementToYamlToolTest
 
   private static String compileToJson(String yaml)
   {
-    McpSchema.CallToolResult result = ElementFromYamlTool.handler(null,
-        new McpSchema.CallToolRequest("element_from_yaml", Map.of("yaml", yaml)));
+    McpSchema.CallToolResult result = ElementToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("element_to_json", Map.of("yaml", yaml)));
     assertFalse(result.isError(),
         "test fixture YAML must compile cleanly; got: " + errorText(result));
     return textOf(result);

@@ -9,28 +9,27 @@ import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
 import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
 import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
 import org.metadatacenter.artifacts.model.yaml.YamlConstants;
-import org.yaml.snakeyaml.Yaml;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code instance_from_yaml} — compiles a YAML-described template instance
+ * MCP tool {@code instance_to_json} — compiles a YAML-described template instance
  * to its canonical CEDAR JSON instance artifact.
  *
- * <p>Same compact-mode reader as the schema {@code *_from_yaml} tools; runs a YAML →
+ * <p>Same compact-mode reader as the schema {@code *_to_json} tools; runs a YAML →
  * model → JSON pipeline. Instance validation against a specific template is done by
  * {@link ValidateInstanceTool} (which needs both the instance and its template), not
  * here.
  */
-public final class InstanceFromYamlTool
+public final class InstanceToJsonTool
 {
   private static final ObjectMapper JACKSON2 = new ObjectMapper();
   private static final YamlArtifactReader READER = new YamlArtifactReader(true);
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
 
-  private InstanceFromYamlTool() {}
+  private InstanceToJsonTool() {}
 
   public static McpSchema.Tool tool()
   {
@@ -46,13 +45,12 @@ public final class InstanceFromYamlTool
         "object", properties, List.of("yaml"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
-        .name("instance_from_yaml")
+        .name("instance_to_json")
         .title("CEDAR template instance: YAML → JSON")
         .description(
-            "Compiles a CEDAR template instance described in YAML into the canonical "
-                + "CEDAR JSON instance. Use 'validate_instance' to verify the result "
-                + "against a specific template."
-                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
+            "Exports a CEDAR template instance (YAML, the exchange form) to the canonical "
+                + "CEDAR JSON instance for cedar-server and other downstream consumers. Use "
+                + "'validate_instance' to verify the result against a specific template.")
         .inputSchema(schema)
         .build();
   }
@@ -71,13 +69,7 @@ public final class InstanceFromYamlTool
 
     LinkedHashMap<String, Object> yamlMap;
     try {
-      Object parsed = new Yaml().load(yamlText);
-      if (!(parsed instanceof Map<?, ?>))
-        return error("yaml must parse to a mapping at the top level (got "
-            + (parsed == null ? "null" : parsed.getClass().getSimpleName()) + ")");
-      yamlMap = new LinkedHashMap<>();
-      for (Map.Entry<?, ?> entry : ((Map<?, ?>) parsed).entrySet())
-        yamlMap.put(String.valueOf(entry.getKey()), entry.getValue());
+      yamlMap = ArtifactExchange.parseYamlMap(yamlText);
     } catch (RuntimeException e) {
       return error("YAML parse failed: " + e.getMessage());
     }

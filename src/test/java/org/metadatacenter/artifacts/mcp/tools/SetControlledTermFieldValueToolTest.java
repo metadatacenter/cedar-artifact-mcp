@@ -1,12 +1,10 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.spec.McpSchema;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.yaml.snakeyaml.Yaml;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,38 +12,21 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Tests for {@code set_controlled_term_field_value}. The controlled-term schema field is
+ * built by creating a controlled-term-field and layering a class constraint onto it via
+ * {@code set_class_constraint} — that's what makes the library classify it as a
+ * ControlledTermField. All fixtures move as YAML; the tool returns the updated instance
+ * as expanded YAML, where a controlled-term value carries {@code id} + {@code label} +
+ * {@code prefLabel} under its children entry.
+ */
 final class SetControlledTermFieldValueToolTest
 {
   private static final String FAKE_BASED_ON = "https://example.org/templates/test-fixture";
 
-  private ObjectMapper jackson;
-
-  @BeforeEach void setUp() { jackson = new ObjectMapper(); }
-
-  @Test void sets_controlled_term_value() throws Exception
+  @Test void sets_controlled_term_value()
   {
-    // Build a controlled-term field by authoring it with a class constraint — that's
-    // what makes the library classify it as ControlledTermField in the schema.
-    String templateJson = compileTemplate(
-        "type: template\n"
-            + "name: Diagnosis template\n"
-            + "description: With diagnosis\n"
-            + "version: 0.0.1\n"
-            + "status: draft\n"
-            + "modelVersion: 1.6.0\n"
-            + "children:\n"
-            + "  - key: diagnosis\n"
-            + "    type: controlled-term-field\n"
-            + "    name: Diagnosis\n"
-            + "    description: ICD diagnosis\n"
-            + "    datatype: iri\n"
-            + "    values:\n"
-            + "      - type: class\n"
-            + "        label: disease\n"
-            + "        acronym: DOID\n"
-            + "        termType: class\n"
-            + "        termLabel: disease\n"
-            + "        iri: http://purl.obolibrary.org/obo/DOID_4\n");
+    String templateJson = controlledTermTemplate("diagnosis");
     String instanceJson = createInstance(templateJson, "Patient 42");
 
     McpSchema.CallToolResult result = invoke(Map.of(
@@ -57,35 +38,15 @@ final class SetControlledTermFieldValueToolTest
         "pref_label", "breast cancer"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-    JsonNode diag = rendered.path("diagnosis");
-    assertEquals("http://purl.obolibrary.org/obo/DOID_1612", diag.path("@id").asText());
-    assertEquals("breast cancer", diag.path("rdfs:label").asText());
-    assertEquals("breast cancer", diag.path("skos:prefLabel").asText());
+    Map<String, Object> diag = child(parseYaml(result), "diagnosis");
+    assertEquals("http://purl.obolibrary.org/obo/DOID_1612", diag.get("id"), "diagnosis id; got: " + diag);
+    assertEquals("breast cancer", diag.get("label"), "diagnosis label; got: " + diag);
+    assertEquals("breast cancer", diag.get("prefLabel"), "diagnosis prefLabel; got: " + diag);
   }
 
-  @Test void pref_label_defaults_to_label_when_omitted() throws Exception
+  @Test void pref_label_defaults_to_label_when_omitted()
   {
-    String templateJson = compileTemplate(
-        "type: template\n"
-            + "name: Diagnosis template\n"
-            + "description: T\n"
-            + "version: 0.0.1\n"
-            + "status: draft\n"
-            + "modelVersion: 1.6.0\n"
-            + "children:\n"
-            + "  - key: diagnosis\n"
-            + "    type: controlled-term-field\n"
-            + "    name: Diagnosis\n"
-            + "    description: ICD diagnosis\n"
-            + "    datatype: iri\n"
-            + "    values:\n"
-            + "      - type: class\n"
-            + "        label: disease\n"
-            + "        acronym: DOID\n"
-            + "        termType: class\n"
-            + "        termLabel: disease\n"
-            + "        iri: http://purl.obolibrary.org/obo/DOID_4\n");
+    String templateJson = controlledTermTemplate("diagnosis");
     String instanceJson = createInstance(templateJson, "P");
 
     McpSchema.CallToolResult result = invoke(Map.of(
@@ -96,27 +57,17 @@ final class SetControlledTermFieldValueToolTest
         "label", "breast cancer"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-    assertEquals("breast cancer",
-        rendered.path("diagnosis").path("skos:prefLabel").asText());
+    Map<String, Object> diag = child(parseYaml(result), "diagnosis");
+    assertEquals("breast cancer", diag.get("prefLabel"),
+        "prefLabel must default to label; got: " + diag);
   }
 
   @Test void rejects_path_to_non_controlled_term_field()
   {
-    // A plain text-field schema (with no controlled-term constraint) won't be
-    // classified as ControlledTermField — the wire collision documented in memory.
-    // The setter must refuse it cleanly and point at add_*_constraint.
-    String templateJson = compileTemplate(
-        "type: template\n"
-            + "name: T\n"
-            + "description: T\n"
-            + "version: 0.0.1\n"
-            + "status: draft\n"
-            + "modelVersion: 1.6.0\n"
-            + "children:\n"
-            + "  - key: note\n"
-            + "    type: text-field\n"
-            + "    name: Note\n");
+    // A plain text-field schema (no controlled-term constraint) won't be classified as
+    // ControlledTermField — the wire collision documented in memory. The setter must
+    // refuse it cleanly and point at set_*_constraint.
+    String templateJson = templateWithField(createField("Note", "text-field"), "note");
     String instanceJson = createInstance(templateJson, "I");
 
     McpSchema.CallToolResult result = invoke(Map.of(
@@ -128,7 +79,7 @@ final class SetControlledTermFieldValueToolTest
     assertTrue(result.isError());
     assertTrue(errorText(result).toLowerCase().contains("controlled-term")
             && errorText(result).contains("set_class_constraint"),
-        "error should mention controlled-term and add_*_constraint guidance; got: "
+        "error should mention controlled-term and set_*_constraint guidance; got: "
             + errorText(result));
   }
 
@@ -143,40 +94,96 @@ final class SetControlledTermFieldValueToolTest
     assertTrue(errorText(result).contains("label"));
   }
 
+  // -----------------------------------------------------------------
   // helpers
+  // -----------------------------------------------------------------
+
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
     return SetControlledTermFieldValueTool.handler(null,
         new McpSchema.CallToolRequest("set_controlled_term_field_value", args));
   }
 
-  private static String compileTemplate(String yaml)
+  private interface Handler
   {
-    McpSchema.CallToolResult result = TemplateFromYamlTool.handler(null,
-        new McpSchema.CallToolRequest("template_from_yaml", Map.of("yaml", yaml)));
-    assertFalse(result.isError(),
-        "fixture template must compile cleanly; got: " + errorText(result));
-    return textOf(result);
+    McpSchema.CallToolResult handle(io.modelcontextprotocol.server.McpSyncServerExchange e,
+        McpSchema.CallToolRequest r);
+  }
+
+  private static McpSchema.CallToolResult invokeTool(Handler handler, String name, Map<String, Object> args)
+  {
+    McpSchema.CallToolResult result = handler.handle(null, new McpSchema.CallToolRequest(name, args));
+    assertFalse(result.isError(), "fixture step '" + name + "' must succeed; got: " + errorText(result));
+    return result;
+  }
+
+  private static String createTemplate(String name)
+  {
+    return textOf(invokeTool(CreateTemplateTool::handler, "create_template", Map.of("name", name)));
+  }
+
+  private static String createField(String name, String type)
+  {
+    Map<String, Object> args = new LinkedHashMap<>();
+    args.put("name", name);
+    args.put("type", type);
+    return textOf(invokeTool(CreateFieldTool::handler, "create_field", args));
+  }
+
+  private static String templateWithField(String fieldYaml, String key)
+  {
+    return textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
+        "parent_json", createTemplate("Fixture"),
+        "child_json", fieldYaml,
+        "key", key)));
+  }
+
+  /**
+   * Build a template carrying a controlled-term field at {@code key}: create the field,
+   * layer a class constraint onto it (so the library classifies it as ControlledTermField),
+   * then graft it onto a fresh template.
+   */
+  private static String controlledTermTemplate(String key)
+  {
+    String field = createField("Diagnosis", "controlled-term-field");
+    String constrained = textOf(invokeTool(SetClassConstraintTool::handler, "set_class_constraint", Map.of(
+        "field_json", field,
+        "class_iri", "http://purl.obolibrary.org/obo/DOID_4",
+        "ontology_acronym", "DOID",
+        "label", "disease",
+        "pref_label", "disease")));
+    return textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
+        "parent_json", createTemplate("Diagnosis template"),
+        "child_json", constrained,
+        "key", key)));
   }
 
   private static String createInstance(String templateJson, String name)
   {
-    McpSchema.CallToolResult result = CreateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_instance", Map.of(
-            "template_json", templateJson,
-            "is_based_on", FAKE_BASED_ON,
-            "name", name)));
-    assertFalse(result.isError(),
-        "fixture instance must build cleanly; got: " + errorText(result));
-    return textOf(result);
+    return textOf(invokeTool(CreateInstanceTool::handler, "create_instance", Map.of(
+        "template_json", templateJson,
+        "is_based_on", FAKE_BASED_ON,
+        "name", name)));
   }
 
-  private ObjectNode parseJson(McpSchema.CallToolResult result) throws Exception
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> parseYaml(McpSchema.CallToolResult result)
   {
-    String text = textOf(result);
-    JsonNode node = jackson.readTree(text);
-    assertTrue(node.isObject(), "result must be a JSON object; got: " + text);
-    return (ObjectNode) node;
+    Object parsed = new Yaml().load(textOf(result));
+    assertTrue(parsed instanceof Map, "result must be a YAML mapping; got: " + textOf(result));
+    Map<String, Object> map = (Map<String, Object>) parsed;
+    assertEquals("instance", map.get("type"), "result must be an instance; got: " + textOf(result));
+    return map;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> child(Map<String, Object> parent, String key)
+  {
+    Object children = parent.get("children");
+    assertTrue(children instanceof Map, "expected a children map; got: " + children);
+    Object node = ((Map<String, Object>) children).get(key);
+    assertTrue(node instanceof Map, "child '" + key + "' must be a value-map; got: " + node);
+    return (Map<String, Object>) node;
   }
 
   private static String textOf(McpSchema.CallToolResult result)

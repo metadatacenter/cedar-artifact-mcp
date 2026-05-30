@@ -1,16 +1,18 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.metadatacenter.artifacts.model.core.ElementSchemaArtifact;
+import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
+import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
 import org.metadatacenter.model.validation.CedarValidator;
 import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ErrorItem;
 import org.metadatacenter.model.validation.report.ValidationReport;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,19 +24,21 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Tests for the {@code create_element} tool. Mirrors {@link CreateTemplateToolTest}'s
  * shape: a happy-path build is validated by {@link CedarValidator#validateTemplateElement}.
+ *
+ * <p>The tool now returns the element as expanded YAML (the exchange form), so the tests
+ * parse the YAML output and, for the validity check, read it back to the model and
+ * validate its JSON rendering.
  */
 final class CreateElementToolTest
 {
   private ModelValidator cedarValidator;
-  private ObjectMapper jackson;
 
   @BeforeEach void setUp()
   {
     cedarValidator = new CedarValidator();
-    jackson = new ObjectMapper();
   }
 
-  @Test void createElement_rendersJsonThatPassesCedarValidator() throws Exception
+  @Test void createElement_rendersYamlThatPassesCedarValidator() throws Exception
   {
     McpSchema.CallToolResult result = invoke(Map.of(
         "name", "Address",
@@ -42,18 +46,18 @@ final class CreateElementToolTest
         "version", "0.1.0"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    Map<String, Object> yaml = parseYaml(result);
 
-    ValidationReport report = cedarValidator.validateTemplateElement(rendered);
+    assertEquals("Address", yaml.get("name"));
+    assertEquals("Postal address element", yaml.get("description"));
+    assertEquals("0.1.0", yaml.get("version"));
+
+    ValidationReport report = cedarValidator.validateTemplateElement(renderJson(yaml));
     if (!"true".equals(report.getValidationStatus())) {
       StringBuilder msg = new StringBuilder("CedarValidator rejected the rendered element:\n");
       for (ErrorItem err : report.getErrors()) msg.append("  - ").append(err).append('\n');
       fail(msg.toString());
     }
-
-    assertEquals("Address", rendered.get("schema:name").asText());
-    assertEquals("Postal address element", rendered.get("schema:description").asText());
-    assertEquals("0.1.0", rendered.get("pav:version").asText());
   }
 
   @Test void createElement_appliesDefaultsWhenOptionalArgsOmitted() throws Exception
@@ -61,11 +65,13 @@ final class CreateElementToolTest
     McpSchema.CallToolResult result = invoke(Map.of("name", "Bare"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    Map<String, Object> yaml = parseYaml(result);
 
-    assertEquals("Bare", rendered.get("schema:name").asText());
-    assertEquals("0.0.1", rendered.get("pav:version").asText(),
-        "version should default to 0.0.1");
+    assertEquals("Bare", yaml.get("name"));
+    assertEquals("0.0.1", yaml.get("version"), "version should default to 0.0.1");
+    // Expanded YAML omits an empty description rather than emitting description: "".
+    assertFalse(yaml.containsKey("description"),
+        "empty description should be omitted from YAML; got: " + yaml);
   }
 
   @Test void rejects_blank_name()
@@ -99,8 +105,8 @@ final class CreateElementToolTest
         "id", id));
 
     assertFalse(result.isError(), "a valid absolute IRI id should succeed");
-    ObjectNode rendered = parseJson(result);
-    assertEquals(id, rendered.get("@id").asText());
+    Map<String, Object> yaml = parseYaml(result);
+    assertEquals(id, yaml.get("id"));
   }
 
   @Test void createElement_mintsIdWhenOmitted() throws Exception
@@ -110,8 +116,8 @@ final class CreateElementToolTest
     McpSchema.CallToolResult result = invoke(Map.of("name", "Address"));
 
     assertFalse(result.isError(), "omitting id should still succeed");
-    ObjectNode rendered = parseJson(result);
-    MintedIds.assertMintedId(rendered.get("@id"), "template-elements");
+    Map<String, Object> yaml = parseYaml(result);
+    MintedIds.assertMintedId((String) yaml.get("id"), "template-elements");
   }
 
   @Test void createElement_rejectsRelativeIri()
@@ -135,14 +141,26 @@ final class CreateElementToolTest
         new McpSchema.CallToolRequest("create_element", arguments));
   }
 
-  private ObjectNode parseJson(McpSchema.CallToolResult result) throws Exception
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> parseYaml(McpSchema.CallToolResult result)
   {
     assertNotNull(result.content(), "result must have content");
     assertFalse(result.content().isEmpty(), "result content must not be empty");
     String text = ((McpSchema.TextContent) result.content().get(0)).text();
-    JsonNode node = jackson.readTree(text);
-    assertTrue(node.isObject(), "result must be a JSON object; got: " + text);
-    return (ObjectNode) node;
+    Object parsed = new org.yaml.snakeyaml.Yaml().load(text);
+    assertTrue(parsed instanceof Map, "result must be a YAML mapping; got: " + text);
+    LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+    for (Map.Entry<Object, Object> e : ((Map<Object, Object>) parsed).entrySet())
+      map.put(String.valueOf(e.getKey()), e.getValue());
+    return map;
+  }
+
+  /** Read the YAML element map back to the model and render its JSON for validation. */
+  private static ObjectNode renderJson(Map<String, Object> yaml)
+  {
+    LinkedHashMap<String, Object> map = new LinkedHashMap<>(yaml);
+    ElementSchemaArtifact model = new YamlArtifactReader(true).readElementSchemaArtifact(map);
+    return new JsonArtifactRenderer().renderElementSchemaArtifact(model);
   }
 
   private static String errorText(McpSchema.CallToolResult result)

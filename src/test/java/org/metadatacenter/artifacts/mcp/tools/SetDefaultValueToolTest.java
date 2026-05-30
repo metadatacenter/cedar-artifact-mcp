@@ -1,15 +1,18 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
+import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
+import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
 import org.metadatacenter.model.validation.CedarValidator;
 import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ValidationReport;
+import org.yaml.snakeyaml.Yaml;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,24 +23,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 final class SetDefaultValueToolTest
 {
   private ModelValidator cedarValidator;
-  private ObjectMapper jackson;
 
   @BeforeEach void setUp()
   {
     cedarValidator = new CedarValidator();
-    jackson = new ObjectMapper();
   }
 
   @Test void sets_text_field_default() throws Exception
   {
-    String fieldJson = createField("Patient name", "text-field");
+    String fieldYaml = createField("Patient name", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
+        "field_json", fieldYaml,
         "value", "Alice"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    ObjectNode rendered = renderJson(result);
     assertEquals("Alice",
         rendered.path("_valueConstraints").path("defaultValue").asText(),
         "default value must appear under _valueConstraints; got: "
@@ -47,32 +48,32 @@ final class SetDefaultValueToolTest
     assertEquals("true", report.getValidationStatus());
   }
 
-  @Test void sets_text_area_field_default() throws Exception
+  @Test void sets_text_area_field_default()
   {
     // Text-area used to be unsupported because TextAreaField.Builder lacked
     // withDefaultValue; the library now exposes it, so this tool covers it too.
-    String fieldJson = createField("Notes", "text-area-field");
+    String fieldYaml = createField("Notes", "text-area-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
+        "field_json", fieldYaml,
         "value", "Initial notes here"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    ObjectNode rendered = renderJson(result);
     assertEquals("Initial notes here",
         rendered.path("_valueConstraints").path("defaultValue").asText());
   }
 
-  @Test void sets_temporal_field_default() throws Exception
+  @Test void sets_temporal_field_default()
   {
-    String fieldJson = createField("DOB", "temporal-field");
+    String fieldYaml = createField("DOB", "temporal-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
+        "field_json", fieldYaml,
         "value", "2026-01-01"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    ObjectNode rendered = renderJson(result);
     assertEquals("2026-01-01",
         rendered.path("_valueConstraints").path("defaultValue").asText(),
         "temporal default value must appear under _valueConstraints");
@@ -83,15 +84,15 @@ final class SetDefaultValueToolTest
     // Numeric defaults must serialize as JSON strings (not bare numbers). The CEDAR
     // validator rejects bare numbers at _valueConstraints.defaultValue, so this test
     // both pins the wire shape and exercises the full validate path.
-    String fieldJson = createField("Age", "numeric-field");
+    String fieldYaml = createField("Age", "numeric-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
+        "field_json", fieldYaml,
         "value", "42"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
-    JsonNode defaultNode = rendered.path("_valueConstraints").path("defaultValue");
+    ObjectNode rendered = renderJson(result);
+    var defaultNode = rendered.path("_valueConstraints").path("defaultValue");
     assertTrue(defaultNode.isTextual(),
         "numeric defaultValue must be a JSON string, not a number; got: " + defaultNode);
     assertEquals("42", defaultNode.asText());
@@ -104,23 +105,12 @@ final class SetDefaultValueToolTest
   @Test void rejects_controlled_term_field()
   {
     // Direct set_default_value on a controlled-term field must redirect to the
-    // controlled-term default tool.
-    String fieldJson = compileField(
-        "type: controlled-term-field\n"
-            + "name: Diagnosis\n"
-            + "description: D\n"
-            + "modelVersion: 1.6.0\n"
-            + "datatype: iri\n"
-            + "values:\n"
-            + "  - type: class\n"
-            + "    label: disease\n"
-            + "    acronym: DOID\n"
-            + "    termType: class\n"
-            + "    termLabel: disease\n"
-            + "    iri: http://purl.obolibrary.org/obo/DOID_4\n");
+    // controlled-term default tool. Build the controlled-term field by creating an
+    // empty one and attaching a class constraint (both return YAML).
+    String fieldYaml = constrainedControlledTermField();
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
+        "field_json", fieldYaml,
         "value", "x"));
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("set_controlled_term_default_value"),
@@ -129,10 +119,10 @@ final class SetDefaultValueToolTest
 
   @Test void rejects_iri_field()
   {
-    String fieldJson = createField("ROR", "ext-ror-field");
+    String fieldYaml = createField("ROR", "ext-ror-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
+        "field_json", fieldYaml,
         "value", "https://ror.org/x"));
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("set_iri_default_value")
@@ -142,8 +132,8 @@ final class SetDefaultValueToolTest
 
   @Test void rejects_missing_value()
   {
-    String fieldJson = createField("X", "text-field");
-    McpSchema.CallToolResult result = invoke(Map.of("field_json", fieldJson));
+    String fieldYaml = createField("X", "text-field");
+    McpSchema.CallToolResult result = invoke(Map.of("field_json", fieldYaml));
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("value"));
   }
@@ -164,21 +154,30 @@ final class SetDefaultValueToolTest
     return textOf(result);
   }
 
-  private static String compileField(String yaml)
+  /** A controlled-term field with one class constraint attached — built entirely from YAML-returning tools. */
+  private static String constrainedControlledTermField()
   {
-    McpSchema.CallToolResult result = FieldFromYamlTool.handler(null,
-        new McpSchema.CallToolRequest("field_from_yaml", Map.of("yaml", yaml)));
+    String empty = createField("Diagnosis", "controlled-term-field");
+    McpSchema.CallToolResult result = SetClassConstraintTool.handler(null,
+        new McpSchema.CallToolRequest("set_class_constraint", Map.of(
+            "field_json", empty,
+            "class_iri", "http://purl.obolibrary.org/obo/DOID_4",
+            "ontology_acronym", "DOID",
+            "label", "disease",
+            "pref_label", "disease")));
     assertFalse(result.isError(),
-        "fixture field YAML must compile cleanly; got: " + errorText(result));
+        "fixture constraint must apply cleanly; got: " + errorText(result));
     return textOf(result);
   }
 
-  private ObjectNode parseJson(McpSchema.CallToolResult result) throws Exception
+  /** Read the tool's YAML output back to the model, then render JSON for assertions. */
+  private static ObjectNode renderJson(McpSchema.CallToolResult result)
   {
-    String text = textOf(result);
-    JsonNode node = jackson.readTree(text);
-    assertTrue(node.isObject(), "result must be a JSON object; got: " + text);
-    return (ObjectNode) node;
+    // Parse via ArtifactExchange so date-like temporal values stay strings (no SnakeYAML
+    // auto-typing to java.util.Date), matching how the threading tools read YAML.
+    LinkedHashMap<String, Object> map = ArtifactExchange.parseYamlMap(textOf(result));
+    FieldSchemaArtifact field = new YamlArtifactReader(true).readFieldSchemaArtifact(map);
+    return new JsonArtifactRenderer().renderFieldSchemaArtifact(field);
   }
 
   private static String textOf(McpSchema.CallToolResult result)

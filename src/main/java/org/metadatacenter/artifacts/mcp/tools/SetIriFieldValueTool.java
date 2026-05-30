@@ -1,7 +1,5 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
@@ -42,7 +40,6 @@ import java.util.Map;
  */
 public final class SetIriFieldValueTool
 {
-  private static final ObjectMapper JACKSON2 = new ObjectMapper();
   private static final JsonArtifactReader READER = new JsonArtifactReader();
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
 
@@ -54,12 +51,12 @@ public final class SetIriFieldValueTool
     properties.put("template_json", Map.of(
         "type", "string",
         "description",
-        "CEDAR template JSON Schema the instance is based on. Used to look up the "
+        "CEDAR template the instance is based on, as YAML. Used to look up the "
             + "field's input type at the given path."));
     properties.put("instance_json", Map.of(
         "type", "string",
         "description",
-        "CEDAR template instance JSON (the kind 'create_instance' or 'instance_from_yaml' returns)."));
+        "CEDAR template instance as YAML (the kind 'create_instance' returns)."));
     properties.put("field_path", Map.of(
         "type", "string",
         "description",
@@ -84,8 +81,7 @@ public final class SetIriFieldValueTool
         .description(
             "Sets the @id of an IRI-valued field instance (link, ROR, ORCID, PFAS, "
                 + "RRID, PubMed, NIH-grant-ID, DOI) at a slash-separated field_path, "
-                + "with an optional rdfs:label. Returns the updated instance JSON."
-                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
+                + "with an optional rdfs:label. Returns the updated instance as expanded YAML.")
         .inputSchema(schema)
         .build();
   }
@@ -120,11 +116,15 @@ public final class SetIriFieldValueTool
 
     String label = stringArg(args, "label");  // optional
 
+    ObjectNode templateObject;
+    try {
+      templateObject = ArtifactExchange.toObjectNode(templateJsonText);
+    } catch (RuntimeException e) {
+      return error("template parse failed: " + e.getMessage());
+    }
+
     TemplateSchemaArtifact template;
     try {
-      JsonNode parsedTemplate = JACKSON2.readTree(templateJsonText);
-      if (!(parsedTemplate instanceof ObjectNode templateObject))
-        return error("template_json must parse to a JSON object");
       template = READER.readTemplateSchemaArtifact(templateObject);
     } catch (ArtifactParseException e) {
       return error("template_json rejected by reader: " + e.getMessage());
@@ -132,11 +132,15 @@ public final class SetIriFieldValueTool
       return error("template_json parse failed: " + e.getMessage());
     }
 
+    ObjectNode instanceObject;
+    try {
+      instanceObject = ArtifactExchange.toObjectNode(instanceJsonText);
+    } catch (RuntimeException e) {
+      return error("instance parse failed: " + e.getMessage());
+    }
+
     TemplateInstanceArtifact instance;
     try {
-      JsonNode parsedInstance = JACKSON2.readTree(instanceJsonText);
-      if (!(parsedInstance instanceof ObjectNode instanceObject))
-        return error("instance_json must parse to a JSON object");
       instance = READER.readTemplateInstanceArtifact(instanceObject);
     } catch (ArtifactParseException e) {
       return error("instance_json rejected by reader: " + e.getMessage());
@@ -178,15 +182,15 @@ public final class SetIriFieldValueTool
     }
 
     ObjectNode rendered = RENDERER.renderTemplateInstanceArtifact(updated);
-    String json;
+    String yaml;
     try {
-      json = JACKSON2.writerWithDefaultPrettyPrinter().writeValueAsString(rendered);
-    } catch (Exception e) {
-      return error("failed to serialize updated instance: " + e.getMessage());
+      yaml = ArtifactExchange.jsonNodeToYaml(rendered);
+    } catch (RuntimeException e) {
+      return error("failed to render updated instance as YAML: " + e.getMessage());
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, json)))
+        .content(List.of(new McpSchema.TextContent(null, yaml)))
         .isError(false)
         .build();
   }

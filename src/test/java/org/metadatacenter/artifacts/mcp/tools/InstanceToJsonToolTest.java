@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-final class InstanceFromYamlToolTest
+final class InstanceToJsonToolTest
 {
   private ObjectMapper jackson;
 
@@ -82,7 +82,7 @@ final class InstanceFromYamlToolTest
     McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
 
     assertTrue(result.isError(),
-        "type: template must not compile via instance_from_yaml; got: " + result);
+        "type: template must not compile via instance_to_json; got: " + result);
   }
 
   @Test void rejects_missing_isBasedOn()
@@ -113,8 +113,8 @@ final class InstanceFromYamlToolTest
   // helpers
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
-    return InstanceFromYamlTool.handler(null,
-        new McpSchema.CallToolRequest("instance_from_yaml", args));
+    return InstanceToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("instance_to_json", args));
   }
 
   private ObjectNode parseJson(McpSchema.CallToolResult result) throws Exception

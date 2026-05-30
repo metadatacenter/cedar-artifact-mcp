@@ -1,15 +1,19 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
+import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
+import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
 import org.metadatacenter.model.validation.CedarValidator;
 import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ValidationReport;
+import org.yaml.snakeyaml.Yaml;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,37 +24,25 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 final class SetControlledTermDefaultValueToolTest
 {
   private ModelValidator cedarValidator;
-  private ObjectMapper jackson;
 
   @BeforeEach void setUp()
   {
     cedarValidator = new CedarValidator();
-    jackson = new ObjectMapper();
   }
 
   @Test void sets_controlled_term_default() throws Exception
   {
-    String fieldJson = compileField(
-        "type: controlled-term-field\n"
-            + "name: Diagnosis\n"
-            + "description: ICD diagnosis\n"
-            + "modelVersion: 1.6.0\n"
-            + "datatype: iri\n"
-            + "values:\n"
-            + "  - type: class\n"
-            + "    label: disease\n"
-            + "    acronym: DOID\n"
-            + "    termType: class\n"
-            + "    termLabel: disease\n"
-            + "    iri: http://purl.obolibrary.org/obo/DOID_4\n");
+    // Build the controlled-term field by creating an empty one and attaching a class
+    // constraint (both tools return YAML — the exchange form).
+    String fieldYaml = constrainedControlledTermField();
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
+        "field_json", fieldYaml,
         "iri", "http://purl.obolibrary.org/obo/DOID_1612",
         "label", "breast cancer"));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    ObjectNode rendered = renderJson(result);
     JsonNode def = rendered.path("_valueConstraints").path("defaultValue");
     assertEquals("http://purl.obolibrary.org/obo/DOID_1612",
         def.path("termUri").asText(),
@@ -66,10 +58,10 @@ final class SetControlledTermDefaultValueToolTest
   {
     // A plain text-field reads back as TextField (the wire collision); the tool must
     // refuse and direct the user to add_*_constraint first.
-    String fieldJson = createField("Note", "text-field");
+    String fieldYaml = createField("Note", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
+        "field_json", fieldYaml,
         "iri", "https://example.org/x",
         "label", "x"));
     assertTrue(result.isError());
@@ -103,21 +95,33 @@ final class SetControlledTermDefaultValueToolTest
     return textOf(result);
   }
 
-  private static String compileField(String yaml)
+  /** A controlled-term field with one class constraint attached — built entirely from YAML-returning tools. */
+  private static String constrainedControlledTermField()
   {
-    McpSchema.CallToolResult result = FieldFromYamlTool.handler(null,
-        new McpSchema.CallToolRequest("field_from_yaml", Map.of("yaml", yaml)));
+    String empty = createField("Diagnosis", "controlled-term-field");
+    McpSchema.CallToolResult result = SetClassConstraintTool.handler(null,
+        new McpSchema.CallToolRequest("set_class_constraint", Map.of(
+            "field_json", empty,
+            "class_iri", "http://purl.obolibrary.org/obo/DOID_4",
+            "ontology_acronym", "DOID",
+            "label", "disease",
+            "pref_label", "disease")));
     assertFalse(result.isError(),
-        "fixture field YAML must compile cleanly; got: " + errorText(result));
+        "fixture constraint must apply cleanly; got: " + errorText(result));
     return textOf(result);
   }
 
-  private ObjectNode parseJson(McpSchema.CallToolResult result) throws Exception
+  /** Read the tool's YAML output back to the model, then render JSON for assertions. */
+  private static ObjectNode renderJson(McpSchema.CallToolResult result)
   {
-    String text = textOf(result);
-    JsonNode node = jackson.readTree(text);
-    assertTrue(node.isObject(), "result must be a JSON object; got: " + text);
-    return (ObjectNode) node;
+    String yaml = textOf(result);
+    Object parsed = new Yaml().load(yaml);
+    assertTrue(parsed instanceof Map, "result must be a YAML mapping; got: " + yaml);
+    LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+    for (Map.Entry<?, ?> e : ((Map<?, ?>) parsed).entrySet())
+      map.put(String.valueOf(e.getKey()), e.getValue());
+    FieldSchemaArtifact field = new YamlArtifactReader(true).readFieldSchemaArtifact(map);
+    return new JsonArtifactRenderer().renderFieldSchemaArtifact(field);
   }
 
   private static String textOf(McpSchema.CallToolResult result)

@@ -1,7 +1,7 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.model.validation.CedarValidator;
@@ -35,13 +35,13 @@ public final class ValidateInstanceTool
     properties.put("template_json", Map.of(
         "type", "string",
         "description",
-        "CEDAR template JSON Schema (the kind 'template_from_yaml' or 'create_template' "
-            + "returns). The instance is validated against this schema."));
+        "CEDAR template as YAML (the kind 'create_template' returns). The instance is "
+            + "validated against this template. JSON Schema is also accepted."));
     properties.put("instance_json", Map.of(
         "type", "string",
         "description",
-        "CEDAR template instance JSON (the kind 'instance_from_yaml' returns, or what "
-            + "a CEDAR repository serves for a saved instance)."));
+        "CEDAR template instance as YAML (the kind 'create_instance' returns, or what "
+            + "a CEDAR repository serves for a saved instance). JSON is also accepted."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("template_json", "instance_json"),
@@ -72,17 +72,17 @@ public final class ValidateInstanceTool
     if (instanceJsonText == null || instanceJsonText.isBlank())
       return error("instance_json is required and must not be blank");
 
-    JsonNode templateNode;
+    ObjectNode templateNode;
     try {
-      templateNode = JACKSON2.readTree(templateJsonText);
-    } catch (Exception e) {
+      templateNode = ArtifactExchange.toObjectNode(templateJsonText);
+    } catch (RuntimeException e) {
       return error("template_json parse failed: " + e.getMessage());
     }
 
-    JsonNode instanceNode;
+    ObjectNode instanceNode;
     try {
-      instanceNode = JACKSON2.readTree(instanceJsonText);
-    } catch (Exception e) {
+      instanceNode = ArtifactExchange.toObjectNode(instanceJsonText);
+    } catch (RuntimeException e) {
       return error("instance_json parse failed: " + e.getMessage());
     }
 

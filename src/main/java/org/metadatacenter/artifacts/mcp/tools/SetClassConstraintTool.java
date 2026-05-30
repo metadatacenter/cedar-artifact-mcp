@@ -29,8 +29,8 @@ public final class SetClassConstraintTool
     properties.put("field_json", Map.of(
         "type", "string",
         "description",
-        "CEDAR controlled-term field as JSON Schema (the kind 'create_field' with "
-            + "type='controlled-term-field' or 'field_from_yaml' returns)."));
+        "CEDAR controlled-term field as YAML (the kind 'create_field' with "
+            + "type='controlled-term-field' or 'field_to_json' returns)."));
     properties.put("class_iri", Map.of(
         "type", "string",
         "description", "Canonical IRI for the class in its ontology."));
@@ -62,9 +62,8 @@ public final class SetClassConstraintTool
         .title("Pin a controlled-term field to an ontology class")
         .description(
             "Attaches a class-level value constraint to a CEDAR controlled-term field, "
-                + "pinning it to a single ontology class. Returns the updated field JSON, "
-                + "re-validated with CedarValidator."
-                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
+                + "pinning it to a single ontology class. Returns the updated field as "
+                + "expanded YAML, re-validated with CedarValidator.")
         .inputSchema(schema)
         .build();
   }

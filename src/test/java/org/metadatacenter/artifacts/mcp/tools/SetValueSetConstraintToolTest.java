@@ -1,15 +1,18 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
+import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
+import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
 import org.metadatacenter.model.validation.CedarValidator;
 import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ValidationReport;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,12 +23,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 final class SetValueSetConstraintToolTest
 {
   private ModelValidator cedarValidator;
-  private ObjectMapper jackson;
 
   @BeforeEach void setUp()
   {
     cedarValidator = new CedarValidator();
-    jackson = new ObjectMapper();
   }
 
   @Test void adds_valueset_constraint_to_controlled_term_field() throws Exception
@@ -82,12 +83,20 @@ final class SetValueSetConstraintToolTest
     return textOf(result);
   }
 
-  private ObjectNode parseJson(McpSchema.CallToolResult result) throws Exception
+  /**
+   * The constraint tools now return the field as expanded YAML. Read it back to the typed
+   * model and render to JSON so the assertions can inspect the canonical _valueConstraints
+   * shape.
+   */
+  @SuppressWarnings("unchecked")
+  private ObjectNode parseJson(McpSchema.CallToolResult result)
   {
     String text = textOf(result);
-    JsonNode node = jackson.readTree(text);
-    assertTrue(node.isObject(), "result must be a JSON object; got: " + text);
-    return (ObjectNode) node;
+    Object loaded = new org.yaml.snakeyaml.Yaml().load(text);
+    assertTrue(loaded instanceof Map, "result must be a YAML mapping; got: " + text);
+    LinkedHashMap<String, Object> map = new LinkedHashMap<>((Map<String, Object>) loaded);
+    FieldSchemaArtifact field = new YamlArtifactReader(true).readFieldSchemaArtifact(map);
+    return new JsonArtifactRenderer().renderFieldSchemaArtifact(field);
   }
 
   private static String textOf(McpSchema.CallToolResult result)

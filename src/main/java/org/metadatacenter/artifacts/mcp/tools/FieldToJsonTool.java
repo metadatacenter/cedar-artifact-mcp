@@ -13,28 +13,27 @@ import org.metadatacenter.model.validation.CedarValidator;
 import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ErrorItem;
 import org.metadatacenter.model.validation.report.ValidationReport;
-import org.yaml.snakeyaml.Yaml;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code field_from_yaml} — field variant of {@code template_from_yaml}.
+ * MCP tool {@code field_to_json} — field variant of {@code template_to_json}.
  *
  * <p>Takes a CEDAR field described in YAML and returns the canonical CEDAR JSON Schema
  * for a field artifact. Validates the rendered JSON with
  * {@link CedarValidator#validateTemplateField} before returning (DESIGN.md Principle 6).
  */
-public final class FieldFromYamlTool
+public final class FieldToJsonTool
 {
   private static final ObjectMapper JACKSON2 = new ObjectMapper();
-  // Compact-mode reader — see TemplateFromYamlTool for rationale.
+  // Compact-mode reader — see TemplateToJsonTool for rationale.
   private static final YamlArtifactReader READER = new YamlArtifactReader(true);
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
   private static final ModelValidator VALIDATOR = new CedarValidator();
 
-  private FieldFromYamlTool() {}
+  private FieldToJsonTool() {}
 
   public static McpSchema.Tool tool()
   {
@@ -51,15 +50,15 @@ public final class FieldFromYamlTool
         "object", properties, List.of("yaml"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
-        .name("field_from_yaml")
+        .name("field_to_json")
         .title("CEDAR field: YAML → JSON Schema")
         .description(
             "Compiles a CEDAR field described in YAML into the canonical CEDAR JSON "
                 + "Schema for a field artifact. The returned JSON has been round-tripped "
                 + "through the artifact library's reader/renderer and accepted by "
                 + "CedarValidator.validateTemplateField, so a non-error result is a "
-                + "guaranteed-valid CEDAR field."
-                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
+                + "guaranteed-valid CEDAR field. Use this to export the canonical JSON Schema "
+                + "for cedar-server and other downstream consumers.")
         .inputSchema(schema)
         .build();
   }
@@ -78,13 +77,7 @@ public final class FieldFromYamlTool
 
     LinkedHashMap<String, Object> yamlMap;
     try {
-      Object parsed = new Yaml().load(yamlText);
-      if (!(parsed instanceof Map<?, ?>))
-        return error("yaml must parse to a mapping at the top level (got "
-            + (parsed == null ? "null" : parsed.getClass().getSimpleName()) + ")");
-      yamlMap = new LinkedHashMap<>();
-      for (Map.Entry<?, ?> entry : ((Map<?, ?>) parsed).entrySet())
-        yamlMap.put(String.valueOf(entry.getKey()), entry.getValue());
+      yamlMap = ArtifactExchange.parseYamlMap(yamlText);
     } catch (RuntimeException e) {
       return error("YAML parse failed: " + e.getMessage());
     }

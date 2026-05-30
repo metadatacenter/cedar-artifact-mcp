@@ -1,7 +1,5 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.model.core.ControlledTermField;
@@ -29,7 +27,6 @@ import java.util.function.Consumer;
  */
 final class ControlledTermConstraints
 {
-  private static final ObjectMapper JACKSON2 = new ObjectMapper();
   private static final JsonArtifactReader READER = new JsonArtifactReader();
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
   private static final ModelValidator VALIDATOR = new CedarValidator();
@@ -45,16 +42,14 @@ final class ControlledTermConstraints
       String fieldJsonText, Consumer<ControlledTermField.ControlledTermFieldBuilder> mutator)
   {
     if (fieldJsonText == null || fieldJsonText.isBlank())
-      return error("field_json is required and must not be blank");
+      return error("field is required and must not be blank");
 
-    JsonNode parsed;
+    ObjectNode fieldObject;
     try {
-      parsed = JACKSON2.readTree(fieldJsonText);
-    } catch (Exception e) {
-      return error("field_json parse failed: " + e.getMessage());
+      fieldObject = ArtifactExchange.toObjectNode(fieldJsonText);
+    } catch (RuntimeException e) {
+      return error("field parse failed: " + e.getMessage());
     }
-    if (!(parsed instanceof ObjectNode fieldObject))
-      return error("field_json must parse to a JSON object");
 
     FieldSchemaArtifact field;
     try {
@@ -93,15 +88,15 @@ final class ControlledTermConstraints
       return error("CedarValidator threw while validating updated field: " + e.getMessage());
     }
 
-    String json;
+    String yaml;
     try {
-      json = JACKSON2.writerWithDefaultPrettyPrinter().writeValueAsString(rendered);
-    } catch (Exception e) {
-      return error("failed to serialize updated field: " + e.getMessage());
+      yaml = ArtifactExchange.jsonNodeToYaml(rendered);
+    } catch (RuntimeException e) {
+      return error("failed to render updated field as YAML: " + e.getMessage());
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, json)))
+        .content(List.of(new McpSchema.TextContent(null, yaml)))
         .isError(false)
         .build();
   }

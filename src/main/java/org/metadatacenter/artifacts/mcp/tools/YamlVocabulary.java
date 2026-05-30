@@ -1,7 +1,7 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
 /**
- * Canonical CEDAR YAML vocabulary documentation, baked into every {@code *_from_yaml}
+ * Canonical CEDAR YAML vocabulary documentation, baked into every {@code *_to_json}
  * tool's input-schema description so the calling LLM can author YAML correctly on the
  * first attempt rather than discovering keys by trial and error.
  *
@@ -10,9 +10,9 @@ package org.metadatacenter.artifacts.mcp.tools;
  * the LLM's documentation") makes this a hard requirement, not a style preference.
  *
  * <p>Each constant below is a focused vocabulary block. Tools compose the blocks they
- * need: a {@code field_from_yaml} tool wants the field vocabulary; a
- * {@code template_from_yaml} tool wants the full template+element+field set; an
- * {@code instance_from_yaml} tool wants the instance vocabulary instead.
+ * need: a {@code field_to_json} tool wants the field vocabulary; a
+ * {@code template_to_json} tool wants the full template+element+field set; an
+ * {@code instance_to_json} tool wants the instance vocabulary instead.
  *
  * <p>When a new field type or value-constraint kind is added to the library, update the
  * relevant block here. The tests don't catch missing documentation — only the LLM does,
@@ -213,7 +213,7 @@ final class YamlVocabulary
     "      label: disease");
 
   // -----------------------------------------------------------------------
-  // Composed blocks — what each *_from_yaml tool sends to the LLM.
+  // Composed blocks — what each *_to_json tool sends to the LLM.
   // -----------------------------------------------------------------------
 
   /** Full vocabulary for template / element authoring (includes children, configuration). */
@@ -241,24 +241,4 @@ final class YamlVocabulary
   {
     return INSTANCE_VOCABULARY;
   }
-
-  // -----------------------------------------------------------------------
-  // Display nudge — appended to every JSON-returning tool's description so the
-  // calling LLM treats JSON Schema as a wire format, not as something to show
-  // the user. The CEDAR JSON Schema serialization is verbose and noisy;
-  // YAML is the form humans read and edit.
-  // -----------------------------------------------------------------------
-
-  /**
-   * Standard footer for tools that return CEDAR JSON Schema. Tells the LLM to convert
-   * to YAML before presenting to the user — JSON Schema is the wire format used to
-   * thread artifacts between tool calls, not the human-facing form.
-   */
-  static final String YAML_PREFERRED_DISPLAY_NUDGE = String.join("\n",
-    "",
-    "DISPLAY: This tool returns CEDAR JSON Schema as the wire format for threading into",
-    "follow-up tool calls. JSON Schema is verbose and rarely what the user wants to see.",
-    "Before showing the result to the user, convert it to YAML with the matching",
-    "*_to_yaml tool (template_to_yaml / element_to_yaml / field_to_yaml / instance_to_yaml).",
-    "Only show JSON Schema when the user explicitly asks for it.");
 }

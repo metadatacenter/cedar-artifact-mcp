@@ -20,7 +20,7 @@ import java.util.Map;
  * <p>Takes a CEDAR element JSON Schema and returns the artifact library's YAML
  * serialization. The {@code isCompact} flag matches the same contract as
  * {@code template_to_yaml}: compact YAML round-trips through
- * {@code element_from_yaml} via the reader's compact mode.
+ * {@code element_to_json} via the reader's compact mode.
  */
 public final class ElementToYamlTool
 {
@@ -37,13 +37,13 @@ public final class ElementToYamlTool
         "description",
         "CEDAR element as a JSON Schema string. Must parse to a JSON object that "
             + "the artifact library's JsonArtifactReader accepts as an element (i.e. "
-            + "the kind of JSON 'element_from_yaml' returns)."));
+            + "the kind of JSON 'element_to_json' returns)."));
     properties.put("isCompact", Map.of(
         "type", "boolean",
         "default", Boolean.TRUE,
         "description",
         "Whether to emit the lean, LLM-friendly compact form. true (default) omits "
-            + "provenance, status, version, and modelVersion — 'element_from_yaml' "
+            + "provenance, status, version, and modelVersion — 'element_to_json' "
             + "reads compact YAML cleanly (it defaults the absent modelVersion), so "
             + "the round-trip works without manual repair. false emits every field "
             + "the renderer can produce."));
@@ -56,7 +56,7 @@ public final class ElementToYamlTool
         .title("CEDAR element: JSON Schema → YAML")
         .description(
             "Renders a CEDAR element JSON Schema as YAML. Reverse direction of "
-                + "'element_from_yaml'. See 'template_to_yaml' for the form contract.")
+                + "'element_to_json'. See 'template_to_yaml' for the form contract.")
         .inputSchema(schema)
         .build();
   }

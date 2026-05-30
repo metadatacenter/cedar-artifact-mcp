@@ -20,11 +20,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
- * Tests for the {@code element_from_yaml} tool. Mirrors {@link TemplateFromYamlToolTest}'s
+ * Tests for the {@code element_to_json} tool. Mirrors {@link TemplateToJsonToolTest}'s
  * shape: a YAML input compiles to a CEDAR JSON Schema that
  * {@link CedarValidator#validateTemplateElement} accepts.
  */
-final class ElementFromYamlToolTest
+final class ElementToJsonToolTest
 {
   private ModelValidator cedarValidator;
   private ObjectMapper jackson;
@@ -112,7 +112,7 @@ final class ElementFromYamlToolTest
     McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
 
     assertTrue(result.isError(),
-        "type: template must not compile via element_from_yaml; got: " + result);
+        "type: template must not compile via element_to_json; got: " + result);
   }
 
   @Test void rejects_missing_yaml_argument()
@@ -145,8 +145,8 @@ final class ElementFromYamlToolTest
 
   private static McpSchema.CallToolResult invoke(Map<String, Object> arguments)
   {
-    return ElementFromYamlTool.handler(null,
-        new McpSchema.CallToolRequest("element_from_yaml", arguments));
+    return ElementToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("element_to_json", arguments));
   }
 
   private ObjectNode parseJson(McpSchema.CallToolResult result) throws Exception

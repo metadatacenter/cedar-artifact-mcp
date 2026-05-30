@@ -113,42 +113,47 @@ The shape of the contract — strict on values, lenient on absence in compact mo
 keeps the MCP a thin transcoder over the library and lets compact YAML flow
 freely through the authoring loop.
 
-## Principle 8 — YAML is the human-facing form; JSON Schema is wire format
+## Principle 8 — Expanded YAML is the exchange currency; JSON Schema is an export
 
-CEDAR has two on-the-wire serializations for templates, elements, and fields: the
-canonical **JSON Schema** (what cedar-server and every downstream CEDAR tool
-consumes) and the compact **YAML** the artifact library reader/renderer pair was
-built around. They carry the same information, but they serve different audiences:
+CEDAR has two on-the-wire serializations for templates, elements, fields, and
+instances: the canonical **JSON Schema** (what cedar-server and every downstream
+CEDAR tool consumes) and the **YAML** the artifact library reader/renderer pair was
+built around. They carry the same information — both deserialize to the one canonical
+in-memory model — but they differ enormously in size:
 
 - **JSON Schema** is verbose, dense with `_ui`, `@context`, `xsd` plumbing, and
-  IRI-laden boilerplate. It exists so downstream services have an unambiguous
-  schema to validate against. Humans do not read this for fun.
-- **YAML** is the compact authoring form. It collapses the boilerplate into a
-  handful of well-named keys (`type`, `name`, `children`, `configuration`,
-  `values`), and a typical template fits comfortably on one screen.
+  IRI-laden boilerplate. A bare text field is ~1.7 KB; a small template runs to
+  hundreds of lines.
+- **YAML** collapses that into a handful of well-named keys (`type`, `name`,
+  `children`, `configuration`, `values`). The same artifacts are ~5–10% the size.
 
-The MCP's job-to-be-done — letting an LLM author and edit CEDAR artifacts with a
-human in the loop — fits YAML, not JSON Schema. The tool surface reflects this:
+Because the model is canonical and the serialization is just transport, the MCP
+threads the **compact** representation. The tool surface:
 
-- **JSON Schema is the threading currency between tool calls.** Every artifact
-  tool that produces a template/element/field/instance returns JSON Schema so
-  the caller can pipe it straight back into `add_field`, `add_element`,
-  `validate_instance`, etc., without a re-parse step.
-- **YAML is the display form for the user.** Every tool that returns JSON
-  Schema documents in its description that the caller should round-trip through
-  the matching `*_to_yaml` tool before showing the result. The
-  `YAML_PREFERRED_DISPLAY_NUDGE` constant in `YamlVocabulary` is appended to
-  each such description so the policy lives in one place.
-- **YAML is also the preferred input form.** The four `*_from_yaml` tools take a
-  human-edited YAML document and emit JSON Schema. The MCP guides authoring
-  toward this path; JSON Schema input exists for round-tripping completeness,
-  not as the encouraged authoring surface.
+- **Expanded YAML is the exchange currency between tool calls.** Every tool that
+  produces an artifact (`create_*`, `add_*`, `remove_child`, the `set_*` family,
+  `create_instance`) returns **expanded** YAML — the lossless form that preserves
+  provenance/version/`@id` — and every tool that consumes an artifact accepts YAML.
+  The caller pipes a tool's YAML output straight into the next tool. `ArtifactExchange`
+  centralizes this: read YAML → model, render model → expanded YAML, with a
+  `CedarValidator` pass (rendered to JSON internally) on the way out (Principle 6).
+- **JSON Schema is an export, produced only on demand.** The four `*_to_json` tools
+  take an artifact (YAML) and emit the canonical JSON Schema for cedar-server and
+  other downstream consumers. JSON is no longer threaded between tools.
+- **`*_to_yaml` is the import path.** It converts an externally-sourced JSON Schema
+  artifact into the YAML exchange form so it can re-enter the authoring loop.
 
-A consequence: the LLM should only show JSON Schema when the user explicitly
-asks for it. JSON Schema in chat is noise; YAML in chat is signal. This
-principle is the reason `YAML_PREFERRED_DISPLAY_NUDGE` exists at all — the only
-documentation the LLM ever sees is the tool description (Principle 4), so the
-display preference has to live there too.
+Why **expanded** YAML rather than compact for exchange: compact YAML drops
+provenance, status, version, and `modelVersion`, which would be lost across a chain
+of edits. Expanded YAML keeps them and still costs a fraction of JSON. The library's
+YAML reader/renderer must therefore round-trip the expanded form losslessly — see
+`cedar-artifact-library`'s `YamlAsymmetryProbeTest` for the per-setting regression
+probes that guard this (ext-* link fields, instance `@type` seeds, value-less and
+empty multi-instance slots, link/temporal defaults, etc.).
+
+A consequence: the LLM shows YAML to the user by default (it is already the lean,
+readable form) and only reaches for `*_to_json` when JSON Schema is the actual
+deliverable.
 
 ## Principle 9 — Test the MCP, not the library
 

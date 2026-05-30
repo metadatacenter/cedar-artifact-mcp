@@ -24,8 +24,8 @@ public final class SetBranchConstraintTool
     properties.put("field_json", Map.of(
         "type", "string",
         "description",
-        "CEDAR controlled-term field as JSON Schema (the kind 'create_field' with "
-            + "type='controlled-term-field' or 'field_from_yaml' returns)."));
+        "CEDAR controlled-term field as YAML (the kind 'create_field' with "
+            + "type='controlled-term-field' or 'field_to_json' returns)."));
     properties.put("ontology_name", Map.of(
         "type", "string",
         "description", "Human-readable ontology name (e.g. 'Human Disease Ontology')."));
@@ -56,8 +56,7 @@ public final class SetBranchConstraintTool
         .description(
             "Attaches a branch-level value constraint to a CEDAR controlled-term field, "
                 + "scoping its permissible values to a subtree rooted at the named class. "
-                + "Returns the updated field JSON, re-validated with CedarValidator."
-                + YamlVocabulary.YAML_PREFERRED_DISPLAY_NUDGE)
+                + "Returns the updated field as expanded YAML, re-validated with CedarValidator.")
         .inputSchema(schema)
         .build();
   }
