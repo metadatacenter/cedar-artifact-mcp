@@ -35,7 +35,7 @@ final class FieldToYamlToolTest
             + "description: Free-text patient name\n"
             + "modelVersion: 1.6.0\n");
 
-    McpSchema.CallToolResult result = invoke(Map.of("json", json));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", json));
 
     assertFalse(result.isError(), errorText(result));
     String yaml = textOf(result);
@@ -65,7 +65,7 @@ final class FieldToYamlToolTest
             + "    iri: http://purl.obolibrary.org/obo/DOID_4\n";
 
     String firstJson = compileToJson(originalYaml);
-    String yaml = textOf(invoke(Map.of("json", firstJson, "isCompact", true)));
+    String yaml = textOf(invoke(Map.of("artifact", firstJson, "isCompact", true)));
     String secondJson = compileToJson(yaml);
 
     JsonNode first = jackson.readTree(firstJson);
@@ -79,19 +79,19 @@ final class FieldToYamlToolTest
   {
     McpSchema.CallToolResult result = invoke(Map.of());
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("json"));
+    assertTrue(errorText(result).contains("artifact"));
   }
 
   @Test void rejects_non_object_json()
   {
-    McpSchema.CallToolResult result = invoke(Map.of("json", "[1,2,3]"));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", "[1,2,3]"));
     assertTrue(result.isError(), "non-object json must produce isError=true");
   }
 
   @Test void rejects_non_boolean_isCompact()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "json", "{}",
+        "artifact", "{}",
         "isCompact", "yes"));
     assertTrue(result.isError(), "non-boolean isCompact must produce isError=true");
     assertTrue(errorText(result).contains("isCompact"),

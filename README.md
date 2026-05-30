@@ -468,9 +468,11 @@ canonical JSON Schema:
   guaranteed-valid artifact. If a top-level `id` is omitted, a fresh IRI is minted onto
   the result (nested children untouched).
 - **`template_to_yaml` / `element_to_yaml` / `field_to_yaml` / `instance_to_yaml`
-  `(json, isCompact?)`** — **import.** Convert an externally-sourced JSON Schema artifact
-  into YAML so it can re-enter the authoring loop. `isCompact` defaults to `true` (the
-  lean view); pass `false` for the full, provenance-preserving form.
+  `(artifact, isCompact?)`** — **render as YAML.** Takes an artifact as YAML or JSON Schema
+  (auto-detected) and emits YAML. `isCompact` is the only compaction control, so this is both
+  how you **recompact** an expanded-YAML artifact for a lean display (`isCompact: true`, no JSON
+  detour) and how you **import** an external JSON Schema artifact into the YAML loop. `isCompact`
+  defaults to `true`; pass `false` for the expanded, provenance-preserving exchange form.
 
 Example YAML an export tool accepts (and the create/add/set tools emit):
 

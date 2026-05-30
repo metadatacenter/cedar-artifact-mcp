@@ -497,7 +497,7 @@ final class EndToEndStdioIT
       // Re-encode the JSON as a JSON string literal so it survives the JSON-RPC frame.
       String escapedJson = jackson.writeValueAsString(templateJsonText);
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"tools/call\",\"params\":"
-          + "{\"name\":\"template_to_yaml\",\"arguments\":{\"json\":"
+          + "{\"name\":\"template_to_yaml\",\"arguments\":{\"artifact\":"
           + escapedJson + ",\"isCompact\":true}}}");
       JsonNode toYamlResponse = readResponse(stdout, stderr);
       assertEquals(5, toYamlResponse.path("id").asInt());

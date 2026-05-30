@@ -1,13 +1,8 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
-import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
-import org.metadatacenter.artifacts.model.reader.JsonArtifactReader;
 import org.metadatacenter.artifacts.model.tools.YamlSerializer;
 
 import java.util.LinkedHashMap;
@@ -15,61 +10,56 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code template_to_yaml} — reverse direction of {@code template_to_json}.
+ * MCP tool {@code template_to_yaml} — renders a CEDAR template as YAML.
  *
- * <p>Takes a CEDAR template JSON Schema and returns the artifact library's YAML
- * serialization. The {@code isCompact} argument selects between the two forms the
+ * <p>The input artifact may be either the expanded YAML exchange form (what the create/add/set
+ * tools emit) or a JSON Schema — the format is auto-detected. This serves two jobs: re-rendering
+ * a threaded YAML artifact in a different form (typically {@code isCompact: true} for a lean
+ * display) without a JSON detour, and importing an externally-sourced JSON Schema into YAML.
+ *
+ * <p>The {@code isCompact} argument selects between the two forms the
  * {@link org.metadatacenter.artifacts.model.renderer.YamlArtifactRenderer} supports:
  * <ul>
- *   <li>{@code true} (default) — the lean, LLM-friendly authoring form. Provenance,
- *       status, version, and {@code modelVersion} are omitted. {@code template_to_json}
- *       reads in compact mode and defaults the absent {@code modelVersion}, so the
- *       output round-trips cleanly.</li>
- *   <li>{@code false} — every field the renderer can emit, suitable for archival or
- *       diff workflows where provenance and version metadata need to survive.</li>
+ *   <li>{@code true} (default) — the lean authoring/display form. Provenance, status, version,
+ *       and {@code modelVersion} are omitted.</li>
+ *   <li>{@code false} — the expanded exchange form: every field the renderer can emit, so the
+ *       artifact round-trips losslessly.</li>
  * </ul>
  *
- * <p>No CedarValidator step here: the output is YAML, not a CEDAR JSON Schema. The input
- * JSON is parsed through {@link JsonArtifactReader#readTemplateSchemaArtifact}, which is
- * the same path the library's own round-trip tests use to drive the renderer.
+ * <p>No CedarValidator step here: the output is YAML, not a CEDAR JSON Schema.
  */
 public final class TemplateToYamlTool
 {
-  private static final ObjectMapper JACKSON2 = new ObjectMapper();
-  private static final JsonArtifactReader READER = new JsonArtifactReader();
-
   private TemplateToYamlTool() {}
 
   public static McpSchema.Tool tool()
   {
     Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("json", Map.of(
+    properties.put("artifact", Map.of(
         "type", "string",
         "description",
-        "CEDAR template as a JSON Schema string. Must parse to a JSON object that "
-            + "the artifact library's JsonArtifactReader accepts as a template (i.e. "
-            + "the kind of JSON 'template_to_json' returns)."));
+        "CEDAR template as YAML (the exchange form the create/add/set tools return) or as a "
+            + "JSON Schema string. The format is auto-detected."));
     properties.put("isCompact", Map.of(
         "type", "boolean",
         "default", Boolean.TRUE,
         "description",
         "Whether to emit the lean, LLM-friendly compact form. true (default) omits "
-            + "provenance, status, version, and modelVersion — 'template_to_json' "
-            + "reads compact YAML cleanly (it defaults the absent modelVersion), so "
-            + "the round-trip works without manual repair. false emits every field "
-            + "the renderer can produce, suitable for archival workflows where "
-            + "provenance metadata needs to survive."));
+            + "provenance, status, version, and modelVersion — the round-trip back to a model "
+            + "defaults the absent modelVersion, so it reads cleanly. false emits the expanded "
+            + "exchange form (every field the renderer can produce), which round-trips losslessly."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("json"), Boolean.FALSE, null, null);
+        "object", properties, List.of("artifact"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
         .name("template_to_yaml")
-        .title("CEDAR template: JSON Schema → YAML")
+        .title("Render a CEDAR template as YAML")
         .description(
-            "Renders a CEDAR template JSON Schema as YAML. The 'isCompact' argument "
-                + "selects compact (LLM-friendly, default) or full-fidelity output. "
-                + "Reverse direction of 'template_to_json'.")
+            "Renders a CEDAR template (YAML or JSON Schema) as YAML. 'isCompact' selects "
+                + "compact (lean, default) or expanded full-fidelity output. Use it to recompact "
+                + "an expanded YAML template for display, or to import a JSON Schema template into "
+                + "YAML. Reverse direction of 'template_to_json'.")
         .inputSchema(schema)
         .build();
   }
@@ -79,12 +69,12 @@ public final class TemplateToYamlTool
   {
     Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
 
-    Object rawJson = args.get("json");
-    if (rawJson == null)
-      return error("json argument is required");
-    String jsonText = rawJson.toString();
-    if (jsonText.isBlank())
-      return error("json argument must not be blank");
+    Object rawArtifact = args.get("artifact");
+    if (rawArtifact == null)
+      return error("artifact argument is required");
+    String artifactText = rawArtifact.toString();
+    if (artifactText.isBlank())
+      return error("artifact argument must not be blank");
 
     boolean isCompact;
     Object rawIsCompact = args.get("isCompact");
@@ -97,24 +87,11 @@ public final class TemplateToYamlTool
           + rawIsCompact.getClass().getSimpleName() + ")");
     }
 
-    JsonNode parsed;
-    try {
-      parsed = JACKSON2.readTree(jsonText);
-    } catch (Exception e) {
-      return error("JSON parse failed: " + e.getMessage());
-    }
-    if (!(parsed instanceof ObjectNode jsonObject))
-      return error("json must parse to a JSON object (got "
-          + (parsed == null ? "null" : parsed.getNodeType().toString().toLowerCase()) + ")");
-
     TemplateSchemaArtifact template;
     try {
-      template = READER.readTemplateSchemaArtifact(jsonObject);
-    } catch (ArtifactParseException e) {
-      return error("CEDAR JSON rejected by reader: " + e.getMessage());
+      template = ArtifactExchange.readTemplate(artifactText);
     } catch (RuntimeException e) {
-      return error("template reader threw " + e.getClass().getSimpleName()
-          + ": " + e.getMessage());
+      return error("artifact rejected by reader (must be a CEDAR template): " + e.getMessage());
     }
 
     String yaml;

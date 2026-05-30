@@ -140,8 +140,11 @@ threads the **compact** representation. The tool surface:
 - **JSON Schema is an export, produced only on demand.** The four `*_to_json` tools
   take an artifact (YAML) and emit the canonical JSON Schema for cedar-server and
   other downstream consumers. JSON is no longer threaded between tools.
-- **`*_to_yaml` is the import path.** It converts an externally-sourced JSON Schema
-  artifact into the YAML exchange form so it can re-enter the authoring loop.
+- **`*_to_yaml` renders any artifact (YAML or JSON) as YAML.** Its `isCompact` flag is the
+  only compaction control, so it does double duty: recompacting an expanded-YAML artifact for
+  display (`isCompact: true`) and importing an externally-sourced JSON Schema artifact into the
+  YAML loop. Because it accepts YAML as well as JSON, there is no JSON detour to get a compact
+  view — the threaded expanded YAML goes straight in.
 
 Why **expanded** YAML rather than compact for exchange: compact YAML drops
 provenance, status, version, and `modelVersion`, which would be lost across a chain

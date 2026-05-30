@@ -41,7 +41,7 @@ final class TemplateToYamlToolTest
             + "status: draft\n"
             + "modelVersion: 1.6.0\n");
 
-    McpSchema.CallToolResult result = invoke(Map.of("json", json));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", json));
 
     assertFalse(result.isError(), errorText(result));
     String yaml = textOf(result);
@@ -50,6 +50,26 @@ final class TemplateToYamlToolTest
         "compact YAML should start with the type/name pair; got:\n" + yaml);
     assertTrue(yaml.contains("name: \"Patient demographics\"") || yaml.contains("name: Patient demographics"),
         "compact YAML should carry the template name; got:\n" + yaml);
+  }
+
+  @Test void recompacts_expanded_yaml_without_a_json_hop() throws Exception
+  {
+    // The exchange form tools emit is expanded YAML; this tool must accept it directly (no
+    // JSON detour) and re-render it compact for display. create_template returns expanded YAML.
+    String expandedYaml = textOf(CreateTemplateTool.handler(null,
+        new McpSchema.CallToolRequest("create_template",
+            Map.of("name", "Patient Study", "version", "0.1.0"))));
+    assertTrue(expandedYaml.contains("modelVersion"),
+        "fixture should be expanded YAML carrying modelVersion; got:\n" + expandedYaml);
+
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", expandedYaml, "isCompact", true));
+
+    assertFalse(result.isError(), errorText(result));
+    String compact = textOf(result);
+    assertTrue(compact.contains("name: Patient Study") || compact.contains("name: \"Patient Study\""),
+        "recompacted YAML should carry the name; got:\n" + compact);
+    assertFalse(compact.contains("modelVersion"),
+        "compact form should drop modelVersion; got:\n" + compact);
   }
 
   @Test void compact_form_omits_what_standard_form_includes() throws Exception
@@ -66,8 +86,8 @@ final class TemplateToYamlToolTest
             + "status: draft\n"
             + "modelVersion: 1.6.0\n");
 
-    String compactYaml = textOf(invoke(Map.of("json", json, "isCompact", true)));
-    String standardYaml = textOf(invoke(Map.of("json", json, "isCompact", false)));
+    String compactYaml = textOf(invoke(Map.of("artifact", json, "isCompact", true)));
+    String standardYaml = textOf(invoke(Map.of("artifact", json, "isCompact", false)));
 
     assertTrue(standardYaml.length() > compactYaml.length(),
         "standard YAML should be longer than compact YAML; "
@@ -101,7 +121,7 @@ final class TemplateToYamlToolTest
             + "    name: Patient name\n";
 
     String firstJson = compileToJson(originalYaml);
-    String yaml = textOf(invoke(Map.of("json", firstJson, "isCompact", true)));
+    String yaml = textOf(invoke(Map.of("artifact", firstJson, "isCompact", true)));
     String secondJson = compileToJson(yaml);
 
     JsonNode first = jackson.readTree(firstJson);
@@ -128,7 +148,7 @@ final class TemplateToYamlToolTest
             + "modelVersion: 1.6.0\n";
 
     String firstJson = compileToJson(originalYaml);
-    String yaml = textOf(invoke(Map.of("json", firstJson, "isCompact", false)));
+    String yaml = textOf(invoke(Map.of("artifact", firstJson, "isCompact", false)));
     String secondJson = compileToJson(yaml);
 
     JsonNode first = jackson.readTree(firstJson);
@@ -141,7 +161,7 @@ final class TemplateToYamlToolTest
   @Test void rejects_non_boolean_isCompact()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "json", "{}",
+        "artifact", "{}",
         "isCompact", "yes"));
     assertTrue(result.isError(), "non-boolean isCompact must produce isError=true");
     assertTrue(errorText(result).contains("isCompact"),
@@ -152,29 +172,31 @@ final class TemplateToYamlToolTest
   {
     McpSchema.CallToolResult result = invoke(Map.of());
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("json"));
+    assertTrue(errorText(result).contains("artifact"));
   }
 
   @Test void rejects_blank_json()
   {
-    McpSchema.CallToolResult result = invoke(Map.of("json", "   "));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", "   "));
     assertTrue(result.isError(), "blank json input must produce isError=true");
   }
 
-  @Test void rejects_non_object_json()
+  @Test void rejects_non_object_artifact()
   {
-    McpSchema.CallToolResult result = invoke(Map.of("json", "[1,2,3]"));
-    assertTrue(result.isError(), "non-object json must produce isError=true");
-    assertTrue(errorText(result).toLowerCase().contains("object"),
-        "error should mention the missing top-level object; got: " + errorText(result));
+    // A top-level sequence is neither a JSON object nor a YAML mapping.
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", "[1,2,3]"));
+    assertTrue(result.isError(), "non-object artifact must produce isError=true");
+    assertTrue(errorText(result).toLowerCase().contains("mapping")
+            || errorText(result).toLowerCase().contains("object"),
+        "error should mention the missing top-level mapping/object; got: " + errorText(result));
   }
 
-  @Test void rejects_malformed_json()
+  @Test void rejects_malformed_artifact()
   {
-    McpSchema.CallToolResult result = invoke(Map.of("json", "{ not json"));
-    assertTrue(result.isError(), "malformed json must produce isError=true");
-    assertTrue(errorText(result).toLowerCase().contains("json"),
-        "error should mention json; got: " + errorText(result));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", "{ not json"));
+    assertTrue(result.isError(), "malformed artifact must produce isError=true");
+    assertTrue(errorText(result).toLowerCase().contains("artifact"),
+        "error should mention the offending artifact argument; got: " + errorText(result));
   }
 
   // -----------------------------------------------------------------

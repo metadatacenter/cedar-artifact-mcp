@@ -1,13 +1,8 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
-import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
-import org.metadatacenter.artifacts.model.reader.JsonArtifactReader;
 import org.metadatacenter.artifacts.model.tools.YamlSerializer;
 
 import java.util.LinkedHashMap;
@@ -17,45 +12,37 @@ import java.util.Map;
 /**
  * MCP tool {@code field_to_yaml} — field variant of {@code template_to_yaml}.
  *
- * <p>Takes a CEDAR field JSON Schema and returns the artifact library's YAML
- * serialization. The {@code isCompact} flag matches the same contract as
- * {@code template_to_yaml}: compact YAML round-trips through
- * {@code field_to_json} via the reader's compact mode.
+ * <p>Accepts a CEDAR field as YAML (the exchange form) or JSON Schema (auto-detected) and
+ * renders YAML. {@code isCompact} matches the {@code template_to_yaml} contract: re-render an
+ * expanded YAML field compact for display, or import a JSON Schema field into YAML.
  */
 public final class FieldToYamlTool
 {
-  private static final ObjectMapper JACKSON2 = new ObjectMapper();
-  private static final JsonArtifactReader READER = new JsonArtifactReader();
-
   private FieldToYamlTool() {}
 
   public static McpSchema.Tool tool()
   {
     Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("json", Map.of(
+    properties.put("artifact", Map.of(
         "type", "string",
         "description",
-        "CEDAR field as a JSON Schema string. Must parse to a JSON object that "
-            + "the artifact library's JsonArtifactReader accepts as a field (i.e. "
-            + "the kind of JSON 'field_to_json' returns)."));
+        "CEDAR field as YAML (the exchange form 'create_field' returns) or as a JSON Schema "
+            + "string. The format is auto-detected."));
     properties.put("isCompact", Map.of(
         "type", "boolean",
         "default", Boolean.TRUE,
         "description",
-        "Whether to emit the lean, LLM-friendly compact form. true (default) omits "
-            + "provenance, status, version, and modelVersion — 'field_to_json' "
-            + "reads compact YAML cleanly (it defaults the absent modelVersion), so "
-            + "the round-trip works without manual repair. false emits every field "
-            + "the renderer can produce."));
+        "Whether to emit the lean compact form (default true) or the expanded, "
+            + "losslessly-round-tripping exchange form (false). See 'template_to_yaml'."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("json"), Boolean.FALSE, null, null);
+        "object", properties, List.of("artifact"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
         .name("field_to_yaml")
-        .title("CEDAR field: JSON Schema → YAML")
+        .title("Render a CEDAR field as YAML")
         .description(
-            "Renders a CEDAR field JSON Schema as YAML. Reverse direction of "
+            "Renders a CEDAR field (YAML or JSON Schema) as YAML. Reverse direction of "
                 + "'field_to_json'. See 'template_to_yaml' for the form contract.")
         .inputSchema(schema)
         .build();
@@ -66,12 +53,12 @@ public final class FieldToYamlTool
   {
     Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
 
-    Object rawJson = args.get("json");
-    if (rawJson == null)
-      return error("json argument is required");
-    String jsonText = rawJson.toString();
-    if (jsonText.isBlank())
-      return error("json argument must not be blank");
+    Object rawArtifact = args.get("artifact");
+    if (rawArtifact == null)
+      return error("artifact argument is required");
+    String artifactText = rawArtifact.toString();
+    if (artifactText.isBlank())
+      return error("artifact argument must not be blank");
 
     boolean isCompact;
     Object rawIsCompact = args.get("isCompact");
@@ -84,24 +71,11 @@ public final class FieldToYamlTool
           + rawIsCompact.getClass().getSimpleName() + ")");
     }
 
-    JsonNode parsed;
-    try {
-      parsed = JACKSON2.readTree(jsonText);
-    } catch (Exception e) {
-      return error("JSON parse failed: " + e.getMessage());
-    }
-    if (!(parsed instanceof ObjectNode jsonObject))
-      return error("json must parse to a JSON object (got "
-          + (parsed == null ? "null" : parsed.getNodeType().toString().toLowerCase()) + ")");
-
     FieldSchemaArtifact field;
     try {
-      field = READER.readFieldSchemaArtifact(jsonObject);
-    } catch (ArtifactParseException e) {
-      return error("CEDAR JSON rejected by reader: " + e.getMessage());
+      field = ArtifactExchange.readField(artifactText);
     } catch (RuntimeException e) {
-      return error("field reader threw " + e.getClass().getSimpleName()
-          + ": " + e.getMessage());
+      return error("artifact rejected by reader (must be a CEDAR field): " + e.getMessage());
     }
 
     String yaml;

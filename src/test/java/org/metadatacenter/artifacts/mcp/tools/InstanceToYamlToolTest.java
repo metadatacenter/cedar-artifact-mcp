@@ -26,7 +26,7 @@ final class InstanceToYamlToolTest
             + "name: Patient 42\n"
             + "isBasedOn: https://repo.metadatacenter.org/templates/abc-123\n");
 
-    McpSchema.CallToolResult result = invoke(Map.of("json", json));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", json));
 
     assertFalse(result.isError(), errorText(result));
     String yaml = textOf(result);
@@ -47,7 +47,7 @@ final class InstanceToYamlToolTest
             + "isBasedOn: https://repo.metadatacenter.org/templates/abc-123\n";
 
     String firstJson = compileToJson(originalYaml);
-    String yaml = textOf(invoke(Map.of("json", firstJson, "isCompact", true)));
+    String yaml = textOf(invoke(Map.of("artifact", firstJson, "isCompact", true)));
     String secondJson = compileToJson(yaml);
 
     JsonNode first = jackson.readTree(firstJson);
@@ -62,7 +62,7 @@ final class InstanceToYamlToolTest
   @Test void rejects_non_boolean_isCompact()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "json", "{}",
+        "artifact", "{}",
         "isCompact", "yes"));
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("isCompact"));
@@ -72,7 +72,7 @@ final class InstanceToYamlToolTest
   {
     McpSchema.CallToolResult result = invoke(Map.of());
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("json"));
+    assertTrue(errorText(result).contains("artifact"));
   }
 
   // helpers
