@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.model.core.TemplateInstanceArtifact;
+import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
 import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
 import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
 import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
@@ -40,6 +41,15 @@ public final class InstanceToJsonTool
         "CEDAR template instance described in the artifact library's YAML format. Full "
             + "key vocabulary and value-shape conventions:\n\n"
             + YamlVocabulary.instanceVocabulary()));
+    properties.put("template_json", Map.of(
+        "type", "string",
+        "description",
+        "The CEDAR template the instance is based on (YAML or JSON Schema). Optional but "
+            + "recommended: a YAML instance is sparse — fields with no value are omitted — "
+            + "whereas a canonical CEDAR JSON instance must carry every template field. When "
+            + "supplied, the instance is inflated against the template so the exported JSON is "
+            + "complete (and will validate); when omitted, only the fields the instance actually "
+            + "carries are exported."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("yaml"), Boolean.FALSE, null, null);
@@ -88,6 +98,19 @@ public final class InstanceToJsonTool
     } catch (RuntimeException e) {
       return error("instance reader threw " + e.getClass().getSimpleName()
           + ": " + e.getMessage());
+    }
+
+    // A YAML instance is sparse (unset fields omitted). When the template is supplied, inflate
+    // against it so the exported JSON carries every required field; otherwise export as-is.
+    Object rawTemplate = args.get("template_json");
+    if (rawTemplate != null && !rawTemplate.toString().isBlank()) {
+      try {
+        TemplateSchemaArtifact template = ArtifactExchange.readTemplate(rawTemplate.toString());
+        instance = InstanceInflater.inflate(template, instance);
+      } catch (RuntimeException e) {
+        return error("template_json supplied but the instance could not be inflated against it: "
+            + e.getMessage());
+      }
     }
 
     ObjectNode rendered = RENDERER.renderTemplateInstanceArtifact(instance);

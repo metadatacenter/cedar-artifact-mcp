@@ -215,6 +215,33 @@ reader" (Principle 7). It is justified because a usable artifact almost always n
 the minted form is exactly what the tool descriptions already instructed callers to
 hand-mint, and the library model is left untouched so non-MCP callers keep full control.
 
+## Principle 11 — Instances are sparse; the template reconstructs the rest
+
+CEDAR's JSON Schema marks every template field `required` in its instances, so the canonical
+**JSON** instance must carry every field — even unset ones, as `{"@value": null}`. That is a
+fact of the *JSON serialization*, not of the model or the YAML. The YAML serialization is free
+to omit what isn't known, and it does: an instance's **YAML is sparse** — it carries the
+identity (`@id`, `name`, `isBasedOn`) and only the fields that hold a value. Unset fields are
+omitted entirely (no `value: null`, no `{}`, and an element with no set descendant is dropped,
+not emitted as a bare `id:`). This follows directly from the no-null / no-empty-placeholder YAML
+contract (the library rejects `null` on read and never renders it).
+
+The "every field present" rule is honored only where it lives — at the **JSON boundary** —
+by reconstructing the empty slots from the template:
+
+- `InstanceInflater.inflate(template, instance)` walks the template and re-adds every missing
+  non-static field/element (recursing into elements), preserving values already set. It is the
+  shared bridge: `validate_instance` inflates before running `CedarValidator`, and
+  `instance_to_json` inflates (when given the template) before rendering the canonical JSON.
+- `set_field_value` and friends inflate first, so the target slot exists, then re-render sparse.
+- `instance_to_json` takes the template as an **optional** parameter: with it, the export is a
+  complete CEDAR instance; without it, only the fields the instance actually carries are emitted.
+
+Consequence: a YAML instance no longer self-validates without its template — the template is
+required wherever JSON is produced. That is the deliberate trade for instances that read as
+"only what's known," with no null/`{}` noise. Empty-element `@id`s are regenerated on inflation
+(instance-level `@id`s are identity, not stable cross-references).
+
 ## Adding a new tool
 
 1. Decide which library operation the tool wraps. If the operation isn't already

@@ -395,7 +395,10 @@ final class SetFieldValueToolTest
     TemplateSchemaArtifact template = reader.readTemplateSchemaArtifact(yamlMap(templateYaml));
     TemplateInstanceArtifact instance = reader.readTemplateInstanceArtifact(yamlMap(instanceYaml));
     ObjectNode templateNode = renderer.renderTemplateSchemaArtifact(template);
-    ObjectNode instanceNode = renderer.renderTemplateInstanceArtifact(instance);
+    // The YAML instance is sparse; inflate against the template before validating, exactly as
+    // validate_instance / instance_to_json do at the JSON boundary.
+    ObjectNode instanceNode = renderer.renderTemplateInstanceArtifact(
+        InstanceInflater.inflate(template, instance));
     ValidationReport report;
     try {
       report = new CedarValidator().validateTemplateInstance(instanceNode, templateNode);

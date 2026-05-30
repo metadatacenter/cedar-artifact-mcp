@@ -37,6 +37,38 @@ final class InstanceToJsonToolTest
         rendered.path("schema:isBasedOn").asText());
   }
 
+  @Test void template_json_inflates_sparse_instance_to_complete_json() throws Exception
+  {
+    // A YAML instance is sparse — unset fields are omitted. Without the template, export carries
+    // only the fields the instance holds. With the template, the instance is inflated so the
+    // exported JSON carries every template field (the form CedarValidator / cedar-server expect).
+    String templateJson = textOf(TemplateToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("template_to_json", Map.of("yaml",
+            "type: template\nname: PatientStudy\nmodelVersion: 1.6.0\nversion: 0.0.1\nstatus: draft\n"
+                + "children:\n"
+                + "  - key: Patient Name\n    type: text-field\n    name: Patient Name\n"
+                + "  - key: Age\n    type: numeric-field\n    name: Age\n    datatype: xsd:int\n"))));
+
+    String sparseInstance =
+        "type: instance\n"
+            + "name: P1\n"
+            + "isBasedOn: https://repo.metadatacenter.org/templates/x\n"
+            + "children:\n"
+            + "  Patient Name:\n    value: Alice\n";
+
+    // Without the template: only the set field is present.
+    ObjectNode bare = parseJson(invoke(Map.of("yaml", sparseInstance)));
+    assertTrue(bare.has("Patient Name"), "the set field must be present; got: " + bare);
+    assertFalse(bare.has("Age"), "without the template, the omitted field stays omitted; got: " + bare);
+
+    // With the template: the omitted field is reconstructed (empty) so the JSON is complete.
+    ObjectNode full = parseJson(invoke(Map.of("yaml", sparseInstance, "template_json", templateJson)));
+    assertEquals("Alice", full.path("Patient Name").path("@value").asText());
+    assertTrue(full.has("Age"), "with the template, the omitted field is reconstructed; got: " + full);
+    assertTrue(full.path("Age").has("@type"),
+        "reconstructed numeric field carries its @type seed; got: " + full.path("Age"));
+  }
+
   @Test void mints_instance_id_when_omitted() throws Exception
   {
     // The instance's own @id is auto-minted when absent (DESIGN.md Principle 10); it is

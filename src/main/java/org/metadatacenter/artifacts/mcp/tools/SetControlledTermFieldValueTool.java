@@ -154,6 +154,14 @@ public final class SetControlledTermFieldValueTool
       return error("instance_json parse failed: " + e.getMessage());
     }
 
+    // A YAML instance is sparse — unset fields are omitted. Inflate against the template so the
+    // target slot exists before setting a value.
+    try {
+      instance = InstanceInflater.inflate(template, instance);
+    } catch (RuntimeException e) {
+      return error("instance does not match template (could not inflate): " + e.getMessage());
+    }
+
     FieldSchemaArtifact schemaField;
     try {
       schemaField = SchemaPaths.resolveField(template, fieldPath);

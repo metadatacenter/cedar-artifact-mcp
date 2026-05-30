@@ -21,14 +21,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * MCP tool {@code create_instance} — builds an empty (skeleton) template instance from
- * a CEDAR template JSON Schema.
+ * MCP tool {@code create_instance} — builds a template instance from a CEDAR template.
  *
- * <p>Walks the template's schema and creates one empty {@code FieldInstance} per
- * non-static, non-attribute-value child; recurses on elements; multi-instance children
- * start as empty arrays. The result is structurally complete and ready for the LLM to
- * populate field-by-field (a future {@code set_field_value} tool, or by hand-editing
- * the YAML via {@code instance_to_json}).
+ * <p>Walks the template and builds a complete instance model (an empty {@code FieldInstance}
+ * per non-static, non-attribute-value child, recursing on elements). The rendered YAML, however,
+ * is <em>sparse</em>: the renderer omits every unset field (no {@code value: null}, no
+ * {@code {}}), so a freshly created instance is essentially just its identity (@id, name,
+ * isBasedOn). The required empty slots are reconstructed from the template at the JSON boundary
+ * (see {@link InstanceInflater}) by {@code validate_instance} and {@code instance_to_json}. The
+ * LLM fills values via {@code set_field_value} and friends.
  *
  * <p>The {@code isBasedOn} URI defaults to the template's {@code @id} when present;
  * for freshly-built templates without an {@code @id} the caller must supply
@@ -82,13 +83,15 @@ public final class CreateInstanceTool
         .name("create_instance")
         .title("Create an empty CEDAR template instance")
         .description(
-            "Builds an empty (skeleton) CEDAR template instance from a template JSON. "
-                + "Each non-static, non-attribute-value field gets a value-less "
-                + "FieldInstance; multi-instance children start as empty arrays; "
-                + "elements are recursively populated. The result is structurally complete "
-                + "and validates against the template; the caller fills in field values "
-                + "via subsequent edits (set_field_value, ...). Returns the instance as "
-                + "expanded YAML; use 'instance_to_json' to export canonical JSON."
+            "Builds a CEDAR template instance from a template. The returned YAML is sparse: it "
+                + "carries the instance identity (@id, name, isBasedOn) and only the fields that "
+                + "hold a value — unset fields are omitted entirely (no null, no empty "
+                + "placeholders), so a freshly created instance is essentially just its identity. "
+                + "It is still structurally complete against the template: the empty fields the "
+                + "canonical JSON form requires are reconstructed at the JSON boundary — "
+                + "'validate_instance' and 'instance_to_json' (given the template) inflate them. "
+                + "Fill values with set_field_value / set_iri_field_value / "
+                + "set_controlled_term_field_value."
                 + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();

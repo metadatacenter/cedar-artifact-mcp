@@ -316,9 +316,10 @@ through the library and passed its structural validation.
 `isCompact` flag. Schema artifacts (template/element/field) **default to compact** — the
 lean form that drops provenance (status, version, modelVersion) but keeps the full
 structure and `@id`; pass `isCompact: false` for the expanded, fully-provenanced form to
-persist to a repository. Instances **default to expanded**, because a skeleton/partial
-instance's value-less field slots are structural (`set_field_value` needs them) and
-compact would elide them; pass `isCompact: true` to display a finished instance leanly.
+persist to a repository. Instances are **sparse** in either mode — a field with no value is
+omitted entirely (no `null`, no `{}`); the empty slots the canonical JSON form requires are
+reconstructed from the template at the JSON boundary (`validate_instance`, `instance_to_json`).
+Instances default to expanded, where `isCompact` only governs whether provenance is shown.
 Note: provenance dropped by a compact hop isn't recoverable later, so a `version` that
 must survive should be threaded with `isCompact: false` or set at persistence time.
 
@@ -451,13 +452,16 @@ of field the value belongs to.
 
 ### `create_instance(template_json, name?, description?, is_based_on?, id?, isCompact?)`
 
-Creates an empty (skeleton) instance from a template, ready to be populated
-with field values. `is_based_on` defaults to the template's `@id` when
-present; supply it explicitly only if the template has no `@id` (templates from
-`create_template` / `template_to_json` now always carry a minted one). `id` is
-the instance's own identity — optional, and auto-minted as a fresh
-`template-instances` IRI when omitted; it is independent of `is_based_on`. Returns
-the instance as YAML.
+Creates an instance from a template, ready to be populated with field values.
+The returned YAML is **sparse** — it carries the instance identity (`@id`,
+`name`, `is_based_on`) and only fields that hold a value, so a fresh instance is
+essentially just its identity. Unset fields are reconstructed from the template
+when JSON is produced (`validate_instance`, `instance_to_json`), so the instance
+is still structurally complete. `is_based_on` defaults to the template's `@id`
+when present; supply it explicitly only if the template has no `@id` (templates
+from `create_template` / `template_to_json` now always carry a minted one). `id`
+is the instance's own identity — optional, and auto-minted as a fresh
+`template-instances` IRI when omitted; it is independent of `is_based_on`.
 
 ### `validate_instance(template_json, instance_json)`
 
@@ -475,7 +479,10 @@ canonical JSON Schema:
   cedar-server and other downstream consumers. The result is round-tripped through the
   library reader/renderer and validated (`CedarValidator`), so a non-error result is a
   guaranteed-valid artifact. If a top-level `id` is omitted, a fresh IRI is minted onto
-  the result (nested children untouched).
+  the result (nested children untouched). `instance_to_json` takes the instance's
+  `template_json` as an optional argument: pass it to inflate the sparse instance back to a
+  complete CEDAR JSON instance (every template field present); omit it to export only the
+  fields the instance carries.
 - **`template_to_yaml` / `element_to_yaml` / `field_to_yaml` / `instance_to_yaml`
   `(artifact, isCompact?)`** — **render as YAML.** Takes an artifact as YAML or JSON Schema
   (auto-detected) and emits YAML. `isCompact` is the only compaction control, so this is both

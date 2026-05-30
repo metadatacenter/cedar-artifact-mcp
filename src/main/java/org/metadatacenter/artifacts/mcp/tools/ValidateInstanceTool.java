@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
+import org.metadatacenter.artifacts.model.core.TemplateInstanceArtifact;
+import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
+import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
 import org.metadatacenter.model.validation.CedarValidator;
 import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ErrorItem;
@@ -26,6 +29,7 @@ public final class ValidateInstanceTool
 {
   private static final ObjectMapper JACKSON2 = new ObjectMapper();
   private static final ModelValidator VALIDATOR = new CedarValidator();
+  private static final JsonArtifactRenderer JSON_RENDERER = new JsonArtifactRenderer();
 
   private ValidateInstanceTool() {}
 
@@ -79,11 +83,23 @@ public final class ValidateInstanceTool
       return error("template_json parse failed: " + e.getMessage());
     }
 
+    // The instance YAML is sparse (unset fields omitted). CedarValidator checks the JSON form,
+    // whose "every field present" rule is a JSON-Schema concern — so inflate the instance against
+    // the template (re-adding the empty slots the JSON form requires) before validating. If the
+    // instance can't be parsed/inflated as a CEDAR instance (malformed, missing structural keys),
+    // validate it in its raw form so the validator's diagnostics come back as a normal
+    // {"valid": false, ...} report rather than a tool error.
     ObjectNode instanceNode;
     try {
-      instanceNode = ArtifactExchange.toObjectNode(instanceJsonText);
-    } catch (RuntimeException e) {
-      return error("instance_json parse failed: " + e.getMessage());
+      TemplateSchemaArtifact template = ArtifactExchange.readTemplate(templateJsonText);
+      TemplateInstanceArtifact sparse = ArtifactExchange.readInstance(instanceJsonText);
+      instanceNode = JSON_RENDERER.renderTemplateInstanceArtifact(InstanceInflater.inflate(template, sparse));
+    } catch (RuntimeException inflateFailed) {
+      try {
+        instanceNode = ArtifactExchange.toObjectNode(instanceJsonText);
+      } catch (RuntimeException e) {
+        return error("instance_json parse failed: " + e.getMessage());
+      }
     }
 
     ValidationReport report;

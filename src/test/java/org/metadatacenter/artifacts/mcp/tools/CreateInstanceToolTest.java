@@ -15,10 +15,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests for the {@code create_instance} tool. The headline check is that the resulting
- * skeleton instance validates against its template via
- * {@code validate_instance} — proving the structural walk produced something
- * CedarValidator accepts.
+ * Tests for the {@code create_instance} tool. A created instance is <em>sparse</em>: unset
+ * fields are omitted from the YAML (no `value: null`, no `{}`). The structural completeness the
+ * template requires lives at the JSON boundary — {@code validate_instance} and
+ * {@code instance_to_json} inflate the instance against the template. So the headline check is
+ * that the instance validates, and structural assertions are made against the inflated JSON
+ * (see {@link #inflatedJson}).
  */
 final class CreateInstanceToolTest
 {
@@ -70,9 +72,9 @@ final class CreateInstanceToolTest
     ObjectNode rendered = parseJson(result);
 
     assertEquals("Patient 42", rendered.path("schema:name").asText());
-    JsonNode child = rendered.path("patient_name");
+    JsonNode child = inflatedJson(result, templateJson).path("patient_name");
     assertTrue(child.isObject(),
-        "patient_name must appear as a child object on the instance; got:\n" + rendered);
+        "patient_name must appear as a child object on the inflated instance; got:\n" + rendered);
 
     assertValidatesAgainst(rendered, templateJson);
   }
@@ -100,7 +102,7 @@ final class CreateInstanceToolTest
         "is_based_on", FAKE_BASED_ON));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    ObjectNode rendered = inflatedJson(result, templateJson);
 
     JsonNode age = rendered.path("Age");
     assertTrue(age.isObject(), "Age must appear as a child object; got:\n" + rendered);
@@ -133,7 +135,7 @@ final class CreateInstanceToolTest
         "is_based_on", FAKE_BASED_ON));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    ObjectNode rendered = inflatedJson(result, templateJson);
 
     JsonNode child = rendered.path("visit_date");
     assertTrue(child.has("@type"),
@@ -197,7 +199,7 @@ final class CreateInstanceToolTest
         "is_based_on", FAKE_BASED_ON));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    ObjectNode rendered = inflatedJson(result, templateJson);
 
     JsonNode addr = rendered.path("address");
     assertTrue(addr.isObject(),
@@ -266,13 +268,46 @@ final class CreateInstanceToolTest
         "is_based_on", FAKE_BASED_ON));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    ObjectNode rendered = inflatedJson(result, templateJson);
 
     assertTrue(rendered.path("note").isObject(),
         "non-static field should be populated; got: " + rendered);
     assertTrue(rendered.path("section").isMissingNode(),
         "static field should be absent from the instance; got 'section': "
             + rendered.path("section"));
+  }
+
+  @Test void created_instance_is_sparse_with_no_empty_slots() throws Exception
+  {
+    // The user-facing guarantee: a freshly created instance carries no unset-field noise — no
+    // `value: null`, no empty-mapping `{}`, and the unset fields are omitted from the YAML
+    // entirely. It is still structurally complete once inflated against its template (validates).
+    String templateJson = compileTemplate(
+        "type: template\n"
+            + "name: PatientStudy\n"
+            + "modelVersion: 1.6.0\n"
+            + "version: 0.0.1\n"
+            + "status: draft\n"
+            + "children:\n"
+            + "  - key: Patient Name\n    type: text-field\n    name: Patient Name\n"
+            + "  - key: Age\n    type: numeric-field\n    name: Age\n    datatype: xsd:int\n");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "template_json", templateJson, "is_based_on", FAKE_BASED_ON));
+    assertFalse(result.isError(), errorText(result));
+    String yaml = textOf(result);
+
+    assertFalse(yaml.contains("value: null"),
+        "a sparse instance must not carry a value: null placeholder; got:\n" + yaml);
+    assertFalse(yaml.contains("{}"),
+        "a sparse instance must not carry an empty-mapping {} slot; got:\n" + yaml);
+    assertFalse(yaml.contains("Patient Name:"),
+        "an unset field must be omitted from the sparse instance; got:\n" + yaml);
+    assertFalse(yaml.contains("Age:"),
+        "an unset field must be omitted from the sparse instance; got:\n" + yaml);
+
+    // Sparse, but still complete once inflated at the JSON boundary.
+    assertValidatesAgainst(parseJson(result), templateJson);
   }
 
   @Test void mints_instance_id_when_omitted() throws Exception
@@ -393,6 +428,20 @@ final class CreateInstanceToolTest
    * its JSON so the existing JSON-key assertions (schema:name, child objects, @type, arrays)
    * still apply — and so this exercises the instance YAML round trip end to end.
    */
+  /**
+   * Inflate the created (sparse) instance against its template and render the complete CEDAR
+   * JSON, so structural assertions (child objects, @type seeds, nested elements) apply to the
+   * full instance — which is exactly what validation and export operate on.
+   */
+  private ObjectNode inflatedJson(McpSchema.CallToolResult result, String templateJson) throws Exception
+  {
+    McpSchema.CallToolResult json = InstanceToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("instance_to_json", Map.of(
+            "yaml", textOf(result), "template_json", templateJson)));
+    assertFalse(json.isError(), errorText(json));
+    return (ObjectNode) jackson.readTree(textOf(json));
+  }
+
   @SuppressWarnings("unchecked")
   private ObjectNode parseJson(McpSchema.CallToolResult result)
   {
