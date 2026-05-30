@@ -61,6 +61,27 @@ final class ArtifactExchange
 
   private ArtifactExchange() {}
 
+  /**
+   * Display directive appended to every artifact-returning tool description. The consuming
+   * LLM only sees the tool surface (DESIGN.md Principle 4), so the instruction not to mangle
+   * the result when relaying it to the user has to live here. The {@code @id} lines are the
+   * artifact's identity and are the most common casualty of "summarize for brevity".
+   */
+  static final String VERBATIM_NOTICE =
+      " When relaying this result to the user, reproduce the returned YAML verbatim: never drop "
+          + "or summarize the 'id:' (@id) lines or any other field, and do not replace the YAML "
+          + "with a table that omits content.";
+
+  /**
+   * Extra directive for the {@code create_*} builders that return a standalone, reusable
+   * artifact. Curbs the over-eager pattern of silently grafting a freshly created field or
+   * element onto a template the user did not ask to modify.
+   */
+  static final String STANDALONE_NOTICE =
+      " The artifact is returned standalone — it is NOT added to any template or element. "
+          + "Attach it to a parent only via add_field / add_element, and only when the user "
+          + "explicitly asks for that step.";
+
   // ---------------------------------------------------------------------
   // serialized artifact -> model (incoming artifacts)
   //

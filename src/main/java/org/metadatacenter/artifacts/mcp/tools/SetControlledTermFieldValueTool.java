@@ -81,7 +81,7 @@ public final class SetControlledTermFieldValueTool
         .description(
             "Sets the value of a controlled-term field instance — the IRI (@id), the "
                 + "rdfs:label, and the skos:prefLabel — at a slash-separated field_path. "
-                + "Returns the updated instance as expanded YAML.")
+                + "Returns the updated instance as expanded YAML." + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();
   }

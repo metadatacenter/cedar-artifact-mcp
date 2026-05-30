@@ -59,7 +59,7 @@ public final class TemplateToYamlTool
             "Renders a CEDAR template (YAML or JSON Schema) as YAML. 'isCompact' selects "
                 + "compact (lean, default) or expanded full-fidelity output. Use it to recompact "
                 + "an expanded YAML template for display, or to import a JSON Schema template into "
-                + "YAML. Reverse direction of 'template_to_json'.")
+                + "YAML. Reverse direction of 'template_to_json'." + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();
   }

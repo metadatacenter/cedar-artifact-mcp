@@ -57,7 +57,8 @@ public final class SetBranchConstraintTool
         .description(
             "Attaches a branch-level value constraint to a CEDAR controlled-term field, "
                 + "scoping its permissible values to a subtree rooted at the named class. "
-                + "Returns the updated field as expanded YAML, re-validated with CedarValidator.")
+                + "Returns the updated field as expanded YAML, re-validated with CedarValidator."
+                + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();
   }

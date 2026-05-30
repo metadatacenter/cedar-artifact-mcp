@@ -55,7 +55,7 @@ public final class CreateTemplateTool
                 + "and version. Returns the artifact as expanded YAML — the exchange form threaded "
                 + "into follow-up tools (add_field, add_element, ...) to compose larger templates. "
                 + "Use 'template_to_json' to export the canonical JSON Schema for cedar-server and "
-                + "other downstream consumers.")
+                + "other downstream consumers." + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();
   }

@@ -43,7 +43,8 @@ public final class ElementToYamlTool
         .title("Render a CEDAR element as YAML")
         .description(
             "Renders a CEDAR element (YAML or JSON Schema) as YAML. Reverse direction of "
-                + "'element_to_json'. See 'template_to_yaml' for the form contract.")
+                + "'element_to_json'. See 'template_to_yaml' for the form contract."
+                + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();
   }

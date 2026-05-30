@@ -43,7 +43,8 @@ public final class FieldToYamlTool
         .title("Render a CEDAR field as YAML")
         .description(
             "Renders a CEDAR field (YAML or JSON Schema) as YAML. Reverse direction of "
-                + "'field_to_json'. See 'template_to_yaml' for the form contract.")
+                + "'field_to_json'. See 'template_to_yaml' for the form contract."
+                + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();
   }

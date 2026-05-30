@@ -64,7 +64,7 @@ public final class SetClassConstraintTool
         .description(
             "Attaches a class-level value constraint to a CEDAR controlled-term field, "
                 + "pinning it to a single ontology class. Returns the updated field as "
-                + "expanded YAML, re-validated with CedarValidator.")
+                + "expanded YAML, re-validated with CedarValidator." + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();
   }

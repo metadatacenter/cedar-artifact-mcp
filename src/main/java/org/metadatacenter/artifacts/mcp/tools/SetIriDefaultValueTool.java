@@ -67,7 +67,7 @@ public final class SetIriDefaultValueTool
         .description(
             "Attaches a default URI value to an IRI-valued CEDAR field schema. "
                 + "Returns the updated field as expanded YAML, re-validated with "
-                + "CedarValidator.")
+                + "CedarValidator." + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();
   }

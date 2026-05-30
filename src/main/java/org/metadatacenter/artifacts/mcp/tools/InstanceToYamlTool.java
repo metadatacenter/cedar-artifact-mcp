@@ -45,7 +45,7 @@ public final class InstanceToYamlTool
         .description(
             "Renders a CEDAR template instance (YAML or JSON) as YAML. The 'isCompact' argument "
                 + "selects compact (lean, default) or expanded full-fidelity output. Reverse "
-                + "direction of 'instance_to_json'.")
+                + "direction of 'instance_to_json'." + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();
   }

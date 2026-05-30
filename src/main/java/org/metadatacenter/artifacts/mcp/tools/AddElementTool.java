@@ -95,7 +95,8 @@ public final class AddElementTool
         .description(
             "Adds an existing CEDAR element (as YAML) as a child of a CEDAR template or "
                 + "element. Parent kind is inferred from the artifact. Returns the "
-                + "updated parent as expanded YAML, re-validated with CedarValidator.")
+                + "updated parent as expanded YAML, re-validated with CedarValidator."
+                + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();
   }

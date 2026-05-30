@@ -60,7 +60,8 @@ public final class RemoveChildTool
         .title("Remove a field or element child from a template or element")
         .description(
             "Removes a child (field or element) from a CEDAR template or element parent. "
-                + "Returns the updated parent as expanded YAML, re-validated with CedarValidator.")
+                + "Returns the updated parent as expanded YAML, re-validated with CedarValidator."
+                + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();
   }

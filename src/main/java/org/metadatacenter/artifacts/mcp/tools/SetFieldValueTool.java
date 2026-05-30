@@ -89,7 +89,8 @@ public final class SetFieldValueTool
                 + "temporal, phone, email, radio, checkbox, list, text-area) at a "
                 + "slash-separated field_path. Returns the updated instance as expanded "
                 + "YAML. Use set_iri_field_value for link/ROR/ORCID/etc. fields, or "
-                + "set_controlled_term_field_value for controlled-term fields.")
+                + "set_controlled_term_field_value for controlled-term fields."
+                + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();
   }

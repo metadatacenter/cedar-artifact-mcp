@@ -88,7 +88,8 @@ public final class CreateInstanceTool
                 + "elements are recursively populated. The result is structurally complete "
                 + "and validates against the template; the caller fills in field values "
                 + "via subsequent edits (set_field_value, ...). Returns the instance as "
-                + "expanded YAML; use 'instance_to_json' to export canonical JSON.")
+                + "expanded YAML; use 'instance_to_json' to export canonical JSON."
+                + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();
   }
