@@ -234,7 +234,7 @@ final class TemplateToJsonToolTest
     String yaml =
         "type: template\n"
             + "name: Deterministic\n"
-            + "description: \n"
+            + "description: A deterministic template\n"
             + "version: 0.1.0\n"
             + "status: draft\n"
             + "modelVersion: 1.6.0\n"

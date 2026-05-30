@@ -199,6 +199,53 @@ final class TemplateToYamlToolTest
         "error should mention the offending artifact argument; got: " + errorText(result));
   }
 
+  // YAML serialization contract: null is never a valid value. The parser resolves every
+  // unquoted null spelling (~, bare key, null, NULL, Null) to a real null, and the reader
+  // rejects it. A quoted "~" is a legitimate string, not a null, and must still be accepted.
+
+  @Test void rejects_yaml_tilde_null()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of("artifact",
+        "type: template\nname: T\ndescription: ~\n"));
+    assertTrue(result.isError(), "`~` (YAML null) must be rejected");
+    assertTrue(errorText(result).toLowerCase().contains("null"),
+        "error should mention null; got: " + errorText(result));
+  }
+
+  @Test void rejects_yaml_bare_empty_null()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of("artifact",
+        "type: template\nname: T\ndescription:\n"));
+    assertTrue(result.isError(), "a bare empty value (YAML null) must be rejected");
+    assertTrue(errorText(result).toLowerCase().contains("null"),
+        "error should mention null; got: " + errorText(result));
+  }
+
+  @Test void rejects_yaml_uppercase_null()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of("artifact",
+        "type: template\nname: T\ndescription: NULL\n"));
+    assertTrue(result.isError(), "`NULL` (YAML null) must be rejected");
+  }
+
+  @Test void rejects_nested_yaml_null_in_child_config()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of("artifact",
+        "type: template\nname: T\nchildren:\n  - key: f\n    type: text-field\n"
+            + "    name: F\n    configuration:\n      minLength: ~\n"));
+    assertTrue(result.isError(), "a null nested in a child configuration must be rejected");
+    assertTrue(errorText(result).contains("configuration"),
+        "error should point at the nested path; got: " + errorText(result));
+  }
+
+  @Test void accepts_quoted_tilde_as_string()
+  {
+    // A quoted "~" is the string "~", not a null — it must NOT be rejected.
+    McpSchema.CallToolResult result = invoke(Map.of("artifact",
+        "type: template\nname: T\ndescription: \"~\"\n"));
+    assertFalse(result.isError(), "quoted \"~\" is a string, not null: " + errorText(result));
+  }
+
   // -----------------------------------------------------------------
   // helpers
   // -----------------------------------------------------------------
