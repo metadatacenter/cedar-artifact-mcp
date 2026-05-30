@@ -304,29 +304,38 @@ compact YAML serialization, and full CEDAR validation. The MCP exposes that
 machinery as MCP tools so an LLM can drive it directly: pulling a template
 in and out of YAML, attaching constraints, populating instance values,
 validating, and so on, without the calling LLM ever needing to know any
-Java. Artifacts move between tools as **expanded YAML** — the compact, lossless
-exchange form (DESIGN.md Principle 8). The `create_*` / `add_*` / `set_*` /
-`remove_*` tools wrap the library's typed builders and return YAML; the
-`*_to_json` tools export the canonical JSON Schema (for cedar-server and other
-downstream consumers) and `*_to_yaml` imports an external JSON Schema artifact
-back into the YAML loop; `validate_instance` calls the canonical CedarValidator.
-A non-error result from any tool is guaranteed to have round-tripped through the
-library and passed its structural validation.
+Java. Artifacts move between tools as **YAML** — the lean exchange form (DESIGN.md
+Principle 8). The `create_*` / `add_*` / `set_*` / `remove_*` tools wrap the library's
+typed builders and return YAML; the `*_to_json` tools export the canonical JSON Schema
+(for cedar-server and other downstream consumers) and `*_to_yaml` imports an external
+JSON Schema artifact back into the YAML loop; `validate_instance` calls the canonical
+CedarValidator. A non-error result from any tool is guaranteed to have round-tripped
+through the library and passed its structural validation.
 
-### `create_template(name, description?, version?, id?)`
+**Compact vs expanded (`isCompact`).** Artifact-returning tools take an optional
+`isCompact` flag. Schema artifacts (template/element/field) **default to compact** — the
+lean form that drops provenance (status, version, modelVersion) but keeps the full
+structure and `@id`; pass `isCompact: false` for the expanded, fully-provenanced form to
+persist to a repository. Instances **default to expanded**, because a skeleton/partial
+instance's value-less field slots are structural (`set_field_value` needs them) and
+compact would elide them; pass `isCompact: true` to display a finished instance leanly.
+Note: provenance dropped by a compact hop isn't recoverable later, so a `version` that
+must survive should be threaded with `isCompact: false` or set at persistence time.
+
+### `create_template(name, description?, version?, id?, isCompact?)`
 
 Creates a new, empty CEDAR template. Pass the returned template into
 `add_field` or `add_element` to attach children, or into `create_instance` to
 make an empty instance of it. `id` is optional: supply one assigned by a CEDAR
 repository, or omit it and a fresh `templates` IRI is auto-minted.
 
-### `create_element(name, description?, version?, id?)`
+### `create_element(name, description?, version?, id?, isCompact?)`
 
 Creates a new, empty CEDAR element — a reusable sub-schema that can be embedded
 inside templates or other elements. `id` is optional; omit it and a fresh
 `template-elements` IRI is auto-minted.
 
-### `create_field(name, type, description?, version?, id?, [type-specific config])`
+### `create_field(name, type, description?, version?, id?, isCompact?, [type-specific config])`
 
 Creates a new CEDAR field of the requested kind: text, text-area, numeric,
 temporal, radio, checkbox, single- or multi-select list, controlled-term, link,
@@ -440,7 +449,7 @@ appends a new entry; any larger index errors.
 information on round-trip — the schema is the source of truth for which kind
 of field the value belongs to.
 
-### `create_instance(template_json, name?, description?, is_based_on?, id?)`
+### `create_instance(template_json, name?, description?, is_based_on?, id?, isCompact?)`
 
 Creates an empty (skeleton) instance from a template, ready to be populated
 with field values. `is_based_on` defaults to the template's `@id` when

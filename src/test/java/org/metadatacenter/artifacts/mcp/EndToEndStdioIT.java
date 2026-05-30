@@ -155,11 +155,12 @@ final class EndToEndStdioIT
           "set_controlled_term_field_value tool should be listed; got " + toolNames);
 
       // 4. tools/call create_template -----------------------------------------------
+      // isCompact:false to exercise the expanded persistence form (carrying version) over stdio.
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":"
           + "{\"name\":\"create_template\",\"arguments\":"
           + "{\"name\":\"Patient demographics\","
           + "\"description\":\"End-to-end test template\","
-          + "\"version\":\"0.1.0\"}}}");
+          + "\"version\":\"0.1.0\",\"isCompact\":false}}}");
       JsonNode callResponse = readResponse(stdout, stderr);
       assertEquals(3, callResponse.path("id").asInt());
 

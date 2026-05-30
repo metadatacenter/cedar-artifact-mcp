@@ -171,10 +171,63 @@ final class ArtifactExchange
   // model -> YAML (outgoing artifacts)
   // ---------------------------------------------------------------------
 
-  /** Render any artifact as expanded YAML — the exchange form threaded between tool calls. */
-  static String toYaml(Artifact artifact)
+  /**
+   * Render any artifact as YAML. {@code isCompact} true (the default the tools use) is the lean
+   * form — provenance, status, version, and modelVersion omitted; the canonical exchange/display
+   * form. {@code isCompact} false is the expanded, lossless form for persistence.
+   */
+  static String toYaml(Artifact artifact, boolean isCompact)
   {
-    return YamlSerializer.getYAML(artifact, false, false);
+    return YamlSerializer.getYAML(artifact, isCompact, false);
+  }
+
+  /**
+   * Read the optional {@code isCompact} tool argument. Defaults to {@code true} (compact) — the
+   * lean form is what callers want by default; expanded is requested explicitly for persistence.
+   * A non-boolean value is treated as the default rather than failing the call.
+   */
+  static boolean readIsCompact(Map<String, Object> args)
+  {
+    return readIsCompact(args, true);
+  }
+
+  /** Read the optional {@code isCompact} argument, falling back to {@code defaultCompact}. */
+  static boolean readIsCompact(Map<String, Object> args, boolean defaultCompact)
+  {
+    Object raw = args.get("isCompact");
+    return raw instanceof Boolean b ? b : defaultCompact;
+  }
+
+  /**
+   * The shared {@code isCompact} input-schema property for schema artifacts (template/element/
+   * field), which default to compact: only provenance is dropped, the structure is intact.
+   */
+  static Map<String, Object> isCompactSchemaProperty()
+  {
+    return Map.of(
+        "type", "boolean",
+        "default", Boolean.TRUE,
+        "description",
+        "Whether to return the lean compact YAML (default true) — the form for threading into "
+            + "follow-up tools and for display. Pass false for the expanded, lossless form "
+            + "(carrying provenance, status, version, modelVersion) intended for persistence.");
+  }
+
+  /**
+   * The {@code isCompact} property for instance-returning tools, which default to EXPANDED. A
+   * skeleton or partially-filled instance carries value-less field slots that compact YAML
+   * elides; those slots are structural (set_field_value needs them), so threading instances
+   * uses the expanded form. Pass true only to display a finished instance leanly.
+   */
+  static Map<String, Object> isCompactInstanceSchemaProperty()
+  {
+    return Map.of(
+        "type", "boolean",
+        "default", Boolean.FALSE,
+        "description",
+        "Whether to return compact YAML. Defaults to false (expanded) for instances: compact "
+            + "elides value-less field slots, which are structural and needed to keep filling "
+            + "the instance via set_field_value. Pass true to display a finished instance leanly.");
   }
 
   // ---------------------------------------------------------------------
@@ -206,8 +259,8 @@ final class ArtifactExchange
     };
   }
 
-  /** Render a CEDAR JSON-Schema {@code ObjectNode} (template, element, field, or instance) as expanded YAML. */
-  static String jsonNodeToYaml(ObjectNode node)
+  /** Render a CEDAR JSON-Schema {@code ObjectNode} (template, element, field, or instance) as YAML. */
+  static String jsonNodeToYaml(ObjectNode node, boolean isCompact)
   {
     JsonNode typeNode = node.get("@type");
     String type = typeNode != null && typeNode.isTextual() ? typeNode.asText() : "";
@@ -222,7 +275,7 @@ final class ArtifactExchange
       artifact = JSON_READER.readTemplateInstanceArtifact(node);
     else
       throw new IllegalArgumentException("cannot determine artifact kind from JSON @type \"" + type + "\"");
-    return toYaml(artifact);
+    return toYaml(artifact, isCompact);
   }
 
   // ---------------------------------------------------------------------

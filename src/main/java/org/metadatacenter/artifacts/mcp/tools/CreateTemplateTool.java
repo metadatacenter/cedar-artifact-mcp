@@ -42,6 +42,7 @@ public final class CreateTemplateTool
             + "a fresh CEDAR template IRI is auto-minted "
             + "(https://repo.metadatacenter.org/templates/<uuid>). Supply one only when you have an "
             + "id assigned by a CEDAR repository. Must be an absolute IRI."));
+    properties.put("isCompact", ArtifactExchange.isCompactSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("name"), Boolean.FALSE, null, null);
@@ -113,7 +114,8 @@ public final class CreateTemplateTool
       return error("rendered template failed CedarValidator: " + validationError);
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, ArtifactExchange.toYaml(template))))
+        .content(List.of(new McpSchema.TextContent(null,
+            ArtifactExchange.toYaml(template, ArtifactExchange.readIsCompact(args)))))
         .isError(false)
         .build();
   }

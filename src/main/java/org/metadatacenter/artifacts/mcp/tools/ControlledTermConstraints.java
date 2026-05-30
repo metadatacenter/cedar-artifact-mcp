@@ -39,7 +39,8 @@ final class ControlledTermConstraints
    * {@code isError=true} content block on any failure.
    */
   static McpSchema.CallToolResult apply(
-      String fieldJsonText, Consumer<ControlledTermField.ControlledTermFieldBuilder> mutator)
+      String fieldJsonText, Consumer<ControlledTermField.ControlledTermFieldBuilder> mutator,
+      boolean isCompact)
   {
     if (fieldJsonText == null || fieldJsonText.isBlank())
       return error("field is required and must not be blank");
@@ -90,7 +91,7 @@ final class ControlledTermConstraints
 
     String yaml;
     try {
-      yaml = ArtifactExchange.jsonNodeToYaml(rendered);
+      yaml = ArtifactExchange.jsonNodeToYaml(rendered, isCompact);
     } catch (RuntimeException e) {
       return error("failed to render updated field as YAML: " + e.getMessage());
     }

@@ -58,7 +58,7 @@ final class TemplateToYamlToolTest
     // JSON detour) and re-render it compact for display. create_template returns expanded YAML.
     String expandedYaml = textOf(CreateTemplateTool.handler(null,
         new McpSchema.CallToolRequest("create_template",
-            Map.of("name", "Patient Study", "version", "0.1.0"))));
+            Map.of("name", "Patient Study", "version", "0.1.0", "isCompact", false))));
     assertTrue(expandedYaml.contains("modelVersion"),
         "fixture should be expanded YAML carrying modelVersion; got:\n" + expandedYaml);
 

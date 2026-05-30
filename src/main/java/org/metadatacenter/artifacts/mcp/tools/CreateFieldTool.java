@@ -123,6 +123,7 @@ public final class CreateFieldTool
     properties.put("regex", Map.of(
         "type", "string",
         "description", "text-field / text-area-field validation regex. Optional."));
+    properties.put("isCompact", ArtifactExchange.isCompactSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("name", "type"), Boolean.FALSE, null, null);
@@ -213,7 +214,8 @@ public final class CreateFieldTool
       return error("rendered field failed CedarValidator: " + validationError);
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, ArtifactExchange.toYaml(field))))
+        .content(List.of(new McpSchema.TextContent(null,
+            ArtifactExchange.toYaml(field, ArtifactExchange.readIsCompact(args)))))
         .isError(false)
         .build();
   }

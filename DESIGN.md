@@ -113,7 +113,7 @@ The shape of the contract — strict on values, lenient on absence in compact mo
 keeps the MCP a thin transcoder over the library and lets compact YAML flow
 freely through the authoring loop.
 
-## Principle 8 — Expanded YAML is the exchange currency; JSON Schema is an export
+## Principle 8 — Compact YAML is the default exchange; JSON Schema is an export
 
 CEDAR has two on-the-wire serializations for templates, elements, fields, and
 instances: the canonical **JSON Schema** (what cedar-server and every downstream
@@ -128,35 +128,41 @@ in-memory model — but they differ enormously in size:
   `children`, `configuration`, `values`). The same artifacts are ~5–10% the size.
 
 Because the model is canonical and the serialization is just transport, the MCP
-threads the **compact** representation. The tool surface:
+threads **YAML**, leaning compact. The tool surface:
 
-- **Expanded YAML is the exchange currency between tool calls.** Every tool that
-  produces an artifact (`create_*`, `add_*`, `remove_child`, the `set_*` family,
-  `create_instance`) returns **expanded** YAML — the lossless form that preserves
-  provenance/version/`@id` — and every tool that consumes an artifact accepts YAML.
-  The caller pipes a tool's YAML output straight into the next tool. `ArtifactExchange`
-  centralizes this: read YAML → model, render model → expanded YAML, with a
+- **YAML is the exchange currency between tool calls.** Every tool that produces an
+  artifact (`create_*`, `add_*`, `remove_child`, the `set_*` family, `create_instance`)
+  returns YAML, and every tool that consumes one accepts YAML (JSON too — auto-detected).
+  `ArtifactExchange` centralizes this: read → model, render model → YAML, with a
   `CedarValidator` pass (rendered to JSON internally) on the way out (Principle 6).
-- **JSON Schema is an export, produced only on demand.** The four `*_to_json` tools
-  take an artifact (YAML) and emit the canonical JSON Schema for cedar-server and
-  other downstream consumers. JSON is no longer threaded between tools.
-- **`*_to_yaml` renders any artifact (YAML or JSON) as YAML.** Its `isCompact` flag is the
-  only compaction control, so it does double duty: recompacting an expanded-YAML artifact for
-  display (`isCompact: true`) and importing an externally-sourced JSON Schema artifact into the
-  YAML loop. Because it accepts YAML as well as JSON, there is no JSON detour to get a compact
-  view — the threaded expanded YAML goes straight in.
+- **Compact is the default; expanded is for persistence.** Compact YAML drops provenance
+  (status, version, `modelVersion`) but keeps the full structure and `@id`. That is the
+  lean form for threading and display, so the artifact-returning tools default to it and
+  expose `isCompact` (`ArtifactExchange.isCompactSchemaProperty`); pass `isCompact: false`
+  for the expanded, fully-provenanced form to hand to a repository. Caveat the LLM should
+  know: provenance dropped by a compact hop is not recoverable downstream, so a `version`
+  that must survive should be threaded expanded or (re)set at persistence time.
+- **Instances default to expanded.** A skeleton or partially-filled instance carries
+  value-less field slots that compact elides, and those slots are structural —
+  `set_field_value` needs them to keep filling the instance. So the instance-returning
+  tools (`create_instance`, `set_*_field_value`) default `isCompact: false`
+  (`isCompactInstanceSchemaProperty`); pass `isCompact: true` only to display a finished
+  instance leanly. Instances are small, so the expanded default costs little.
+- **JSON Schema is an export, produced only on demand.** The four `*_to_json` tools take
+  an artifact (YAML) and emit the canonical JSON Schema for cedar-server and other
+  downstream consumers. JSON is not threaded between tools.
+- **`*_to_yaml` renders any artifact (YAML or JSON) as YAML**, with the same `isCompact`
+  flag — so it recompacts an expanded artifact for display and imports external JSON into
+  the YAML loop, with no JSON detour.
 
-Why **expanded** YAML rather than compact for exchange: compact YAML drops
-provenance, status, version, and `modelVersion`, which would be lost across a chain
-of edits. Expanded YAML keeps them and still costs a fraction of JSON. The library's
-YAML reader/renderer must therefore round-trip the expanded form losslessly — see
-`cedar-artifact-library`'s `YamlAsymmetryProbeTest` for the per-setting regression
-probes that guard this (ext-* link fields, instance `@type` seeds, value-less and
-empty multi-instance slots, link/temporal defaults, etc.).
+The library's YAML reader/renderer must round-trip both forms losslessly — see
+`cedar-artifact-library`'s `YamlAsymmetryProbeTest` for the per-setting regression probes
+that guard this (ext-* link fields, instance `@type` seeds, value-less and empty
+multi-instance slots, link/temporal defaults, etc.).
 
-A consequence: the LLM shows YAML to the user by default (it is already the lean,
-readable form) and only reaches for `*_to_json` when JSON Schema is the actual
-deliverable.
+A consequence: the LLM shows compact YAML to the user by default (the lean, readable
+form), threads it between tools, and reaches for `isCompact: false` / `*_to_json` only
+when persistence or a JSON deliverable calls for it.
 
 ## Principle 9 — Test the MCP, not the library
 

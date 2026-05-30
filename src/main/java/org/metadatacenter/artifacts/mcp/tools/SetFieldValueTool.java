@@ -74,6 +74,7 @@ public final class SetFieldValueTool
         "Value to set. String for text/text-area/temporal/phone/email/radio/checkbox/"
             + "list fields; number for numeric fields. Type must match the schema's "
             + "input type at the resolved path."));
+    properties.put("isCompact", ArtifactExchange.isCompactInstanceSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
@@ -182,7 +183,7 @@ public final class SetFieldValueTool
     ObjectNode rendered = RENDERER.renderTemplateInstanceArtifact(updated);
     String yaml;
     try {
-      yaml = ArtifactExchange.jsonNodeToYaml(rendered);
+      yaml = ArtifactExchange.jsonNodeToYaml(rendered, ArtifactExchange.readIsCompact(args, false));
     } catch (RuntimeException e) {
       return error("failed to render updated instance as YAML: " + e.getMessage());
     }

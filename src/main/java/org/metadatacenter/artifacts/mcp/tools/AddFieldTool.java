@@ -85,6 +85,7 @@ public final class AddFieldTool
         "description",
         "Maximum number of instances when isMultiInstance is true. Optional; left unset "
             + "if omitted. Only meaningful for multi-instance fields."));
+    properties.put("isCompact", ArtifactExchange.isCompactSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
@@ -224,7 +225,7 @@ public final class AddFieldTool
 
     String yaml;
     try {
-      yaml = ArtifactExchange.jsonNodeToYaml(rendered);
+      yaml = ArtifactExchange.jsonNodeToYaml(rendered, ArtifactExchange.readIsCompact(args));
     } catch (RuntimeException e) {
       return error("failed to render updated parent as YAML: " + e.getMessage());
     }

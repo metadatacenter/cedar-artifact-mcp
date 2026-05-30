@@ -36,6 +36,7 @@ public final class SetOntologyConstraintTool
     properties.put("ontology_name", Map.of(
         "type", "string",
         "description", "Human-readable ontology name (e.g. 'Human Disease Ontology')."));
+    properties.put("isCompact", ArtifactExchange.isCompactSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
@@ -75,7 +76,8 @@ public final class SetOntologyConstraintTool
     }
 
     return ControlledTermConstraints.apply(fieldJson, builder ->
-        builder.withOntologyValueConstraint(iri, ontologyAcronym, ontologyName));
+        builder.withOntologyValueConstraint(iri, ontologyAcronym, ontologyName),
+        ArtifactExchange.readIsCompact(args));
   }
 
   private static String stringArg(Map<String, Object> args, String key)

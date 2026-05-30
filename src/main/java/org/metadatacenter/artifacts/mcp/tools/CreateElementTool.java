@@ -41,6 +41,7 @@ public final class CreateElementTool
             + "a fresh CEDAR element IRI is auto-minted "
             + "(https://repo.metadatacenter.org/template-elements/<uuid>). Supply one only when you "
             + "have an id assigned by a CEDAR repository. Must be an absolute IRI."));
+    properties.put("isCompact", ArtifactExchange.isCompactSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("name"), Boolean.FALSE, null, null);
@@ -110,7 +111,8 @@ public final class CreateElementTool
       return error("rendered element failed CedarValidator: " + validationError);
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, ArtifactExchange.toYaml(element))))
+        .content(List.of(new McpSchema.TextContent(null,
+            ArtifactExchange.toYaml(element, ArtifactExchange.readIsCompact(args)))))
         .isError(false)
         .build();
   }

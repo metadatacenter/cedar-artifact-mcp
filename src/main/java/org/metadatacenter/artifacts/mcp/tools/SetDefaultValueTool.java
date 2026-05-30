@@ -55,6 +55,7 @@ public final class SetDefaultValueTool
         "Default value to set. String for text/temporal/phone/email/radio/checkbox/"
             + "list fields; number for numeric fields. Type must match the field's "
             + "input type."));
+    properties.put("isCompact", ArtifactExchange.isCompactSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("field_json", "value"), Boolean.FALSE, null, null);
@@ -124,7 +125,7 @@ public final class SetDefaultValueTool
 
     String yaml;
     try {
-      yaml = ArtifactExchange.jsonNodeToYaml(rendered);
+      yaml = ArtifactExchange.jsonNodeToYaml(rendered, ArtifactExchange.readIsCompact(args));
     } catch (RuntimeException e) {
       return error("failed to render updated field as YAML: " + e.getMessage());
     }

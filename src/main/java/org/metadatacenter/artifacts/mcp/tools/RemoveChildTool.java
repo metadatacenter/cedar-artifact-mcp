@@ -50,6 +50,7 @@ public final class RemoveChildTool
         "Property key of the child to remove. The tool auto-detects whether the key "
             + "names a field or element child by looking it up in the parent's "
             + "fieldSchemas / elementSchemas."));
+    properties.put("isCompact", ArtifactExchange.isCompactSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("parent_json", "key"), Boolean.FALSE, null, null);
@@ -141,7 +142,7 @@ public final class RemoveChildTool
 
     String yaml;
     try {
-      yaml = ArtifactExchange.jsonNodeToYaml(rendered);
+      yaml = ArtifactExchange.jsonNodeToYaml(rendered, ArtifactExchange.readIsCompact(args));
     } catch (RuntimeException e) {
       return error("failed to render updated parent as YAML: " + e.getMessage());
     }

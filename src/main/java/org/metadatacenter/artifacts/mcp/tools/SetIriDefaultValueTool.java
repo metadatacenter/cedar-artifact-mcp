@@ -56,6 +56,7 @@ public final class SetIriDefaultValueTool
     properties.put("iri", Map.of(
         "type", "string",
         "description", "Default URI value."));
+    properties.put("isCompact", ArtifactExchange.isCompactSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("field_json", "iri"), Boolean.FALSE, null, null);
@@ -131,7 +132,7 @@ public final class SetIriDefaultValueTool
 
     String yaml;
     try {
-      yaml = ArtifactExchange.jsonNodeToYaml(rendered);
+      yaml = ArtifactExchange.jsonNodeToYaml(rendered, ArtifactExchange.readIsCompact(args));
     } catch (RuntimeException e) {
       return error("failed to render updated field as YAML: " + e.getMessage());
     }

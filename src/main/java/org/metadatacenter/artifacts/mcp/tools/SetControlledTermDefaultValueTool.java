@@ -47,6 +47,7 @@ public final class SetControlledTermDefaultValueTool
     properties.put("label", Map.of(
         "type", "string",
         "description", "Human-readable label for the default class."));
+    properties.put("isCompact", ArtifactExchange.isCompactSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("field_json", "iri", "label"),
@@ -110,7 +111,8 @@ public final class SetControlledTermDefaultValueTool
           + "set_branch_constraint / set_valueset_constraint, then set the default.");
 
     return ControlledTermConstraints.apply(fieldJson, builder ->
-        builder.withDefaultValue(iri, label));
+        builder.withDefaultValue(iri, label),
+        ArtifactExchange.readIsCompact(args));
   }
 
   private static String stringArg(Map<String, Object> args, String key)

@@ -48,7 +48,8 @@ final class CreateTemplateToolTest
 
     assertEquals("Patient demographics", yaml.get("name"));
     assertEquals("Minimal demographics template", yaml.get("description"));
-    assertEquals("0.1.0", yaml.get("version"));
+    // Default output is compact, which omits version/status/modelVersion (provenance).
+    assertFalse(yaml.containsKey("version"), "compact output should omit version; got: " + yaml);
 
     ValidationReport report = cedarValidator.validateTemplate(renderJson(yaml));
     if (!"true".equals(report.getValidationStatus())) {
@@ -60,9 +61,11 @@ final class CreateTemplateToolTest
 
   @Test void createTemplate_setsNameAndVersion() throws Exception
   {
+    // version lives only in the expanded (persistence) form, so request isCompact: false.
     McpSchema.CallToolResult result = invoke(Map.of(
         "name", "Patient demographics",
-        "version", "0.1.0"));
+        "version", "0.1.0",
+        "isCompact", false));
 
     Map<String, Object> yaml = parseYaml(result);
     assertEquals("template", yaml.get("type"));
@@ -72,13 +75,21 @@ final class CreateTemplateToolTest
 
   @Test void createTemplate_defaultsVersionWhenOmitted() throws Exception
   {
-    McpSchema.CallToolResult result = invoke(Map.of("name", "Minimal"));
+    McpSchema.CallToolResult result = invoke(Map.of("name", "Minimal", "isCompact", false));
 
     assertFalse(result.isError(), "omitting optional fields should still succeed");
     Map<String, Object> yaml = parseYaml(result);
     assertEquals("0.0.1", yaml.get("version"));
-    // Expanded YAML omits an empty description rather than emitting description: "".
+    // Even expanded YAML omits an empty description rather than emitting description: "".
     assertFalse(yaml.containsKey("description"), "empty description should not be emitted");
+  }
+
+  @Test void createTemplate_compactByDefaultOmitsProvenance() throws Exception
+  {
+    Map<String, Object> yaml = parseYaml(invoke(Map.of("name", "Lean", "version", "0.2.0")));
+    assertEquals("Lean", yaml.get("name"));
+    assertFalse(yaml.containsKey("version"), "compact default should omit version; got: " + yaml);
+    assertFalse(yaml.containsKey("modelVersion"), "compact default should omit modelVersion; got: " + yaml);
   }
 
   @Test void createTemplate_rejectsBlankName()

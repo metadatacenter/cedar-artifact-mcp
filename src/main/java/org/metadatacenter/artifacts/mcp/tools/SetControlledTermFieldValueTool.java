@@ -68,6 +68,7 @@ public final class SetControlledTermFieldValueTool
         "description",
         "Preferred label (skos:prefLabel). Optional; defaults to the label when omitted. "
             + "May differ from the label when the class has multiple synonyms."));
+    properties.put("isCompact", ArtifactExchange.isCompactInstanceSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
@@ -193,7 +194,7 @@ public final class SetControlledTermFieldValueTool
     ObjectNode rendered = RENDERER.renderTemplateInstanceArtifact(updated);
     String yaml;
     try {
-      yaml = ArtifactExchange.jsonNodeToYaml(rendered);
+      yaml = ArtifactExchange.jsonNodeToYaml(rendered, ArtifactExchange.readIsCompact(args, false));
     } catch (RuntimeException e) {
       return error("failed to render updated instance as YAML: " + e.getMessage());
     }
