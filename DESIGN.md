@@ -40,8 +40,9 @@ unit of work this MCP exposes. Persistence (writing to disk, posting to a server
 foreign-format export (Excel, REDCap, etc.) are out of scope and belong in separate
 MCPs.
 
-For now the server is stateless — every tool call takes and returns JSON, with the
-caller threading any intermediate state. If we later need cross-call session state
+For now the server is stateless — every tool call takes and returns a serialized
+artifact (YAML by default; see Principle 8), with the caller threading any
+intermediate state. If we later need cross-call session state
 (e.g. an in-progress template handle), that's a deliberate design decision, not a
 default.
 
@@ -199,11 +200,11 @@ set and minted separately.
 
 Two boundaries make this safe:
 
-- **Top-level only.** The `create_*` tools mint the artifact they return. The `*_from_yaml`
+- **Top-level only.** The `create_*` tools mint the artifact they return. The `*_to_json`
   tools mint only the top-level map's `id` key before handing it to the reader; nested
   children under `children:` are never walked, so a template's fields and elements stay
   id-less unless the author set one explicitly. Fields are first-class, reusable CEDAR
-  artifacts, so a *standalone* field minted via `create_field` / `field_from_yaml` gets an
+  artifacts, so a *standalone* field minted via `create_field` / `field_to_json` gets an
   id like any other root — a field that subsequently becomes a child via `add_field` simply
   carries the id it was born with, which the renderer round-trips correctly.
 - **Absence only.** Like the compact-mode `modelVersion` defaulting in Principle 7, minting
