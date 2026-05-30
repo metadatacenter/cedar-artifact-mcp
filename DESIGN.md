@@ -222,9 +222,12 @@ CEDAR's JSON Schema marks every template field `required` in its instances, so t
 fact of the *JSON serialization*, not of the model or the YAML. The YAML serialization is free
 to omit what isn't known, and it does: an instance's **YAML is sparse** — it carries the
 identity (`@id`, `name`, `isBasedOn`) and only the fields that hold a value. Unset fields are
-omitted entirely (no `value: null`, no `{}`, and an element with no set descendant is dropped,
-not emitted as a bare `id:`). This follows directly from the no-null / no-empty-placeholder YAML
-contract (the library rejects `null` on read and never renders it).
+omitted entirely (no `value: null`, no `{}`, no empty multi-instance `[]`, and an element with
+no set descendant is dropped, not emitted as a bare `id:`). This follows directly from the
+no-null / no-empty-placeholder YAML contract: the library rejects `null`, an empty mapping
+(`{}`), and an empty list (`[]`) on read, and never renders any of them. (An empty list is the
+multi-instance slot — it is rejected as a *value*, but a non-empty list of instances is of
+course fine.)
 
 The "every field present" rule is honored only where it lives — at the **JSON boundary** —
 by reconstructing the empty slots from the template:

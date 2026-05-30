@@ -166,7 +166,7 @@ final class CreateInstanceToolTest
         "is_based_on", FAKE_BASED_ON));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    ObjectNode rendered = inflatedJson(result, templateJson);
 
     JsonNode tags = rendered.path("tags");
     assertTrue(tags.isArray(),
@@ -233,7 +233,7 @@ final class CreateInstanceToolTest
         "is_based_on", FAKE_BASED_ON));
 
     assertFalse(result.isError(), errorText(result));
-    ObjectNode rendered = parseJson(result);
+    ObjectNode rendered = inflatedJson(result, templateJson);
 
     // The attribute-value group renders as an array of attribute-name strings under
     // the group's key. An empty group renders as an empty array.
@@ -290,7 +290,8 @@ final class CreateInstanceToolTest
             + "status: draft\n"
             + "children:\n"
             + "  - key: Patient Name\n    type: text-field\n    name: Patient Name\n"
-            + "  - key: Age\n    type: numeric-field\n    name: Age\n    datatype: xsd:int\n");
+            + "  - key: Age\n    type: numeric-field\n    name: Age\n    datatype: xsd:int\n"
+            + "  - key: tags\n    type: text-field\n    name: Tag\n    configuration:\n      multiple: true\n");
 
     McpSchema.CallToolResult result = invoke(Map.of(
         "template_json", templateJson, "is_based_on", FAKE_BASED_ON));
@@ -301,6 +302,8 @@ final class CreateInstanceToolTest
         "a sparse instance must not carry a value: null placeholder; got:\n" + yaml);
     assertFalse(yaml.contains("{}"),
         "a sparse instance must not carry an empty-mapping {} slot; got:\n" + yaml);
+    assertFalse(yaml.contains("[]"),
+        "a sparse instance must not carry an empty-list [] slot; got:\n" + yaml);
     assertFalse(yaml.contains("Patient Name:"),
         "an unset field must be omitted from the sparse instance; got:\n" + yaml);
     assertFalse(yaml.contains("Age:"),
