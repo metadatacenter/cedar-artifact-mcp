@@ -245,6 +245,12 @@ required wherever JSON is produced. That is the deliberate trade for instances t
 "only what's known," with no null/`{}` noise. Empty-element `@id`s are regenerated on inflation
 (instance-level `@id`s are identity, not stable cross-references).
 
+`InstanceInflater` is an **interim, MCP-side stand-in**: the all-fields-present JSON rule is a
+library/CEDAR design decision, and generating those empty placeholders properly belongs **in the
+library** — completing its currently-stubbed `InstanceFixer(template, instance)`. That decision is
+disliked but retained until the next library iteration; see `cedar-artifact-library`'s ROADMAP.
+When the library owns placeholder generation, this inflater folds into it.
+
 ## Adding a new tool
 
 1. Decide which library operation the tool wraps. If the operation isn't already
