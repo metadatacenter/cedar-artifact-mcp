@@ -24,7 +24,9 @@ import org.yaml.snakeyaml.nodes.Tag;
 import org.yaml.snakeyaml.representer.Representer;
 import org.yaml.snakeyaml.resolver.Resolver;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -349,5 +351,29 @@ final class ArtifactExchange
       }
     }
     return sb.length() == 0 ? "(no error details)" : sb.toString();
+  }
+
+  /**
+   * Render a {@link ValidationReport} as the public {@code {"valid": ...}} report the
+   * {@code validate_*} tools return: {@code {"valid": true}} on success, otherwise
+   * {@code {"valid": false, "errors": [...]}} with the validator's diagnostics. The verdict is
+   * data, not a tool error (DESIGN.md Principle 5), so an invalid artifact still yields a report.
+   */
+  static String validationReportJson(ValidationReport report)
+  {
+    boolean valid = "true".equals(report.getValidationStatus());
+    LinkedHashMap<String, Object> result = new LinkedHashMap<>();
+    result.put("valid", valid);
+    if (!valid) {
+      List<String> errors = new ArrayList<>();
+      for (ErrorItem err : report.getErrors())
+        errors.add(err.toString());
+      result.put("errors", errors);
+    }
+    try {
+      return JACKSON2.writerWithDefaultPrettyPrinter().writeValueAsString(result);
+    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+      throw new RuntimeException("failed to serialize validation report: " + e.getMessage(), e);
+    }
   }
 }

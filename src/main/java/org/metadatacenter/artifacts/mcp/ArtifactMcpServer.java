@@ -30,7 +30,11 @@ import org.metadatacenter.artifacts.mcp.tools.SetFieldValueTool;
 import org.metadatacenter.artifacts.mcp.tools.SetIriFieldValueTool;
 import org.metadatacenter.artifacts.mcp.tools.TemplateToJsonTool;
 import org.metadatacenter.artifacts.mcp.tools.TemplateToYamlTool;
+import org.metadatacenter.artifacts.mcp.tools.ValidateArtifactTool;
+import org.metadatacenter.artifacts.mcp.tools.ValidateElementTool;
+import org.metadatacenter.artifacts.mcp.tools.ValidateFieldTool;
 import org.metadatacenter.artifacts.mcp.tools.ValidateInstanceTool;
+import org.metadatacenter.artifacts.mcp.tools.ValidateTemplateTool;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -80,6 +84,10 @@ public final class ArtifactMcpServer
         .toolCall(InstanceToJsonTool.tool(), InstanceToJsonTool::handler)
         .toolCall(InstanceToYamlTool.tool(), InstanceToYamlTool::handler)
         .toolCall(ValidateInstanceTool.tool(), ValidateInstanceTool::handler)
+        .toolCall(ValidateTemplateTool.tool(), ValidateTemplateTool::handler)
+        .toolCall(ValidateElementTool.tool(), ValidateElementTool::handler)
+        .toolCall(ValidateFieldTool.tool(), ValidateFieldTool::handler)
+        .toolCall(ValidateArtifactTool.tool(), ValidateArtifactTool::handler)
         .toolCall(SetFieldValueTool.tool(), SetFieldValueTool::handler)
         .toolCall(SetIriFieldValueTool.tool(), SetIriFieldValueTool::handler)
         .toolCall(SetControlledTermFieldValueTool.tool(), SetControlledTermFieldValueTool::handler)

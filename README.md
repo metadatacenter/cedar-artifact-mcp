@@ -469,6 +469,23 @@ Validates a template instance (YAML) against its template (YAML). Returns
 `{"valid": true}` on success, or `{"valid": false, "errors": [...]}` with
 diagnostics on failure.
 
+### `validate_template` / `validate_element` / `validate_field` / `validate_artifact` `(artifact)`
+
+Validate a **standalone** artifact against the CEDAR model schema — built for
+checking artifacts obtained **from the wild** (e.g. pulled from cedar-server or a
+colleague). Each takes a single `artifact` as JSON Schema or YAML (auto-detected);
+JSON is validated **exactly as received** (no round-trip through the library, so the
+verdict reflects the artifact itself), while YAML is read through the library first.
+The report shape matches `validate_instance` — `{"valid": true}` or
+`{"valid": false, "errors": [...]}`, returned as a successful tool call either way.
+
+`validate_template` / `validate_element` / `validate_field` each validate the named
+kind (and redirect with a helpful message if you hand them the wrong one).
+`validate_artifact` **auto-detects** the kind from the artifact's `@type` and
+dispatches — use it when you don't know whether you've got a template, element, or
+field. (A template *instance* is detected but must go through `validate_instance`,
+which also needs the template it's based on.)
+
 ### Export and import: `*_to_json` / `*_to_yaml`
 
 Artifacts thread between tools as YAML. Two families bridge to and from the

@@ -1,6 +1,5 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
@@ -9,7 +8,6 @@ import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
 import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
 import org.metadatacenter.model.validation.CedarValidator;
 import org.metadatacenter.model.validation.ModelValidator;
-import org.metadatacenter.model.validation.report.ErrorItem;
 import org.metadatacenter.model.validation.report.ValidationReport;
 
 import java.util.LinkedHashMap;
@@ -27,7 +25,6 @@ import java.util.Map;
  */
 public final class ValidateInstanceTool
 {
-  private static final ObjectMapper JACKSON2 = new ObjectMapper();
   private static final ModelValidator VALIDATOR = new CedarValidator();
   private static final JsonArtifactRenderer JSON_RENDERER = new JsonArtifactRenderer();
 
@@ -109,20 +106,10 @@ public final class ValidateInstanceTool
       return error("CedarValidator threw while validating instance: " + e.getMessage());
     }
 
-    boolean valid = "true".equals(report.getValidationStatus());
-    LinkedHashMap<String, Object> result = new LinkedHashMap<>();
-    result.put("valid", valid);
-    if (!valid) {
-      List<String> errors = new java.util.ArrayList<>();
-      for (ErrorItem err : report.getErrors())
-        errors.add(err.toString());
-      result.put("errors", errors);
-    }
-
     String json;
     try {
-      json = JACKSON2.writerWithDefaultPrettyPrinter().writeValueAsString(result);
-    } catch (Exception e) {
+      json = ArtifactExchange.validationReportJson(report);
+    } catch (RuntimeException e) {
       return error("failed to serialize validation report: " + e.getMessage());
     }
 
