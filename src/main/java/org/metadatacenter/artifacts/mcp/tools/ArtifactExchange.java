@@ -84,6 +84,21 @@ final class ArtifactExchange
           + "Attach it to a parent only via add_field / add_element, and only when the user "
           + "explicitly asks for that step.";
 
+  /**
+   * Input directive for tools that accept an artifact the caller obtained elsewhere (e.g. a file
+   * from the wild). Reassures the LLM that supplying a large artifact inline is expected — there
+   * is no size concern and no file-path option — and, like {@link #VERBATIM_NOTICE} on the output
+   * side, insists the serialization be passed through untouched. Massaging it (reformatting,
+   * re-indenting, re-serializing, "fixing") would mean validating/converting a rewritten copy
+   * rather than the artifact in hand.
+   */
+  static final String VERBATIM_INPUT_NOTICE =
+      " Supply the artifact exactly as you obtained it: read its file and paste the content inline "
+          + "(a large artifact inline is fine — there is no size limit to worry about and no "
+          + "file-path parameter). Do not reformat, re-indent, re-serialize, or otherwise massage "
+          + "the content — pass the bytes verbatim, so the operation sees the real artifact and not "
+          + "an LLM-rewritten copy.";
+
   // ---------------------------------------------------------------------
   // serialized artifact -> model (incoming artifacts)
   //

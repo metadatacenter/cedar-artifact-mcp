@@ -47,7 +47,7 @@ public final class ValidateElementTool
                 + "diagnostics — a non-error result either way, so read the verdict from the "
                 + "report. For a template or field use validate_template / validate_field; for a "
                 + "template instance use validate_instance; or use validate_artifact to "
-                + "auto-detect.")
+                + "auto-detect." + ArtifactExchange.VERBATIM_INPUT_NOTICE)
         .inputSchema(schema)
         .build();
   }

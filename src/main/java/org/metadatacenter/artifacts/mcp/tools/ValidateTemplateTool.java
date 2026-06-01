@@ -50,7 +50,8 @@ public final class ValidateTemplateTool
                 + "{\"valid\": false, \"errors\": [...]} with the validator's diagnostics — a "
                 + "non-error result either way, so read the verdict from the report. For an "
                 + "element or field use validate_element / validate_field; for a template "
-                + "instance use validate_instance; or use validate_artifact to auto-detect.")
+                + "instance use validate_instance; or use validate_artifact to auto-detect."
+                + ArtifactExchange.VERBATIM_INPUT_NOTICE)
         .inputSchema(schema)
         .build();
   }

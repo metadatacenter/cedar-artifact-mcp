@@ -50,7 +50,7 @@ public final class ValidateArtifactTool
                 + "Accepts JSON Schema (validated as-is) or YAML. Returns {\"valid\": true} or "
                 + "{\"valid\": false, \"errors\": [...]} (a non-error result either way). A "
                 + "template instance is detected but must be validated with validate_instance "
-                + "(which also needs its template).")
+                + "(which also needs its template)." + ArtifactExchange.VERBATIM_INPUT_NOTICE)
         .inputSchema(schema)
         .build();
   }
