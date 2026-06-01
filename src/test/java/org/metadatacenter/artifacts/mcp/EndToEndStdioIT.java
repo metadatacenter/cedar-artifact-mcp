@@ -558,9 +558,77 @@ final class EndToEndStdioIT
     }
   }
 
+  @Test void server_inflates_sparse_instance_to_placeholder_json_over_stdio() throws Exception
+  {
+    // End-to-end over real stdio: a sparse instance plus its template, run through
+    // instance_to_json, must come back as the full CEDAR JSON form with empty placeholders
+    // ({"@value": null}) for the unset fields. Exercises the inflation path through the shaded jar.
+    Path jar = locateShadedJar();
+    Process server = new ProcessBuilder("java", "-jar", jar.toString())
+        .redirectErrorStream(false).start();
+    StringBuilder stderr = drainStderr(server);
+    BufferedReader stdout = new BufferedReader(
+        new InputStreamReader(server.getInputStream(), StandardCharsets.UTF_8));
+
+    try (Writer stdin = new OutputStreamWriter(server.getOutputStream(), StandardCharsets.UTF_8)) {
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":"
+          + "{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},"
+          + "\"clientInfo\":{\"name\":\"e2e\",\"version\":\"0\"}}}");
+      readResponse(stdout, stderr);
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
+
+      // 1) compile a two-field template to JSON
+      String templateYaml = String.join("\n",
+          "type: template", "name: PatientStudy", "version: 0.1.0", "status: draft",
+          "modelVersion: 1.6.0", "children:",
+          "  - key: patient_name", "    type: text-field", "    name: Patient name",
+          "  - key: age", "    type: numeric-field", "    name: Age", "    datatype: xsd:int");
+      ObjectNode templateArgs = jackson.createObjectNode();
+      templateArgs.put("yaml", templateYaml);
+      send(stdin, frame(2, "template_to_json", templateArgs));
+      JsonNode r2 = readResponse(stdout, stderr);
+      assertFalse(r2.path("result").path("isError").asBoolean(true), "template_to_json failed: " + r2);
+      String templateJson = r2.path("result").path("content").get(0).path("text").asText();
+
+      // 2) inflate a wholly-empty (sparse) instance against that template
+      String sparseInstance =
+          "type: instance\nname: P1\nisBasedOn: https://repo.metadatacenter.org/templates/x\n";
+      ObjectNode instanceArgs = jackson.createObjectNode();
+      instanceArgs.put("yaml", sparseInstance);
+      instanceArgs.put("template_json", templateJson);
+      send(stdin, frame(3, "instance_to_json", instanceArgs));
+      JsonNode r3 = readResponse(stdout, stderr);
+      assertFalse(r3.path("result").path("isError").asBoolean(true), "instance_to_json failed: " + r3);
+
+      JsonNode instance = jackson.readTree(r3.path("result").path("content").get(0).path("text").asText());
+      assertTrue(instance.path("patient_name").has("@value") && instance.path("patient_name").path("@value").isNull(),
+          "unset text field must be an empty placeholder {\"@value\": null}; got: " + instance.path("patient_name"));
+      assertTrue(instance.path("age").has("@value") && instance.path("age").path("@value").isNull(),
+          "unset numeric field must be an empty placeholder; got: " + instance.path("age"));
+      assertEquals("xsd:int", instance.path("age").path("@type").asText(),
+          "numeric placeholder carries its declared @type");
+    } finally {
+      shutdown(server, stderr);
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // helpers
   // ---------------------------------------------------------------------------
+
+  /** Build a tools/call JSON-RPC frame, letting Jackson handle escaping of nested artifact text. */
+  private String frame(int id, String toolName, ObjectNode arguments) throws Exception
+  {
+    ObjectNode params = jackson.createObjectNode();
+    params.put("name", toolName);
+    params.set("arguments", arguments);
+    ObjectNode request = jackson.createObjectNode();
+    request.put("jsonrpc", "2.0");
+    request.put("id", id);
+    request.put("method", "tools/call");
+    request.set("params", params);
+    return jackson.writeValueAsString(request);
+  }
 
   private static Path locateShadedJar() throws IOException
   {
