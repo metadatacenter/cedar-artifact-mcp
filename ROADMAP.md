@@ -97,12 +97,14 @@ an optional `isCompact` flag:
 
 - **Build without a locally installed library** — building this MCP requires
   `cedar-artifact-library:2.8.1-SNAPSHOT` to have been `mvn install`ed from a local checkout
-  of the library's `develop` branch; it does not resolve from any public repository. That
-  makes the MCP heavier to distribute than it needs to be: anyone building from source must
-  first clone and build the library (the prebuilt shaded jar is the workaround). The fix
-  lives on the library side — publish released, non-SNAPSHOT artifacts to a public Maven
-  repository and pin this MCP to a released version. `cedar-cee-mcp` already resolves
-  entirely from Maven Central and is the target state.
+  of the library's `develop` branch — and that library in turn sits atop `cedar-parent`,
+  `cedar-model-library`, and `cedar-model-validation-library`, so a fresh machine must clone
+  and install four repositories in dependency order; none of the snapshots resolve from any
+  public repository. That makes the MCP heavier to distribute than it needs to be (the
+  prebuilt shaded jar is the workaround). The fix lives on the library side — publish
+  released, non-SNAPSHOT artifacts to a public Maven repository and pin this MCP to a
+  released version. `cedar-cee-mcp` already resolves entirely from Maven Central and is the
+  target state.
 
 - **Replacing children in place** — replacing a child still requires `remove_child` + an
   `add_*`. A dedicated `replace_child` would be ergonomic if a workflow needs it.
