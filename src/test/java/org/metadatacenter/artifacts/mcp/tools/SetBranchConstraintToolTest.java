@@ -34,7 +34,7 @@ final class SetBranchConstraintToolTest
     String fieldJson = createControlledTermField("Disease");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
+        "field", fieldJson,
         "branch_iri", "http://purl.obolibrary.org/obo/DOID_4",
         "ontology_name", "Human Disease Ontology",
         "ontology_acronym", "DOID",
@@ -58,7 +58,7 @@ final class SetBranchConstraintToolTest
     String fieldJson = createControlledTermField("X");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
+        "field", fieldJson,
         "branch_iri", "http://purl.obolibrary.org/obo/DOID_4",
         "ontology_name", "DOID",
         "ontology_acronym", "DOID",
@@ -77,7 +77,7 @@ final class SetBranchConstraintToolTest
     String numericFieldJson = createField("Count", "numeric-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", numericFieldJson,
+        "field", numericFieldJson,
         "branch_iri", "http://example.com/x",
         "ontology_name", "X",
         "ontology_acronym", "X",

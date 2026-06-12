@@ -34,7 +34,7 @@ public final class SetControlledTermDefaultValueTool
   public static McpSchema.Tool tool()
   {
     Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("field_json", Map.of(
+    properties.put("field", Map.of(
         "type", "string",
         "description",
         "CEDAR controlled-term field as YAML. Must already carry at least "
@@ -49,7 +49,7 @@ public final class SetControlledTermDefaultValueTool
         "description", "Human-readable label for the default class."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("field_json", "iri", "label"),
+        "object", properties, List.of("field", "iri", "label"),
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
@@ -68,7 +68,7 @@ public final class SetControlledTermDefaultValueTool
   {
     Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
 
-    String fieldJson = stringArg(args, "field_json");
+    String fieldJson = stringArg(args, "field");
     String iriArg = stringArg(args, "iri");
     String label = stringArg(args, "label");
 
@@ -90,7 +90,7 @@ public final class SetControlledTermDefaultValueTool
     // with just a default — almost certainly not what the LLM wants. Refuse and point
     // at the constraint tools.
     if (fieldJson == null || fieldJson.isBlank())
-      return error("field_json is required and must not be blank");
+      return error("field is required and must not be blank");
     ObjectNode fieldObject;
     try {
       fieldObject = ArtifactExchange.toObjectNode(fieldJson);
@@ -101,7 +101,7 @@ public final class SetControlledTermDefaultValueTool
     try {
       field = READER.readFieldSchemaArtifact(fieldObject);
     } catch (ArtifactParseException e) {
-      return error("field_json rejected by reader: " + e.getMessage());
+      return error("field rejected by reader: " + e.getMessage());
     }
     if (!(field instanceof ControlledTermField))
       return error("field is not a controlled-term field (got "

@@ -34,7 +34,7 @@ final class SetOntologyConstraintToolTest
     String fieldJson = createControlledTermField("Disease");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
+        "field", fieldJson,
         "ontology_iri", "https://data.bioontology.org/ontologies/DOID",
         "ontology_acronym", "DOID",
         "ontology_name", "Human Disease Ontology"));
@@ -58,7 +58,7 @@ final class SetOntologyConstraintToolTest
     String numericFieldJson = createField("Count", "numeric-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", numericFieldJson,
+        "field", numericFieldJson,
         "ontology_iri", "https://example.com/o",
         "ontology_acronym", "X",
         "ontology_name", "X"));
@@ -68,7 +68,7 @@ final class SetOntologyConstraintToolTest
   @Test void rejects_missing_required_args()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", createControlledTermField("X")));
+        "field", createControlledTermField("X")));
     assertTrue(result.isError());
   }
 

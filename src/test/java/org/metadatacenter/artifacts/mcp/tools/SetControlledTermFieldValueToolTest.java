@@ -30,8 +30,8 @@ final class SetControlledTermFieldValueToolTest
     String instanceJson = createInstance(templateJson, "Patient 42");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "diagnosis",
         "iri", "http://purl.obolibrary.org/obo/DOID_1612",
         "label", "breast cancer",
@@ -50,8 +50,8 @@ final class SetControlledTermFieldValueToolTest
     String instanceJson = createInstance(templateJson, "P");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "diagnosis",
         "iri", "http://purl.obolibrary.org/obo/DOID_1612",
         "label", "breast cancer"));
@@ -71,8 +71,8 @@ final class SetControlledTermFieldValueToolTest
     String instanceJson = createInstance(templateJson, "I");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "note",
         "iri", "https://example.org/x",
         "label", "x"));
@@ -86,8 +86,8 @@ final class SetControlledTermFieldValueToolTest
   @Test void rejects_missing_label()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", "{}",
-        "instance_json", "{}",
+        "template", "{}",
+        "instance", "{}",
         "field_path", "x",
         "iri", "https://x.example"));
     assertTrue(result.isError());
@@ -133,8 +133,8 @@ final class SetControlledTermFieldValueToolTest
   private static String templateWithField(String fieldYaml, String key)
   {
     return textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
-        "parent_json", createTemplate("Fixture"),
-        "child_json", fieldYaml,
+        "parent", createTemplate("Fixture"),
+        "child", fieldYaml,
         "key", key)));
   }
 
@@ -147,21 +147,21 @@ final class SetControlledTermFieldValueToolTest
   {
     String field = createField("Diagnosis", "controlled-term-field");
     String constrained = textOf(invokeTool(SetClassConstraintTool::handler, "set_class_constraint", Map.of(
-        "field_json", field,
+        "field", field,
         "class_iri", "http://purl.obolibrary.org/obo/DOID_4",
         "ontology_acronym", "DOID",
         "label", "disease",
         "pref_label", "disease")));
     return textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
-        "parent_json", createTemplate("Diagnosis template"),
-        "child_json", constrained,
+        "parent", createTemplate("Diagnosis template"),
+        "child", constrained,
         "key", key)));
   }
 
   private static String createInstance(String templateJson, String name)
   {
     return textOf(invokeTool(CreateInstanceTool::handler, "create_instance", Map.of(
-        "template_json", templateJson,
+        "template", templateJson,
         "is_based_on", FAKE_BASED_ON,
         "name", name)));
   }

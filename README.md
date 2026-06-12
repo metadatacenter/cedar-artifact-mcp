@@ -378,7 +378,7 @@ tools. `id` is optional; omit it and a fresh `template-fields` IRI is
 auto-minted (a field is a first-class, reusable CEDAR artifact, so a standalone
 one gets an id like any other top-level artifact).
 
-### `add_field(parent_json, child_json, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
+### `add_field(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
 
 Adds an existing field as a child of a template or element parent. The
 per-add-site overrides set how the field appears in *this* parent — the key it
@@ -387,33 +387,33 @@ single-instance or multi-instance (with optional `minItems` / `maxItems`).
 They're per-add-site because the same reusable field may be used differently in
 different parents.
 
-### `add_element(parent_json, child_json, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
+### `add_element(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
 
 Element variant of `add_field`: adds an existing element as a child of a
 template or element parent. Same per-add-site overrides apply.
 
-### `remove_child(parent_json, key)`
+### `remove_child(parent, key)`
 
 Removes a field or element child from a template or element parent by key.
 
-### `set_class_constraint(field_json, class_iri, ontology_acronym, label, pref_label, value_type?)`
+### `set_class_constraint(field, class_iri, ontology_acronym, label, pref_label, value_type?)`
 
 Pins a controlled-term field to a single ontology class. The input tuple
 matches what `bioportal-term-mcp`'s `get_class` returns. `value_type` defaults
 to `"class"` (a real ontology class) or `"value"` for permissible-value
 entries.
 
-### `set_ontology_constraint(field_json, ontology_iri, ontology_acronym, ontology_name)`
+### `set_ontology_constraint(field, ontology_iri, ontology_acronym, ontology_name)`
 
 Scopes a controlled-term field's permissible values to all classes from a
 named ontology. The input tuple matches `bioportal-term-mcp`'s `get_ontology`.
 
-### `set_branch_constraint(field_json, ontology_name, ontology_acronym, branch_iri, branch_label, max_depth?)`
+### `set_branch_constraint(field, ontology_name, ontology_acronym, branch_iri, branch_label, max_depth?)`
 
 Scopes a controlled-term field to an ontology subtree rooted at a named class.
 `max_depth` defaults to `0` (unbounded).
 
-### `set_valueset_constraint(field_json, value_set_iri, vs_collection, name)`
+### `set_valueset_constraint(field, value_set_iri, vs_collection, name)`
 
 Pins a controlled-term field to a curated value set hosted in BioPortal (e.g.
 in `CEDARVS` or `HRAVS`).
@@ -423,38 +423,38 @@ plain text-field as input — the library only classifies a field as
 controlled-term once it carries at least one constraint, so the two are wire-
 indistinguishable until then.
 
-### `set_default_value(field_json, value)`
+### `set_default_value(field, value)`
 
 Attaches a default value to a literal-valued field (text, text-area, numeric,
 temporal, phone, email, radio, checkbox, list). The value type must match the
 field's input type.
 
-### `set_iri_default_value(field_json, iri)`
+### `set_iri_default_value(field, iri)`
 
 Attaches a default URI to an IRI-valued field (link, ROR, ORCID, PFAS, RRID,
 PubMed, NIH-grant-ID, DOI). The schema-level default is a bare URI; if you want
 a default that carries a human label too, set it on the instance side via
 `set_iri_field_value`.
 
-### `set_controlled_term_default_value(field_json, iri, label)`
+### `set_controlled_term_default_value(field, iri, label)`
 
 Attaches a default class IRI + human label to a controlled-term field. The
 field must already carry at least one `set_*_constraint` constraint; a plain
 text-field is refused with a redirect to the constraint tools.
 
-### `set_field_value(template_json, instance_json, field_path, value)`
+### `set_field_value(template, instance, field_path, value)`
 
 Sets the value of a literal-valued field on an instance — text, numeric,
 temporal, phone, email, radio, checkbox, list, or text-area. The value type
 must match the schema's input type.
 
-### `set_iri_field_value(template_json, instance_json, field_path, iri, label?)`
+### `set_iri_field_value(template, instance, field_path, iri, label?)`
 
 Sets the URI (and optional human label) of an IRI-valued field on an instance
 — link, ROR, ORCID, PFAS, RRID, PubMed, NIH-grant-ID, or DOI. The label
 populates `rdfs:label` alongside the URI and is typically supplied.
 
-### `set_controlled_term_field_value(template_json, instance_json, field_path, iri, label, pref_label?)`
+### `set_controlled_term_field_value(template, instance, field_path, iri, label, pref_label?)`
 
 Sets the URI, human label, and preferred label of a controlled-term field on
 an instance. The schema must declare the field as controlled-term (with at
@@ -467,11 +467,11 @@ multi-instance children: `address/street`, `addresses[2]/street`, `emails[0]`.
 For multi-instance fields at the leaf, an index equal to the current list size
 appends a new entry; any larger index errors.
 
-`template_json` is required because the instance JSON loses field-type
+`template` is required because the instance JSON loses field-type
 information on round-trip — the schema is the source of truth for which kind
 of field the value belongs to.
 
-### `create_instance(template_json, name?, description?, is_based_on?, id?)`
+### `create_instance(template, name?, description?, is_based_on?, id?)`
 
 Creates an instance from a template, ready to be populated with field values.
 The returned YAML is **sparse** — it carries the instance identity (`@id`,
@@ -484,7 +484,7 @@ from `create_template` / `template_to_json` now always carry a minted one). `id`
 is the instance's own identity — optional, and auto-minted as a fresh
 `template-instances` IRI when omitted; it is independent of `is_based_on`.
 
-### `validate_instance(template_json, instance_json)`
+### `validate_instance(template, instance)`
 
 Validates a template instance (YAML) against its template (YAML). Returns
 `{"valid": true}` on success, or `{"valid": false, "errors": [...]}` with
@@ -518,7 +518,7 @@ canonical JSON Schema:
   library reader/renderer and validated (`CedarValidator`), so a non-error result is a
   guaranteed-valid artifact. If a top-level `id` is omitted, a fresh IRI is minted onto
   the result (nested children untouched). `instance_to_json` takes the instance's
-  `template_json` as an optional argument: pass it to inflate the sparse instance back to a
+  `template` as an optional argument: pass it to inflate the sparse instance back to a
   complete CEDAR JSON instance (every template field present); omit it to export only the
   fields the instance carries.
 - **`template_to_yaml` / `element_to_yaml` / `field_to_yaml` / `instance_to_yaml`

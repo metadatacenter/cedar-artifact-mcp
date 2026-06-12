@@ -22,7 +22,7 @@ final class ValidateTemplateToolTest
 
   @BeforeEach void setUp() { jackson = new ObjectMapper(); }
 
-  @Test void valid_template_json_reports_valid() throws Exception
+  @Test void valid_template_reports_valid() throws Exception
   {
     String templateJson = templateToJson(createTemplate("Demographics"));
 

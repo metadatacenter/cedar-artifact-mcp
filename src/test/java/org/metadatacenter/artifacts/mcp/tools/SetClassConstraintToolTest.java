@@ -34,7 +34,7 @@ final class SetClassConstraintToolTest
     String fieldJson = createControlledTermField("Disease");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
+        "field", fieldJson,
         "class_iri", "http://purl.obolibrary.org/obo/DOID_4",
         "ontology_acronym", "DOID",
         "label", "disease",
@@ -63,7 +63,7 @@ final class SetClassConstraintToolTest
     String textFieldJson = createField("Some IRI", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", textFieldJson,
+        "field", textFieldJson,
         "class_iri", "http://purl.obolibrary.org/obo/DOID_4",
         "ontology_acronym", "DOID",
         "label", "disease",
@@ -83,7 +83,7 @@ final class SetClassConstraintToolTest
     String numericFieldJson = createField("Count", "numeric-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", numericFieldJson,
+        "field", numericFieldJson,
         "class_iri", "http://example.com/x",
         "ontology_acronym", "X",
         "label", "x",
@@ -97,7 +97,7 @@ final class SetClassConstraintToolTest
   @Test void rejects_invalid_class_iri()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", createControlledTermField("X"),
+        "field", createControlledTermField("X"),
         "class_iri", "not a uri with spaces",
         "ontology_acronym", "X",
         "label", "x",
@@ -109,7 +109,7 @@ final class SetClassConstraintToolTest
   @Test void rejects_missing_required_args()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", createControlledTermField("X")));
+        "field", createControlledTermField("X")));
     assertTrue(result.isError());
   }
 

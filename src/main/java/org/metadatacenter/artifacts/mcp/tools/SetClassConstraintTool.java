@@ -26,7 +26,7 @@ public final class SetClassConstraintTool
   public static McpSchema.Tool tool()
   {
     Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("field_json", Map.of(
+    properties.put("field", Map.of(
         "type", "string",
         "description",
         "CEDAR controlled-term field as YAML (the kind 'create_field' with "
@@ -54,7 +54,7 @@ public final class SetClassConstraintTool
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
-        List.of("field_json", "class_iri", "ontology_acronym", "label", "pref_label"),
+        List.of("field", "class_iri", "ontology_acronym", "label", "pref_label"),
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
@@ -73,7 +73,7 @@ public final class SetClassConstraintTool
   {
     Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
 
-    String fieldJson = stringArg(args, "field_json");
+    String fieldJson = stringArg(args, "field");
     String classIri = stringArg(args, "class_iri");
     String ontologyAcronym = stringArg(args, "ontology_acronym");
     String label = stringArg(args, "label");

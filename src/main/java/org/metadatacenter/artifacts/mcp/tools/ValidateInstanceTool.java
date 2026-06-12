@@ -33,19 +33,19 @@ public final class ValidateInstanceTool
   public static McpSchema.Tool tool()
   {
     Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("template_json", Map.of(
+    properties.put("template", Map.of(
         "type", "string",
         "description",
         "CEDAR template as YAML (the kind 'create_template' returns). The instance is "
             + "validated against this template. JSON Schema is also accepted."));
-    properties.put("instance_json", Map.of(
+    properties.put("instance", Map.of(
         "type", "string",
         "description",
         "CEDAR template instance as YAML (the kind 'create_instance' returns, or what "
             + "a CEDAR repository serves for a saved instance). JSON is also accepted."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("template_json", "instance_json"),
+        "object", properties, List.of("template", "instance"),
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
@@ -65,19 +65,19 @@ public final class ValidateInstanceTool
   {
     Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
 
-    String templateJsonText = stringArg(args, "template_json");
+    String templateJsonText = stringArg(args, "template");
     if (templateJsonText == null || templateJsonText.isBlank())
-      return error("template_json is required and must not be blank");
+      return error("template is required and must not be blank");
 
-    String instanceJsonText = stringArg(args, "instance_json");
+    String instanceJsonText = stringArg(args, "instance");
     if (instanceJsonText == null || instanceJsonText.isBlank())
-      return error("instance_json is required and must not be blank");
+      return error("instance is required and must not be blank");
 
     ObjectNode templateNode;
     try {
       templateNode = ArtifactExchange.toObjectNode(templateJsonText);
     } catch (RuntimeException e) {
-      return error("template_json parse failed: " + e.getMessage());
+      return error("template parse failed: " + e.getMessage());
     }
 
     // The instance YAML is sparse (unset fields omitted). CedarValidator checks the JSON form,
@@ -95,7 +95,7 @@ public final class ValidateInstanceTool
       try {
         instanceNode = ArtifactExchange.toObjectNode(instanceJsonText);
       } catch (RuntimeException e) {
-        return error("instance_json parse failed: " + e.getMessage());
+        return error("instance parse failed: " + e.getMessage());
       }
     }
 

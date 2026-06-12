@@ -37,7 +37,7 @@ final class InstanceToJsonToolTest
         rendered.path("schema:isBasedOn").asText());
   }
 
-  @Test void template_json_inflates_sparse_instance_to_complete_json() throws Exception
+  @Test void template_inflates_sparse_instance_to_complete_json() throws Exception
   {
     // A YAML instance is sparse — unset fields are omitted. Without the template, export carries
     // only the fields the instance holds. With the template, the instance is inflated so the
@@ -62,7 +62,7 @@ final class InstanceToJsonToolTest
     assertFalse(bare.has("Age"), "without the template, the omitted field stays omitted; got: " + bare);
 
     // With the template: the omitted field is reconstructed (empty) so the JSON is complete.
-    ObjectNode full = parseJson(invoke(Map.of("yaml", sparseInstance, "template_json", templateJson)));
+    ObjectNode full = parseJson(invoke(Map.of("yaml", sparseInstance, "template", templateJson)));
     assertEquals("Alice", full.path("Patient Name").path("@value").asText());
     assertTrue(full.has("Age"), "with the template, the omitted field is reconstructed; got: " + full);
     assertTrue(full.path("Age").has("@type"),
@@ -72,7 +72,7 @@ final class InstanceToJsonToolTest
   @Test void inflation_fills_unset_fields_with_empty_placeholders() throws Exception
   {
     // The behaviour: a sparse YAML instance carries only set fields, but inflating it against its
-    // template (instance_to_json with template_json) yields the canonical JSON form where EVERY
+    // template (instance_to_json with template) yields the canonical JSON form where EVERY
     // template field is present — unset ones as an empty placeholder {"@value": null}. That is the
     // library/CEDAR "JSON needs all-field placeholders" rule; the YAML itself stays sparse. Without
     // the template, no placeholders are generated (the library renders the sparse model as-is).
@@ -87,7 +87,7 @@ final class InstanceToJsonToolTest
     String sparseInstance =
         "type: instance\nname: P1\nisBasedOn: https://repo.metadatacenter.org/templates/x\n";
 
-    ObjectNode full = parseJson(invoke(Map.of("yaml", sparseInstance, "template_json", templateJson)));
+    ObjectNode full = parseJson(invoke(Map.of("yaml", sparseInstance, "template", templateJson)));
     assertTrue(full.has("Patient Name") && full.has("Age"),
         "inflated JSON must carry every template field; got: " + full);
     assertTrue(full.path("Patient Name").has("@value") && full.path("Patient Name").path("@value").isNull(),

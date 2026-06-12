@@ -28,8 +28,8 @@ final class SetIriFieldValueToolTest
     String instanceJson = createInstance(templateJson, "Stanford");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "ror",
         "iri", "https://ror.org/00f54p054",
         "label", "Stanford University"));
@@ -46,8 +46,8 @@ final class SetIriFieldValueToolTest
     String instanceJson = createInstance(templateJson, "I");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "homepage",
         "iri", "https://example.com"));
 
@@ -62,8 +62,8 @@ final class SetIriFieldValueToolTest
     String instanceJson = createInstance(templateJson, "I");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "note",
         "iri", "https://x.example"));
     assertTrue(result.isError());
@@ -78,8 +78,8 @@ final class SetIriFieldValueToolTest
     String instanceJson = createInstance(templateJson, "I");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "ror",
         "iri", "not a uri with spaces"));
     assertTrue(result.isError());
@@ -125,15 +125,15 @@ final class SetIriFieldValueToolTest
   private static String templateWithField(String fieldYaml, String key)
   {
     return textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
-        "parent_json", createTemplate("Fixture"),
-        "child_json", fieldYaml,
+        "parent", createTemplate("Fixture"),
+        "child", fieldYaml,
         "key", key)));
   }
 
   private static String createInstance(String templateJson, String name)
   {
     return textOf(invokeTool(CreateInstanceTool::handler, "create_instance", Map.of(
-        "template_json", templateJson,
+        "template", templateJson,
         "is_based_on", FAKE_BASED_ON,
         "name", name)));
   }

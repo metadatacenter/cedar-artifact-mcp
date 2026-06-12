@@ -22,7 +22,7 @@ public final class SetOntologyConstraintTool
   public static McpSchema.Tool tool()
   {
     Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("field_json", Map.of(
+    properties.put("field", Map.of(
         "type", "string",
         "description",
         "CEDAR controlled-term field as YAML (the kind 'create_field' with "
@@ -39,7 +39,7 @@ public final class SetOntologyConstraintTool
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
-        List.of("field_json", "ontology_iri", "ontology_acronym", "ontology_name"),
+        List.of("field", "ontology_iri", "ontology_acronym", "ontology_name"),
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
@@ -59,7 +59,7 @@ public final class SetOntologyConstraintTool
   {
     Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
 
-    String fieldJson = stringArg(args, "field_json");
+    String fieldJson = stringArg(args, "field");
     String ontologyIri = stringArg(args, "ontology_iri");
     String ontologyAcronym = stringArg(args, "ontology_acronym");
     String ontologyName = stringArg(args, "ontology_name");

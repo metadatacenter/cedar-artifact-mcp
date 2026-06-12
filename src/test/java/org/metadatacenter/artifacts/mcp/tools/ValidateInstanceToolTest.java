@@ -30,8 +30,8 @@ final class ValidateInstanceToolTest
         "https://repo.metadatacenter.org/templates/abc");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson));
+        "template", templateJson,
+        "instance", instanceJson));
 
     assertFalse(result.isError(), errorText(result));
     JsonNode report = jackson.readTree(textOf(result));
@@ -47,8 +47,8 @@ final class ValidateInstanceToolTest
     String junkInstance = "{ \"@context\": {} }";
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", junkInstance));
+        "template", templateJson,
+        "instance", junkInstance));
 
     assertFalse(result.isError(),
         "validation report itself is a successful tool call; got: " + errorText(result));
@@ -63,25 +63,25 @@ final class ValidateInstanceToolTest
   {
     McpSchema.CallToolResult result = invoke(Map.of());
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("template_json"));
+    assertTrue(errorText(result).contains("template"));
   }
 
-  @Test void rejects_malformed_template_json()
+  @Test void rejects_malformed_template()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", "{ not json",
-        "instance_json", "{}"));
+        "template", "{ not json",
+        "instance", "{}"));
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("template_json"));
+    assertTrue(errorText(result).contains("template"));
   }
 
-  @Test void rejects_malformed_instance_json()
+  @Test void rejects_malformed_instance()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", createTemplate("X"),
-        "instance_json", "{ not json"));
+        "template", createTemplate("X"),
+        "instance", "{ not json"));
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("instance_json"));
+    assertTrue(errorText(result).contains("instance"));
   }
 
   // helpers
@@ -105,7 +105,7 @@ final class ValidateInstanceToolTest
   {
     McpSchema.CallToolResult result = CreateInstanceTool.handler(null,
         new McpSchema.CallToolRequest("create_instance", Map.of(
-            "template_json", templateJson,
+            "template", templateJson,
             "name", name,
             "description", description,
             "is_based_on", isBasedOn)));

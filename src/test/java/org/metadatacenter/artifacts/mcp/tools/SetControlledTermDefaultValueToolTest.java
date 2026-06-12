@@ -37,7 +37,7 @@ final class SetControlledTermDefaultValueToolTest
     String fieldYaml = constrainedControlledTermField();
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldYaml,
+        "field", fieldYaml,
         "iri", "http://purl.obolibrary.org/obo/DOID_1612",
         "label", "breast cancer"));
 
@@ -61,7 +61,7 @@ final class SetControlledTermDefaultValueToolTest
     String fieldYaml = createField("Note", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldYaml,
+        "field", fieldYaml,
         "iri", "https://example.org/x",
         "label", "x"));
     assertTrue(result.isError());
@@ -73,7 +73,7 @@ final class SetControlledTermDefaultValueToolTest
   @Test void rejects_missing_label()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", "{}",
+        "field", "{}",
         "iri", "https://x.example"));
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("label"));
@@ -101,7 +101,7 @@ final class SetControlledTermDefaultValueToolTest
     String empty = createField("Diagnosis", "controlled-term-field");
     McpSchema.CallToolResult result = SetClassConstraintTool.handler(null,
         new McpSchema.CallToolRequest("set_class_constraint", Map.of(
-            "field_json", empty,
+            "field", empty,
             "class_iri", "http://purl.obolibrary.org/obo/DOID_4",
             "ontology_acronym", "DOID",
             "label", "disease",

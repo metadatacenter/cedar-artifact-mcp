@@ -34,7 +34,7 @@ final class SetDefaultValueToolTest
     String fieldYaml = createField("Patient name", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldYaml,
+        "field", fieldYaml,
         "value", "Alice"));
 
     assertFalse(result.isError(), errorText(result));
@@ -55,7 +55,7 @@ final class SetDefaultValueToolTest
     String fieldYaml = createField("Notes", "text-area-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldYaml,
+        "field", fieldYaml,
         "value", "Initial notes here"));
 
     assertFalse(result.isError(), errorText(result));
@@ -69,7 +69,7 @@ final class SetDefaultValueToolTest
     String fieldYaml = createField("DOB", "temporal-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldYaml,
+        "field", fieldYaml,
         "value", "2026-01-01"));
 
     assertFalse(result.isError(), errorText(result));
@@ -87,7 +87,7 @@ final class SetDefaultValueToolTest
     String fieldYaml = createField("Age", "numeric-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldYaml,
+        "field", fieldYaml,
         "value", "42"));
 
     assertFalse(result.isError(), errorText(result));
@@ -110,7 +110,7 @@ final class SetDefaultValueToolTest
     String fieldYaml = constrainedControlledTermField();
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldYaml,
+        "field", fieldYaml,
         "value", "x"));
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("set_controlled_term_default_value"),
@@ -122,7 +122,7 @@ final class SetDefaultValueToolTest
     String fieldYaml = createField("ROR", "ext-ror-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldYaml,
+        "field", fieldYaml,
         "value", "https://ror.org/x"));
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("set_iri_default_value")
@@ -133,7 +133,7 @@ final class SetDefaultValueToolTest
   @Test void rejects_missing_value()
   {
     String fieldYaml = createField("X", "text-field");
-    McpSchema.CallToolResult result = invoke(Map.of("field_json", fieldYaml));
+    McpSchema.CallToolResult result = invoke(Map.of("field", fieldYaml));
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("value"));
   }
@@ -160,7 +160,7 @@ final class SetDefaultValueToolTest
     String empty = createField("Diagnosis", "controlled-term-field");
     McpSchema.CallToolResult result = SetClassConstraintTool.handler(null,
         new McpSchema.CallToolRequest("set_class_constraint", Map.of(
-            "field_json", empty,
+            "field", empty,
             "class_iri", "http://purl.obolibrary.org/obo/DOID_4",
             "ontology_acronym", "DOID",
             "label", "disease",

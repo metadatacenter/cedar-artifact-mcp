@@ -22,7 +22,7 @@ public final class SetValueSetConstraintTool
   public static McpSchema.Tool tool()
   {
     Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("field_json", Map.of(
+    properties.put("field", Map.of(
         "type", "string",
         "description",
         "CEDAR controlled-term field as YAML (the kind 'create_field' with "
@@ -41,7 +41,7 @@ public final class SetValueSetConstraintTool
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
-        List.of("field_json", "value_set_iri", "vs_collection", "name"),
+        List.of("field", "value_set_iri", "vs_collection", "name"),
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
@@ -61,7 +61,7 @@ public final class SetValueSetConstraintTool
   {
     Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
 
-    String fieldJson = stringArg(args, "field_json");
+    String fieldJson = stringArg(args, "field");
     String valueSetIri = stringArg(args, "value_set_iri");
     String vsCollection = stringArg(args, "vs_collection");
     String name = stringArg(args, "name");

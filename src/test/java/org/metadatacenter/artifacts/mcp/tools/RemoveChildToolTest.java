@@ -31,7 +31,7 @@ final class RemoveChildToolTest
     template = addField(template, createField("Age", "numeric-field"), "age");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", template,
+        "parent", template,
         "key", "patient_name"));
 
     assertFalse(result.isError(), errorText(result));
@@ -52,7 +52,7 @@ final class RemoveChildToolTest
     template = addElement(template, address, "address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", template,
+        "parent", template,
         "key", "address"));
 
     assertFalse(result.isError(), errorText(result));
@@ -70,7 +70,7 @@ final class RemoveChildToolTest
     String element = addField(createElement("Address"), createField("Street", "text-field"), "street");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", element,
+        "parent", element,
         "key", "street"));
 
     assertFalse(result.isError(), errorText(result));
@@ -86,7 +86,7 @@ final class RemoveChildToolTest
     String template = createTemplate("T");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", template,
+        "parent", template,
         "key", "nonexistent"));
 
     assertTrue(result.isError());
@@ -96,7 +96,7 @@ final class RemoveChildToolTest
   @Test void rejects_parent_without_at_type()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", "{}",
+        "parent", "{}",
         "key", "x"));
     assertTrue(result.isError());
     assertTrue(errorText(result).toLowerCase().contains("@type"));
@@ -106,7 +106,7 @@ final class RemoveChildToolTest
   {
     McpSchema.CallToolResult result = invoke(Map.of());
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("parent_json"));
+    assertTrue(errorText(result).contains("parent"));
   }
 
   // -----------------------------------------------------------------
@@ -150,8 +150,8 @@ final class RemoveChildToolTest
   {
     McpSchema.CallToolResult result = AddFieldTool.handler(null,
         new McpSchema.CallToolRequest("add_field", Map.of(
-            "parent_json", parentYaml,
-            "child_json", fieldYaml,
+            "parent", parentYaml,
+            "child", fieldYaml,
             "key", key)));
     assertFalse(result.isError(),
         "fixture add_field must succeed; got: " + errorText(result));
@@ -162,8 +162,8 @@ final class RemoveChildToolTest
   {
     McpSchema.CallToolResult result = AddElementTool.handler(null,
         new McpSchema.CallToolRequest("add_element", Map.of(
-            "parent_json", parentYaml,
-            "child_json", elementYaml,
+            "parent", parentYaml,
+            "child", elementYaml,
             "key", key)));
     assertFalse(result.isError(),
         "fixture add_element must succeed; got: " + errorText(result));

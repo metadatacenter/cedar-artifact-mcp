@@ -39,7 +39,7 @@ public final class RemoveChildTool
   public static McpSchema.Tool tool()
   {
     Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("parent_json", Map.of(
+    properties.put("parent", Map.of(
         "type", "string",
         "description",
         "CEDAR template or element as YAML (the exchange form). Kind is inferred from "
@@ -52,7 +52,7 @@ public final class RemoveChildTool
             + "fieldSchemas / elementSchemas."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("parent_json", "key"), Boolean.FALSE, null, null);
+        "object", properties, List.of("parent", "key"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
         .name("remove_child")
@@ -70,9 +70,9 @@ public final class RemoveChildTool
   {
     Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
 
-    String parentJsonText = stringArg(args, "parent_json");
+    String parentJsonText = stringArg(args, "parent");
     if (parentJsonText == null || parentJsonText.isBlank())
-      return error("parent_json is required and must not be blank");
+      return error("parent is required and must not be blank");
 
     String key = stringArg(args, "key");
     if (key == null || key.isBlank())

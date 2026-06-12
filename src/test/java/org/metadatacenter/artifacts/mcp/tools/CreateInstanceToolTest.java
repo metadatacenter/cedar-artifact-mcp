@@ -35,7 +35,7 @@ final class CreateInstanceToolTest
     String templateJson = createTemplate("Demographics");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
+        "template", templateJson,
         "is_based_on", FAKE_BASED_ON));
 
     assertFalse(result.isError(), errorText(result));
@@ -64,7 +64,7 @@ final class CreateInstanceToolTest
             + "    description: Free-text patient name\n");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
+        "template", templateJson,
         "is_based_on", FAKE_BASED_ON,
         "name", "Patient 42"));
 
@@ -98,7 +98,7 @@ final class CreateInstanceToolTest
             + "    datatype: xsd:int\n");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
+        "template", templateJson,
         "is_based_on", FAKE_BASED_ON));
 
     assertFalse(result.isError(), errorText(result));
@@ -131,7 +131,7 @@ final class CreateInstanceToolTest
             + "    granularity: day\n");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
+        "template", templateJson,
         "is_based_on", FAKE_BASED_ON));
 
     assertFalse(result.isError(), errorText(result));
@@ -162,7 +162,7 @@ final class CreateInstanceToolTest
             + "      multiple: true\n");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
+        "template", templateJson,
         "is_based_on", FAKE_BASED_ON));
 
     assertFalse(result.isError(), errorText(result));
@@ -195,7 +195,7 @@ final class CreateInstanceToolTest
             + "        name: Street\n");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
+        "template", templateJson,
         "is_based_on", FAKE_BASED_ON));
 
     assertFalse(result.isError(), errorText(result));
@@ -229,7 +229,7 @@ final class CreateInstanceToolTest
             + "    name: Extras\n");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
+        "template", templateJson,
         "is_based_on", FAKE_BASED_ON));
 
     assertFalse(result.isError(), errorText(result));
@@ -264,7 +264,7 @@ final class CreateInstanceToolTest
             + "    name: Note\n");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
+        "template", templateJson,
         "is_based_on", FAKE_BASED_ON));
 
     assertFalse(result.isError(), errorText(result));
@@ -294,7 +294,7 @@ final class CreateInstanceToolTest
             + "  - key: tags\n    type: text-field\n    name: Tag\n    configuration:\n      multiple: true\n");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson, "is_based_on", FAKE_BASED_ON));
+        "template", templateJson, "is_based_on", FAKE_BASED_ON));
     assertFalse(result.isError(), errorText(result));
     String yaml = textOf(result);
 
@@ -318,7 +318,7 @@ final class CreateInstanceToolTest
     // The instance's own @id is auto-minted when absent (DESIGN.md Principle 10), distinct
     // from is_based_on which points at the template.
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", createTemplate("Demographics"),
+        "template", createTemplate("Demographics"),
         "is_based_on", FAKE_BASED_ON));
 
     assertFalse(result.isError(), errorText(result));
@@ -332,7 +332,7 @@ final class CreateInstanceToolTest
   {
     String id = "https://repo.metadatacenter.org/template-instances/abc-123";
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", createTemplate("Demographics"),
+        "template", createTemplate("Demographics"),
         "is_based_on", FAKE_BASED_ON,
         "id", id));
 
@@ -344,7 +344,7 @@ final class CreateInstanceToolTest
   @Test void rejects_relative_instance_id()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", createTemplate("Demographics"),
+        "template", createTemplate("Demographics"),
         "is_based_on", FAKE_BASED_ON,
         "id", "template-instances/abc-123"));
 
@@ -361,7 +361,7 @@ final class CreateInstanceToolTest
     // as a clean error rather than building a bogus instance.
     String templateJson = "type: template\nname: Unsaved\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("template_json", templateJson));
+    McpSchema.CallToolResult result = invoke(Map.of("template", templateJson));
 
     assertTrue(result.isError(),
         "missing is_based_on with @id-less template must produce isError=true");
@@ -372,17 +372,17 @@ final class CreateInstanceToolTest
   @Test void rejects_invalid_is_based_on_uri()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", createTemplate("X"),
+        "template", createTemplate("X"),
         "is_based_on", "not a uri with spaces"));
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("is_based_on"));
   }
 
-  @Test void rejects_missing_template_json()
+  @Test void rejects_missing_template()
   {
     McpSchema.CallToolResult result = invoke(Map.of());
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("template_json"));
+    assertTrue(errorText(result).contains("template"));
   }
 
   // -----------------------------------------------------------------
@@ -417,8 +417,8 @@ final class CreateInstanceToolTest
   {
     McpSchema.CallToolResult result = ValidateInstanceTool.handler(null,
         new McpSchema.CallToolRequest("validate_instance", Map.of(
-            "template_json", templateJson,
-            "instance_json", jackson.writeValueAsString(instanceJson))));
+            "template", templateJson,
+            "instance", jackson.writeValueAsString(instanceJson))));
     assertFalse(result.isError(), errorText(result));
     JsonNode report = jackson.readTree(textOf(result));
     assertTrue(report.path("valid").asBoolean(),
@@ -440,7 +440,7 @@ final class CreateInstanceToolTest
   {
     McpSchema.CallToolResult json = InstanceToJsonTool.handler(null,
         new McpSchema.CallToolRequest("instance_to_json", Map.of(
-            "yaml", textOf(result), "template_json", templateJson)));
+            "yaml", textOf(result), "template", templateJson)));
     assertFalse(json.isError(), errorText(json));
     return (ObjectNode) jackson.readTree(textOf(json));
   }

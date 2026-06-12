@@ -45,7 +45,7 @@ public final class CreateInstanceTool
   public static McpSchema.Tool tool()
   {
     Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("template_json", Map.of(
+    properties.put("template", Map.of(
         "type", "string",
         "description",
         "CEDAR template as YAML (the kind 'create_template' returns) to build the skeleton "
@@ -76,7 +76,7 @@ public final class CreateInstanceTool
             + "Distinct from is_based_on, which points to the template."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("template_json"), Boolean.FALSE, null, null);
+        "object", properties, List.of("template"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
         .name("create_instance")
@@ -101,9 +101,9 @@ public final class CreateInstanceTool
   {
     Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
 
-    String templateJsonText = stringArg(args, "template_json");
+    String templateJsonText = stringArg(args, "template");
     if (templateJsonText == null || templateJsonText.isBlank())
-      return error("template_json is required and must not be blank");
+      return error("template is required and must not be blank");
 
     String nameOverride = stringArg(args, "name");
     String descriptionOverride = stringArg(args, "description");
@@ -136,7 +136,7 @@ public final class CreateInstanceTool
     try {
       template = READER.readTemplateSchemaArtifact(templateObject);
     } catch (ArtifactParseException e) {
-      return error("template_json rejected by reader: " + e.getMessage());
+      return error("template rejected by reader: " + e.getMessage());
     } catch (RuntimeException e) {
       return error("template reader threw " + e.getClass().getSimpleName()
           + ": " + e.getMessage());

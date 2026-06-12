@@ -29,8 +29,8 @@ final class AddElementToolTest
     String elementYaml = createElement("Address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", elementYaml,
+        "parent", templateYaml,
+        "child", elementYaml,
         "key", "address"));
 
     assertFalse(result.isError(), errorText(result));
@@ -52,8 +52,8 @@ final class AddElementToolTest
     String innerYaml = createElement("Address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", outerYaml,
-        "child_json", innerYaml,
+        "parent", outerYaml,
+        "child", innerYaml,
         "key", "address"));
 
     assertFalse(result.isError(), errorText(result));
@@ -71,8 +71,8 @@ final class AddElementToolTest
     String elementYaml = createElement("Address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", elementYaml,
+        "parent", templateYaml,
+        "child", elementYaml,
         "key", "home_address",
         "name", "Home address"));
 
@@ -92,8 +92,8 @@ final class AddElementToolTest
     String elementYaml = createElement("Address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", elementYaml,
+        "parent", templateYaml,
+        "child", elementYaml,
         "key", "addresses",
         "isMultiInstance", true));
 
@@ -113,8 +113,8 @@ final class AddElementToolTest
     String elementYaml = createElement("Address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", elementYaml,
+        "parent", templateYaml,
+        "child", elementYaml,
         "key", "address"));
 
     assertFalse(result.isError(), errorText(result));
@@ -133,8 +133,8 @@ final class AddElementToolTest
     String elementYaml = createElement("Address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", elementYaml,
+        "parent", templateYaml,
+        "child", elementYaml,
         "key", "addr",
         "description", "Override description"));
 
@@ -154,8 +154,8 @@ final class AddElementToolTest
     String elementYaml = createElement("Address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", elementYaml,
+        "parent", templateYaml,
+        "child", elementYaml,
         "key", "addresses",
         "isMultiInstance", true,
         "minItems", 1,
@@ -176,8 +176,8 @@ final class AddElementToolTest
   @Test void rejects_non_integer_minItems()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", createTemplate("X"),
-        "child_json", createElement("X"),
+        "parent", createTemplate("X"),
+        "child", createElement("X"),
         "key", "x",
         "minItems", "two"));
     assertTrue(result.isError());
@@ -187,8 +187,8 @@ final class AddElementToolTest
   @Test void rejects_non_boolean_isMultiInstance()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", createTemplate("X"),
-        "child_json", createElement("X"),
+        "parent", createTemplate("X"),
+        "child", createElement("X"),
         "key", "x",
         "isMultiInstance", "yes"));
     assertTrue(result.isError());
@@ -201,8 +201,8 @@ final class AddElementToolTest
     String elementYaml = createElement("address");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", elementYaml));
+        "parent", templateYaml,
+        "child", elementYaml));
 
     assertFalse(result.isError(), errorText(result));
     Map<String, Object> rendered = parseYaml(result);
@@ -218,27 +218,27 @@ final class AddElementToolTest
     String elementYaml = createElement("address");
 
     McpSchema.CallToolResult first = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", elementYaml));
+        "parent", templateYaml,
+        "child", elementYaml));
     assertFalse(first.isError(), errorText(first));
 
     McpSchema.CallToolResult second = invoke(Map.of(
-        "parent_json", textOf(first),
-        "child_json", elementYaml));
+        "parent", textOf(first),
+        "child", elementYaml));
     assertTrue(second.isError(),
         "duplicate key (default) must produce isError=true; got: " + second);
     assertTrue(errorText(second).toLowerCase().contains("address"),
         "error should mention the conflicting key; got: " + errorText(second));
   }
 
-  @Test void rejects_child_json_that_is_not_an_element()
+  @Test void rejects_child_that_is_not_an_element()
   {
     String templateYaml = createTemplate("X");
     String fieldYaml = createFieldYaml("standalone", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", fieldYaml,
+        "parent", templateYaml,
+        "child", fieldYaml,
         "key", "x"));
     assertTrue(result.isError(),
         "a field must not be accepted as a child element; got: " + result);
@@ -247,8 +247,8 @@ final class AddElementToolTest
   @Test void rejects_parent_without_at_type()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", "{}",
-        "child_json", createElement("X"),
+        "parent", "{}",
+        "child", createElement("X"),
         "key", "x"));
     assertTrue(result.isError());
     assertTrue(errorText(result).toLowerCase().contains("@type"));
@@ -258,7 +258,7 @@ final class AddElementToolTest
   {
     McpSchema.CallToolResult result = invoke(Map.of());
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("parent_json"));
+    assertTrue(errorText(result).contains("parent"));
   }
 
   // -----------------------------------------------------------------

@@ -45,7 +45,7 @@ public final class SetDefaultValueTool
   public static McpSchema.Tool tool()
   {
     Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("field_json", Map.of(
+    properties.put("field", Map.of(
         "type", "string",
         "description",
         "CEDAR field as YAML (the kind 'create_field' with a literal-valued "
@@ -57,7 +57,7 @@ public final class SetDefaultValueTool
             + "input type."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("field_json", "value"), Boolean.FALSE, null, null);
+        "object", properties, List.of("field", "value"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
         .name("set_default_value")
@@ -77,9 +77,9 @@ public final class SetDefaultValueTool
   {
     Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
 
-    String fieldJsonText = stringArg(args, "field_json");
+    String fieldJsonText = stringArg(args, "field");
     if (fieldJsonText == null || fieldJsonText.isBlank())
-      return error("field_json is required and must not be blank");
+      return error("field is required and must not be blank");
 
     if (!args.containsKey("value"))
       return error("value is required");
@@ -96,7 +96,7 @@ public final class SetDefaultValueTool
     try {
       field = READER.readFieldSchemaArtifact(fieldObject);
     } catch (ArtifactParseException e) {
-      return error("field_json rejected by reader: " + e.getMessage());
+      return error("field rejected by reader: " + e.getMessage());
     } catch (RuntimeException e) {
       return error("field reader threw " + e.getClass().getSimpleName() + ": " + e.getMessage());
     }

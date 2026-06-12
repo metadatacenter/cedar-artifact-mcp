@@ -41,7 +41,7 @@ public final class InstanceToJsonTool
         "CEDAR template instance described in the artifact library's YAML format. Full "
             + "key vocabulary and value-shape conventions:\n\n"
             + YamlVocabulary.instanceVocabulary()));
-    properties.put("template_json", Map.of(
+    properties.put("template", Map.of(
         "type", "string",
         "description",
         "The CEDAR template the instance is based on (YAML or JSON Schema). Optional but "
@@ -102,13 +102,13 @@ public final class InstanceToJsonTool
 
     // A YAML instance is sparse (unset fields omitted). When the template is supplied, inflate
     // against it so the exported JSON carries every required field; otherwise export as-is.
-    Object rawTemplate = args.get("template_json");
+    Object rawTemplate = args.get("template");
     if (rawTemplate != null && !rawTemplate.toString().isBlank()) {
       try {
         TemplateSchemaArtifact template = ArtifactExchange.readTemplate(rawTemplate.toString());
         instance = InstanceInflater.inflate(template, instance);
       } catch (RuntimeException e) {
-        return error("template_json supplied but the instance could not be inflated against it: "
+        return error("template supplied but the instance could not be inflated against it: "
             + e.getMessage());
       }
     }

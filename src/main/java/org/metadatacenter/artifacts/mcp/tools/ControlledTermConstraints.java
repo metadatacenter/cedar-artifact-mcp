@@ -55,7 +55,7 @@ final class ControlledTermConstraints
     try {
       field = READER.readFieldSchemaArtifact(fieldObject);
     } catch (ArtifactParseException e) {
-      return error("field_json rejected by reader: " + e.getMessage());
+      return error("field rejected by reader: " + e.getMessage());
     } catch (RuntimeException e) {
       return error("field reader threw " + e.getClass().getSimpleName() + ": " + e.getMessage());
     }
@@ -66,7 +66,7 @@ final class ControlledTermConstraints
     // input — text-field or controlled-term-field — and (re-)build it as a controlled-term
     // field with the new constraint attached.
     if (field.fieldUi().inputType() != FieldInputType.TEXTFIELD)
-      return error("field_json must be a text-field or controlled-term-field (got input type "
+      return error("field must be a text-field or controlled-term-field (got input type "
           + field.fieldUi().inputType() + ")");
 
     ControlledTermField updated;

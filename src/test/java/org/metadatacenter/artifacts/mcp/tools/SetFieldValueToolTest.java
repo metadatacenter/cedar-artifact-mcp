@@ -37,8 +37,8 @@ final class SetFieldValueToolTest
     String instanceJson = createInstance(templateJson, "Patient 42");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "patient_name",
         "value", "Alice"));
 
@@ -54,8 +54,8 @@ final class SetFieldValueToolTest
     String instanceJson = createInstance(templateJson, "Patient");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "age",
         "value", 42));
 
@@ -76,8 +76,8 @@ final class SetFieldValueToolTest
     String instanceJson = createInstance(templateJson, "P1");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "age",
         "value", 30));
 
@@ -104,8 +104,8 @@ final class SetFieldValueToolTest
     String instanceJson = createInstance(templateJson, "P1");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "patient_name",
         "value", "Alice"));
 
@@ -119,18 +119,18 @@ final class SetFieldValueToolTest
   {
     String streetField = createField("Street", "text-field");
     String element = textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
-        "parent_json", createElement("Address"),
-        "child_json", streetField,
+        "parent", createElement("Address"),
+        "child", streetField,
         "key", "street")));
     String templateJson = textOf(invokeTool(AddElementTool::handler, "add_element", Map.of(
-        "parent_json", createTemplate("With address"),
-        "child_json", element,
+        "parent", createTemplate("With address"),
+        "child", element,
         "key", "address")));
     String instanceJson = createInstance(templateJson, "P");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "address/street",
         "value", "221B Baker St"));
 
@@ -148,16 +148,16 @@ final class SetFieldValueToolTest
 
     // First append: index 0 on an empty list = append "alpha".
     McpSchema.CallToolResult first = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "tags[0]",
         "value", "alpha"));
     assertFalse(first.isError(), errorText(first));
 
     // Second append: index 1 on a 1-length list = append "beta".
     McpSchema.CallToolResult second = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", textOf(first),
+        "template", templateJson,
+        "instance", textOf(first),
         "field_path", "tags[1]",
         "value", "beta"));
     assertFalse(second.isError(), errorText(second));
@@ -175,13 +175,13 @@ final class SetFieldValueToolTest
 
     // Append then replace at index 0.
     String afterAppend = textOf(invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "tags[0]",
         "value", "alpha")));
     McpSchema.CallToolResult replaced = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", afterAppend,
+        "template", templateJson,
+        "instance", afterAppend,
         "field_path", "tags[0]",
         "value", "ALPHA"));
 
@@ -198,8 +198,8 @@ final class SetFieldValueToolTest
 
     // Index 5 on an empty list is out of range (> size).
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "tags[5]",
         "value", "x"));
     assertTrue(result.isError());
@@ -213,8 +213,8 @@ final class SetFieldValueToolTest
     String instanceJson = createInstance(templateJson, "P");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "ror",
         "value", "https://ror.org/x"));
     assertTrue(result.isError());
@@ -228,8 +228,8 @@ final class SetFieldValueToolTest
     String instanceJson = createInstance(templateJson, "P");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", instanceJson,
+        "template", templateJson,
+        "instance", instanceJson,
         "field_path", "nonexistent",
         "value", "x"));
     assertTrue(result.isError());
@@ -240,8 +240,8 @@ final class SetFieldValueToolTest
   {
     String templateJson = createTemplate("P");
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template_json", templateJson,
-        "instance_json", "{}",
+        "template", templateJson,
+        "instance", "{}",
         "field_path", "x"));
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("value"));
@@ -298,8 +298,8 @@ final class SetFieldValueToolTest
   private static String templateWithField(String fieldYaml, String key)
   {
     return textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
-        "parent_json", createTemplate("Fixture"),
-        "child_json", fieldYaml,
+        "parent", createTemplate("Fixture"),
+        "child", fieldYaml,
         "key", key)));
   }
 
@@ -307,8 +307,8 @@ final class SetFieldValueToolTest
   private static String templateWithMultiField(String fieldYaml, String key)
   {
     return textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
-        "parent_json", createTemplate("Fixture"),
-        "child_json", fieldYaml,
+        "parent", createTemplate("Fixture"),
+        "child", fieldYaml,
         "key", key,
         "isMultiInstance", true)));
   }
@@ -319,8 +319,8 @@ final class SetFieldValueToolTest
     String parent = createTemplate("Fixture");
     for (int i = 0; i < fieldYamls.size(); i++)
       parent = textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
-          "parent_json", parent,
-          "child_json", fieldYamls.get(i),
+          "parent", parent,
+          "child", fieldYamls.get(i),
           "key", keys.get(i))));
     return parent;
   }
@@ -328,7 +328,7 @@ final class SetFieldValueToolTest
   private static String createInstance(String templateJson, String name)
   {
     return textOf(invokeTool(CreateInstanceTool::handler, "create_instance", Map.of(
-        "template_json", templateJson,
+        "template", templateJson,
         "is_based_on", FAKE_BASED_ON,
         "name", name)));
   }

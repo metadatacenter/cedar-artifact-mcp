@@ -44,8 +44,8 @@ final class AddFieldToolTest
     String fieldYaml = createField("Patient name", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", fieldYaml,
+        "parent", templateYaml,
+        "child", fieldYaml,
         "key", "patient_name"));
 
     assertFalse(result.isError(), errorText(result));
@@ -64,8 +64,8 @@ final class AddFieldToolTest
     String fieldYaml = createField("Country", "controlled-term-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", elementYaml,
-        "child_json", fieldYaml,
+        "parent", elementYaml,
+        "child", fieldYaml,
         "key", "country"));
 
     assertFalse(result.isError(), errorText(result));
@@ -84,8 +84,8 @@ final class AddFieldToolTest
     String fieldYaml = createField("Patient name", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", fieldYaml,
+        "parent", templateYaml,
+        "child", fieldYaml,
         "key", "patient_full_name",
         "name", "Patient full name"));
 
@@ -107,8 +107,8 @@ final class AddFieldToolTest
     String fieldYaml = createField("Email", "email-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", fieldYaml,
+        "parent", templateYaml,
+        "child", fieldYaml,
         "key", "emails",
         "isMultiInstance", true));
 
@@ -127,8 +127,8 @@ final class AddFieldToolTest
     String fieldYaml = createField("Email", "email-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", fieldYaml,
+        "parent", templateYaml,
+        "child", fieldYaml,
         "key", "email"));
 
     assertFalse(result.isError(), errorText(result));
@@ -147,8 +147,8 @@ final class AddFieldToolTest
     String fieldYaml = createField("Patient name", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", fieldYaml,
+        "parent", templateYaml,
+        "child", fieldYaml,
         "key", "patient_name",
         "description", "Override description"));
 
@@ -167,8 +167,8 @@ final class AddFieldToolTest
     String fieldYaml = createField("Tag", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", fieldYaml,
+        "parent", templateYaml,
+        "child", fieldYaml,
         "key", "tags",
         "isMultiInstance", true,
         "minItems", 1,
@@ -191,8 +191,8 @@ final class AddFieldToolTest
   @Test void rejects_non_integer_minItems()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", createTemplate("X"),
-        "child_json", createField("X", "text-field"),
+        "parent", createTemplate("X"),
+        "child", createField("X", "text-field"),
         "key", "x",
         "minItems", "two"));
     assertTrue(result.isError());
@@ -202,8 +202,8 @@ final class AddFieldToolTest
   @Test void rejects_non_boolean_isMultiInstance()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", createTemplate("X"),
-        "child_json", createField("X", "text-field"),
+        "parent", createTemplate("X"),
+        "child", createField("X", "text-field"),
         "key", "x",
         "isMultiInstance", "yes"));
     assertTrue(result.isError());
@@ -217,8 +217,8 @@ final class AddFieldToolTest
 
     // No 'key' arg — should fall back to child's name ("patient_email").
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", fieldYaml));
+        "parent", templateYaml,
+        "child", fieldYaml));
 
     assertFalse(result.isError(), errorText(result));
     Map<String, Object> yaml = parseYaml(result);
@@ -235,28 +235,28 @@ final class AddFieldToolTest
     String fieldYaml = createField("contact", "text-field");
 
     McpSchema.CallToolResult first = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", fieldYaml));
+        "parent", templateYaml,
+        "child", fieldYaml));
     assertFalse(first.isError(), errorText(first));
 
     McpSchema.CallToolResult second = invoke(Map.of(
-        "parent_json", textOf(first),
-        "child_json", fieldYaml));
+        "parent", textOf(first),
+        "child", fieldYaml));
     assertTrue(second.isError(),
         "duplicate key (default) must produce isError=true; got: " + second);
     assertTrue(errorText(second).toLowerCase().contains("contact"),
         "error should mention the conflicting key; got: " + errorText(second));
   }
 
-  @Test void rejects_child_json_that_is_not_a_field()
+  @Test void rejects_child_that_is_not_a_field()
   {
     // An element must not be accepted as a field child — that's add_element's job.
     String templateYaml = createTemplate("X");
     String elementYaml = createElement("not-a-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", templateYaml,
-        "child_json", elementYaml,
+        "parent", templateYaml,
+        "child", elementYaml,
         "key", "x"));
     assertTrue(result.isError(),
         "an element must not be accepted as a field child; got: " + result);
@@ -267,8 +267,8 @@ final class AddFieldToolTest
     String fieldYaml = createField("X", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", "{}",
-        "child_json", fieldYaml,
+        "parent", "{}",
+        "child", fieldYaml,
         "key", "x"));
     assertTrue(result.isError());
     assertTrue(errorText(result).toLowerCase().contains("@type"));
@@ -281,8 +281,8 @@ final class AddFieldToolTest
     String anotherFieldYaml = createField("another", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "parent_json", fieldYaml,
-        "child_json", anotherFieldYaml,
+        "parent", fieldYaml,
+        "child", anotherFieldYaml,
         "key", "x"));
     assertTrue(result.isError(),
         "field artifact must not be accepted as a parent; got: " + result);
@@ -292,7 +292,7 @@ final class AddFieldToolTest
   {
     McpSchema.CallToolResult result = invoke(Map.of());
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("parent_json"));
+    assertTrue(errorText(result).contains("parent"));
   }
 
   // -----------------------------------------------------------------

@@ -34,7 +34,7 @@ final class SetValueSetConstraintToolTest
     String fieldJson = createControlledTermField("Area unit");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldJson,
+        "field", fieldJson,
         "value_set_iri", "https://example.org/cedarvs/area-units",
         "vs_collection", "CEDARVS",
         "name", "Area units"));
@@ -58,7 +58,7 @@ final class SetValueSetConstraintToolTest
     String numericFieldJson = createField("Count", "numeric-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", numericFieldJson,
+        "field", numericFieldJson,
         "value_set_iri", "https://example.org/vs",
         "vs_collection", "CEDARVS",
         "name", "X"));

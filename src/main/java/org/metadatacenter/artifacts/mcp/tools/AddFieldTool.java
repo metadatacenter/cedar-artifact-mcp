@@ -39,12 +39,12 @@ public final class AddFieldTool
   public static McpSchema.Tool tool()
   {
     Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("parent_json", Map.of(
+    properties.put("parent", Map.of(
         "type", "string",
         "description",
         "Parent CEDAR template or element as YAML (the exchange form). Kind is inferred from "
             + "the artifact. JSON Schema is also accepted."));
-    properties.put("child_json", Map.of(
+    properties.put("child", Map.of(
         "type", "string",
         "description",
         "Child CEDAR field as YAML — the kind of artifact 'create_field' returns. JSON Schema "
@@ -88,7 +88,7 @@ public final class AddFieldTool
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
-        List.of("parent_json", "child_json"),
+        List.of("parent", "child"),
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
@@ -108,13 +108,13 @@ public final class AddFieldTool
   {
     Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
 
-    String parentJsonText = stringArg(args, "parent_json");
+    String parentJsonText = stringArg(args, "parent");
     if (parentJsonText == null || parentJsonText.isBlank())
-      return error("parent_json is required and must not be blank");
+      return error("parent is required and must not be blank");
 
-    String childJsonText = stringArg(args, "child_json");
+    String childJsonText = stringArg(args, "child");
     if (childJsonText == null || childJsonText.isBlank())
-      return error("child_json is required and must not be blank");
+      return error("child is required and must not be blank");
 
     String keyArg = stringArg(args, "key");  // optional; defaults to child's schema:name
     String nameOverride = stringArg(args, "name");  // optional
@@ -178,7 +178,7 @@ public final class AddFieldTool
       if (maxItems != null) rebuild.withMaxItems(maxItems);
       child = rebuild.build();
     } catch (ArtifactParseException e) {
-      return error("child_json rejected by reader (must be a CEDAR field): " + e.getMessage());
+      return error("child rejected by reader (must be a CEDAR field): " + e.getMessage());
     } catch (RuntimeException e) {
       return error("field reader threw " + e.getClass().getSimpleName() + ": " + e.getMessage());
     }

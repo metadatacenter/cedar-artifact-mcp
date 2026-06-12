@@ -52,13 +52,13 @@ public final class SetFieldValueTool
   public static McpSchema.Tool tool()
   {
     Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("template_json", Map.of(
+    properties.put("template", Map.of(
         "type", "string",
         "description",
         "CEDAR template the instance is based on, as YAML. Used to look up the "
             + "field's input type at the given path — the instance loses that "
             + "distinction on round-trip."));
-    properties.put("instance_json", Map.of(
+    properties.put("instance", Map.of(
         "type", "string",
         "description",
         "CEDAR template instance as YAML (the kind 'create_instance' returns)."));
@@ -77,7 +77,7 @@ public final class SetFieldValueTool
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
-        List.of("template_json", "instance_json", "field_path", "value"),
+        List.of("template", "instance", "field_path", "value"),
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
@@ -99,13 +99,13 @@ public final class SetFieldValueTool
   {
     Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
 
-    String templateJsonText = stringArg(args, "template_json");
+    String templateJsonText = stringArg(args, "template");
     if (templateJsonText == null || templateJsonText.isBlank())
-      return error("template_json is required and must not be blank");
+      return error("template is required and must not be blank");
 
-    String instanceJsonText = stringArg(args, "instance_json");
+    String instanceJsonText = stringArg(args, "instance");
     if (instanceJsonText == null || instanceJsonText.isBlank())
-      return error("instance_json is required and must not be blank");
+      return error("instance is required and must not be blank");
 
     String fieldPath = stringArg(args, "field_path");
     if (fieldPath == null || fieldPath.isBlank())
@@ -126,9 +126,9 @@ public final class SetFieldValueTool
     try {
       template = READER.readTemplateSchemaArtifact(templateObject);
     } catch (ArtifactParseException e) {
-      return error("template_json rejected by reader: " + e.getMessage());
+      return error("template rejected by reader: " + e.getMessage());
     } catch (Exception e) {
-      return error("template_json parse failed: " + e.getMessage());
+      return error("template parse failed: " + e.getMessage());
     }
 
     ObjectNode instanceObject;
@@ -142,9 +142,9 @@ public final class SetFieldValueTool
     try {
       instance = READER.readTemplateInstanceArtifact(instanceObject);
     } catch (ArtifactParseException e) {
-      return error("instance_json rejected by reader: " + e.getMessage());
+      return error("instance rejected by reader: " + e.getMessage());
     } catch (Exception e) {
-      return error("instance_json parse failed: " + e.getMessage());
+      return error("instance parse failed: " + e.getMessage());
     }
 
     // A YAML instance is sparse — unset fields are omitted. Inflate it against the template so

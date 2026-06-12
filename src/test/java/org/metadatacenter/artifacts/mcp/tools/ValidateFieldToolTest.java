@@ -17,7 +17,7 @@ final class ValidateFieldToolTest
 
   @BeforeEach void setUp() { jackson = new ObjectMapper(); }
 
-  @Test void valid_field_json_reports_valid() throws Exception
+  @Test void valid_field_reports_valid() throws Exception
   {
     String fieldJson = textOf(FieldToJsonTool.handler(null,
         new McpSchema.CallToolRequest("field_to_json", Map.of("yaml", createField("Patient name", "text-field")))));

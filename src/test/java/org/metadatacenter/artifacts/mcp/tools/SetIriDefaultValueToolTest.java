@@ -34,7 +34,7 @@ final class SetIriDefaultValueToolTest
     String fieldYaml = createField("Affiliation", "ext-ror-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldYaml,
+        "field", fieldYaml,
         "iri", "https://ror.org/00f54p054"));
 
     assertFalse(result.isError(), errorText(result));
@@ -53,7 +53,7 @@ final class SetIriDefaultValueToolTest
     String fieldYaml = createField("Note", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldYaml,
+        "field", fieldYaml,
         "iri", "https://example.org/x"));
     assertTrue(result.isError());
     assertTrue(errorText(result).toLowerCase().contains("iri field")
@@ -65,7 +65,7 @@ final class SetIriDefaultValueToolTest
   {
     String fieldYaml = createField("ROR", "ext-ror-field");
     McpSchema.CallToolResult result = invoke(Map.of(
-        "field_json", fieldYaml,
+        "field", fieldYaml,
         "iri", "not a uri with spaces"));
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("iri"));

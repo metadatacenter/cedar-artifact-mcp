@@ -595,7 +595,7 @@ final class EndToEndStdioIT
           "type: instance\nname: P1\nisBasedOn: https://repo.metadatacenter.org/templates/x\n";
       ObjectNode instanceArgs = jackson.createObjectNode();
       instanceArgs.put("yaml", sparseInstance);
-      instanceArgs.put("template_json", templateJson);
+      instanceArgs.put("template", templateJson);
       send(stdin, frame(3, "instance_to_json", instanceArgs));
       JsonNode r3 = readResponse(stdout, stderr);
       assertFalse(r3.path("result").path("isError").asBoolean(true), "instance_to_json failed: " + r3);
