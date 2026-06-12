@@ -51,7 +51,6 @@ public final class SetClassConstraintTool
         "How the class is sourced. 'class' (default) — a class from a real ontology, "
             + "the BioPortal/get_class case. 'value' — a permissible-value entry from a "
             + "value-set or similar enumeration."));
-    properties.put("isCompact", ArtifactExchange.isCompactSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
@@ -104,8 +103,7 @@ public final class SetClassConstraintTool
     }
 
     return ControlledTermConstraints.apply(fieldJson, builder ->
-        builder.withClassValueConstraint(iri, ontologyAcronym, label, prefLabel, valueType),
-        ArtifactExchange.readIsCompact(args));
+        builder.withClassValueConstraint(iri, ontologyAcronym, label, prefLabel, valueType));
   }
 
   private static String stringArg(Map<String, Object> args, String key)

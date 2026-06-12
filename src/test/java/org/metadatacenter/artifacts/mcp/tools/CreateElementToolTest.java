@@ -50,8 +50,8 @@ final class CreateElementToolTest
 
     assertEquals("Address", yaml.get("name"));
     assertEquals("Postal address element", yaml.get("description"));
-    // Default output is compact, which omits version/status/modelVersion (provenance).
-    assertFalse(yaml.containsKey("version"), "compact output should omit version; got: " + yaml);
+    // The exchange form is expanded: what was set at creation survives in the returned YAML.
+    assertEquals("0.1.0", String.valueOf(yaml.get("version")));
 
     ValidationReport report = cedarValidator.validateTemplateElement(renderJson(yaml));
     if (!"true".equals(report.getValidationStatus())) {
@@ -63,8 +63,7 @@ final class CreateElementToolTest
 
   @Test void createElement_appliesDefaultsWhenOptionalArgsOmitted() throws Exception
   {
-    // version lives only in the expanded (persistence) form, so request isCompact: false.
-    McpSchema.CallToolResult result = invoke(Map.of("name", "Bare", "isCompact", false));
+    McpSchema.CallToolResult result = invoke(Map.of("name", "Bare"));
 
     assertFalse(result.isError(), errorText(result));
     Map<String, Object> yaml = parseYaml(result);

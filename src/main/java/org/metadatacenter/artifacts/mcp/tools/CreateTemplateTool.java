@@ -3,6 +3,7 @@ package org.metadatacenter.artifacts.mcp.tools;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
+import org.metadatacenter.artifacts.model.core.Status;
 import org.metadatacenter.artifacts.model.core.Version;
 
 import java.net.URI;
@@ -36,13 +37,13 @@ public final class CreateTemplateTool
     properties.put("version", Map.of(
         "type", "string",
         "description", "Semantic version string in major.minor.patch form (e.g. \"0.0.1\"). Optional; defaults to 0.0.1."));
+    properties.put("status", ArtifactExchange.statusSchemaProperty());
     properties.put("id", Map.of(
         "type", "string",
         "description", "IRI that identifies the template itself (the @id). Optional; if omitted, "
             + "a fresh CEDAR template IRI is auto-minted "
             + "(https://repo.metadatacenter.org/templates/<uuid>). Supply one only when you have an "
             + "id assigned by a CEDAR repository. Must be an absolute IRI."));
-    properties.put("isCompact", ArtifactExchange.isCompactSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("name"), Boolean.FALSE, null, null);
@@ -79,6 +80,13 @@ public final class CreateTemplateTool
       return error("invalid version \"" + versionText + "\": " + e.getMessage());
     }
 
+    Status status;
+    try {
+      status = ArtifactExchange.readStatus(args);
+    } catch (IllegalArgumentException e) {
+      return error(e.getMessage());
+    }
+
     String idText = stringArg(args, "id");
     URI id;
     if (idText != null && !idText.isBlank()) {
@@ -101,6 +109,7 @@ public final class CreateTemplateTool
           .withName(name)
           .withDescription(description)
           .withVersion(version)
+          .withStatus(status)
           .withJsonLdId(id)
           .build();
     } catch (RuntimeException e) {
@@ -115,7 +124,7 @@ public final class CreateTemplateTool
 
     return McpSchema.CallToolResult.builder()
         .content(List.of(new McpSchema.TextContent(null,
-            ArtifactExchange.toYaml(template, ArtifactExchange.readIsCompact(args)))))
+            ArtifactExchange.exchangeYaml(template))))
         .isError(false)
         .build();
   }

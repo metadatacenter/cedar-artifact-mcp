@@ -8,6 +8,7 @@ import org.metadatacenter.artifacts.model.core.NumericField;
 import org.metadatacenter.artifacts.model.core.TemporalField;
 import org.metadatacenter.artifacts.model.core.TextAreaField;
 import org.metadatacenter.artifacts.model.core.TextField;
+import org.metadatacenter.artifacts.model.core.Status;
 import org.metadatacenter.artifacts.model.core.Version;
 import org.metadatacenter.artifacts.model.core.fields.InputTimeFormat;
 import org.metadatacenter.artifacts.model.core.fields.TemporalGranularity;
@@ -68,6 +69,7 @@ public final class CreateFieldTool
     properties.put("version", Map.of(
         "type", "string",
         "description", "Semantic version string in major.minor.patch form (e.g. \"0.0.1\"). Optional; defaults to 0.0.1."));
+    properties.put("status", ArtifactExchange.statusSchemaProperty());
     properties.put("id", Map.of(
         "type", "string",
         "description", "IRI that identifies the field itself (the @id). Optional; if omitted, "
@@ -123,7 +125,6 @@ public final class CreateFieldTool
     properties.put("regex", Map.of(
         "type", "string",
         "description", "text-field / text-area-field validation regex. Optional."));
-    properties.put("isCompact", ArtifactExchange.isCompactSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("name", "type"), Boolean.FALSE, null, null);
@@ -182,6 +183,13 @@ public final class CreateFieldTool
       return error("invalid version \"" + versionText + "\": " + e.getMessage());
     }
 
+    Status status;
+    try {
+      status = ArtifactExchange.readStatus(args);
+    } catch (IllegalArgumentException e) {
+      return error(e.getMessage());
+    }
+
     String idText = stringArg(args, "id");
     URI id = null;
     if (idText != null && !idText.isBlank()) {
@@ -201,7 +209,7 @@ public final class CreateFieldTool
     FieldSchemaArtifact field;
     try {
       FieldSchemaArtifactBuilder<?> builder = FieldBuilders.builderFor(type);
-      builder.withName(name).withDescription(description).withVersion(version);
+      builder.withName(name).withDescription(description).withVersion(version).withStatus(status);
       builder.withJsonLdId(id);
       String configError = applyTypeSpecificConfig(builder, type, args);
       if (configError != null) return error(configError);
@@ -216,7 +224,7 @@ public final class CreateFieldTool
 
     return McpSchema.CallToolResult.builder()
         .content(List.of(new McpSchema.TextContent(null,
-            ArtifactExchange.toYaml(field, ArtifactExchange.readIsCompact(args)))))
+            ArtifactExchange.exchangeYaml(field))))
         .isError(false)
         .build();
   }

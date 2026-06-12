@@ -38,7 +38,6 @@ public final class SetValueSetConstraintTool
     properties.put("name", Map.of(
         "type", "string",
         "description", "Human-readable name of the value set (skos:prefLabel)."));
-    properties.put("isCompact", ArtifactExchange.isCompactSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
@@ -79,8 +78,7 @@ public final class SetValueSetConstraintTool
     }
 
     return ControlledTermConstraints.apply(fieldJson, builder ->
-        builder.withValueSetValueConstraint(iri, vsCollection, name),
-        ArtifactExchange.readIsCompact(args));
+        builder.withValueSetValueConstraint(iri, vsCollection, name));
   }
 
   private static String stringArg(Map<String, Object> args, String key)

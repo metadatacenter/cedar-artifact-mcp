@@ -39,28 +39,32 @@ first example exercises the structural and instance tools end-to-end; a
 follow-on example adds the controlled-term piece by pairing this MCP with
 [`bioportal-term-mcp`](https://github.com/metadatacenter/bioportal-term-mcp).
 
-Each step shows the YAML the LLM is expected to display back after the matching
-tool call. The YAML shown is the **compact** form — the lean, LLM-friendly
-authoring view that drops provenance fields (status, version, modelVersion,
-created/modified timestamps, etc.); an **expanded** form that preserves
-every field the renderer can emit is available by passing `isCompact: false`
-to any of the `*_to_yaml` tools.
+Each step shows the YAML the matching tool call returns — the **expanded
+exchange form**, reproduced verbatim. Every tool that builds or modifies an
+artifact returns this lossless form: provenance (`status`, `version`,
+`modelVersion`) is always carried — defaulting to `draft` / `0.0.1` / `1.6.0`
+when not supplied — so nothing set on an artifact is ever dropped as it
+threads from tool to tool. A leaner display that omits the provenance keys is
+available on request through the `*_to_yaml` tools (`isCompact: true`).
 
 Every top-level artifact is auto-assigned an `@id` of the right CEDAR form when
 you don't supply one — `https://repo.metadatacenter.org/{templates,
-template-elements,template-fields,template-instances}/<uuid>`. Unlike provenance,
-the `@id` is the artifact's *identity*, so the compact form keeps it; it shows up
-as the `id:` line in the YAML below. Minting is top-level only: a child authored
-inline inside a parent (a field in a template's `children:`, a value in a
-controlled-term field) is left id-less unless you set one explicitly — which is
-why `Street` and the controlled-term values further down carry no `id:`.
+template-elements,template-fields,template-instances}/<uuid>`. The `@id` is
+the artifact's *identity*; it shows up as the `id:` line in the YAML below.
+Minting is top-level only: a child authored inline inside a parent (a field in
+a template's `children:`, a value in a controlled-term field) is left id-less
+unless you set one explicitly — which is why `Street` and the controlled-term
+values further down carry no `id:`.
 
 *Create a template called Patient Study.*
 
 ```yaml
 type: template
 name: Patient Study
-id: https://repo.metadatacenter.org/templates/3a5d8f12-6c4b-4e9a-b2f7-1d8e0c3a5b7f
+id: https://repo.metadatacenter.org/templates/974975f5-e798-42f9-a997-1cc1f7e49bf5
+status: draft
+version: 0.0.1
+modelVersion: 1.6.0
 ```
 
 *Create a text field called Patient Name.*
@@ -68,7 +72,10 @@ id: https://repo.metadatacenter.org/templates/3a5d8f12-6c4b-4e9a-b2f7-1d8e0c3a5b
 ```yaml
 type: text-field
 name: Patient Name
-id: https://repo.metadatacenter.org/template-fields/9b1c4e7a-2d5f-4a8c-9e0b-3f6a1d4c7b2e
+id: https://repo.metadatacenter.org/template-fields/c06a3461-9e39-4bb5-9f42-00df3f27e51a
+status: draft
+version: 0.0.1
+modelVersion: 1.6.0
 ```
 
 *Create a numeric field called Age with type `xsd:int`.*
@@ -76,7 +83,10 @@ id: https://repo.metadatacenter.org/template-fields/9b1c4e7a-2d5f-4a8c-9e0b-3f6a
 ```yaml
 type: numeric-field
 name: Age
-id: https://repo.metadatacenter.org/template-fields/c7e0a3d6-4b9f-4c1a-8d2e-5a7b0c3f6e9d
+id: https://repo.metadatacenter.org/template-fields/fea353f2-0996-4560-93a1-378e72a1616e
+status: draft
+version: 0.0.1
+modelVersion: 1.6.0
 datatype: xsd:int
 ```
 
@@ -85,7 +95,10 @@ datatype: xsd:int
 ```yaml
 type: numeric-field
 name: Age
-id: https://repo.metadatacenter.org/template-fields/c7e0a3d6-4b9f-4c1a-8d2e-5a7b0c3f6e9d
+id: https://repo.metadatacenter.org/template-fields/fea353f2-0996-4560-93a1-378e72a1616e
+status: draft
+version: 0.0.1
+modelVersion: 1.6.0
 datatype: xsd:int
 default: 42
 ```
@@ -95,33 +108,57 @@ default: 42
 ```yaml
 type: template
 name: Patient Study
-id: https://repo.metadatacenter.org/templates/3a5d8f12-6c4b-4e9a-b2f7-1d8e0c3a5b7f
+id: https://repo.metadatacenter.org/templates/974975f5-e798-42f9-a997-1cc1f7e49bf5
+status: draft
+version: 0.0.1
+modelVersion: 1.6.0
 children:
   - key: Patient Name
     type: text-field
     name: Patient Name
-    id: https://repo.metadatacenter.org/template-fields/9b1c4e7a-2d5f-4a8c-9e0b-3f6a1d4c7b2e
+    id: https://repo.metadatacenter.org/template-fields/c06a3461-9e39-4bb5-9f42-00df3f27e51a
+    status: draft
+    version: 0.0.1
+    modelVersion: 1.6.0
+    configuration:
+      propertyIri: https://schema.metadatacenter.org/properties/Patient+Name
   - key: Age
     type: numeric-field
     name: Age
-    id: https://repo.metadatacenter.org/template-fields/c7e0a3d6-4b9f-4c1a-8d2e-5a7b0c3f6e9d
+    id: https://repo.metadatacenter.org/template-fields/fea353f2-0996-4560-93a1-378e72a1616e
+    status: draft
+    version: 0.0.1
+    modelVersion: 1.6.0
     datatype: xsd:int
     default: 42
+    configuration:
+      propertyIri: https://schema.metadatacenter.org/properties/Age
 ```
 
 The two fields keep the `@id`s they were minted with when they were created as
 standalone artifacts above; adding them into the template doesn't change them.
+The `configuration.propertyIri` on each child is the property IRI the parent
+maps the child key to, auto-derived from the key when the child doesn't carry
+one.
 
 *Create an element called Address with a text field Street.*
 
 ```yaml
 type: element
 name: Address
-id: https://repo.metadatacenter.org/template-elements/2f8b5d1c-7a4e-4d9b-a6c3-0e1f8b4d7c2a
+id: https://repo.metadatacenter.org/template-elements/4b737aeb-74f3-4b51-9cad-94922b86bf56
+status: draft
+version: 0.0.1
+modelVersion: 1.6.0
 children:
   - key: Street
     type: text-field
     name: Street
+    status: draft
+    version: 0.0.1
+    modelVersion: 1.6.0
+    configuration:
+      propertyIri: https://schema.metadatacenter.org/properties/Street
 ```
 
 `Street` is authored inline as a child of the element, so it is not minted an
@@ -132,26 +169,49 @@ children:
 ```yaml
 type: template
 name: Patient Study
-id: https://repo.metadatacenter.org/templates/3a5d8f12-6c4b-4e9a-b2f7-1d8e0c3a5b7f
+id: https://repo.metadatacenter.org/templates/974975f5-e798-42f9-a997-1cc1f7e49bf5
+status: draft
+version: 0.0.1
+modelVersion: 1.6.0
 children:
   - key: Patient Name
     type: text-field
     name: Patient Name
-    id: https://repo.metadatacenter.org/template-fields/9b1c4e7a-2d5f-4a8c-9e0b-3f6a1d4c7b2e
+    id: https://repo.metadatacenter.org/template-fields/c06a3461-9e39-4bb5-9f42-00df3f27e51a
+    status: draft
+    version: 0.0.1
+    modelVersion: 1.6.0
+    configuration:
+      propertyIri: https://schema.metadatacenter.org/properties/Patient+Name
   - key: Age
     type: numeric-field
     name: Age
-    id: https://repo.metadatacenter.org/template-fields/c7e0a3d6-4b9f-4c1a-8d2e-5a7b0c3f6e9d
+    id: https://repo.metadatacenter.org/template-fields/fea353f2-0996-4560-93a1-378e72a1616e
+    status: draft
+    version: 0.0.1
+    modelVersion: 1.6.0
     datatype: xsd:int
     default: 42
+    configuration:
+      propertyIri: https://schema.metadatacenter.org/properties/Age
   - key: Address
     type: element
     name: Address
-    id: https://repo.metadatacenter.org/template-elements/2f8b5d1c-7a4e-4d9b-a6c3-0e1f8b4d7c2a
+    id: https://repo.metadatacenter.org/template-elements/4b737aeb-74f3-4b51-9cad-94922b86bf56
+    status: draft
+    version: 0.0.1
+    modelVersion: 1.6.0
     children:
       - key: Street
         type: text-field
         name: Street
+        status: draft
+        version: 0.0.1
+        modelVersion: 1.6.0
+        configuration:
+          propertyIri: https://schema.metadatacenter.org/properties/Street
+    configuration:
+      propertyIri: https://schema.metadatacenter.org/properties/Address
 ```
 
 *Create an instance of Patient Study.*
@@ -159,20 +219,21 @@ children:
 ```yaml
 type: instance
 name: Patient Study
-id: https://repo.metadatacenter.org/template-instances/6d2a9f4b-1c7e-4a3d-b8f0-5c2e9a1d4b7f
-isBasedOn: https://repo.metadatacenter.org/templates/3a5d8f12-6c4b-4e9a-b2f7-1d8e0c3a5b7f
+id: https://repo.metadatacenter.org/template-instances/27854341-d101-4c90-9562-b2124e52ce10
+isBasedOn: https://repo.metadatacenter.org/templates/974975f5-e798-42f9-a997-1cc1f7e49bf5
 ```
 
 The instance gets its own minted `@id` (a `template-instances` IRI), distinct
-from `isBasedOn`, which is taken from the template's `@id`.
+from `isBasedOn`, which is taken from the template's `@id`. An instance carries
+no `version` / `status` — those are schema-artifact concerns.
 
 *Set Patient Name to Alice in the instance.*
 
 ```yaml
 type: instance
 name: Patient Study
-id: https://repo.metadatacenter.org/template-instances/6d2a9f4b-1c7e-4a3d-b8f0-5c2e9a1d4b7f
-isBasedOn: https://repo.metadatacenter.org/templates/3a5d8f12-6c4b-4e9a-b2f7-1d8e0c3a5b7f
+id: https://repo.metadatacenter.org/template-instances/27854341-d101-4c90-9562-b2124e52ce10
+isBasedOn: https://repo.metadatacenter.org/templates/974975f5-e798-42f9-a997-1cc1f7e49bf5
 children:
   Patient Name:
     value: Alice
@@ -183,8 +244,8 @@ children:
 ```yaml
 type: instance
 name: Patient Study
-id: https://repo.metadatacenter.org/template-instances/6d2a9f4b-1c7e-4a3d-b8f0-5c2e9a1d4b7f
-isBasedOn: https://repo.metadatacenter.org/templates/3a5d8f12-6c4b-4e9a-b2f7-1d8e0c3a5b7f
+id: https://repo.metadatacenter.org/template-instances/27854341-d101-4c90-9562-b2124e52ce10
+isBasedOn: https://repo.metadatacenter.org/templates/974975f5-e798-42f9-a997-1cc1f7e49bf5
 children:
   Patient Name:
     value: Alice
@@ -224,7 +285,10 @@ branch of the DOID ontology in BioPortal.*
 type: controlled-term-field
 name: Disease
 description: Disease term sourced from the Disease branch of the DOID ontology.
-id: https://repo.metadatacenter.org/template-fields/7a3d0c6e-9b2f-4a5c-8d1e-3f6b9c2a5d8e
+id: https://repo.metadatacenter.org/template-fields/c4b30a07-d812-48fa-8b78-f860f5236eb9
+status: draft
+version: 0.0.1
+modelVersion: 1.6.0
 datatype: iri
 values:
   - type: branch
@@ -245,13 +309,19 @@ every descendant of `disease` in DOID is permitted.
 ```yaml
 type: template
 name: Study
-id: https://repo.metadatacenter.org/templates/4c9e2a7d-3b6f-4d1a-9c8e-0a5b2f7d4e1c
+id: https://repo.metadatacenter.org/templates/c074f646-655f-4367-8e3b-20964ad5add8
+status: draft
+version: 0.0.1
+modelVersion: 1.6.0
 children:
   - key: Disease
     type: controlled-term-field
     name: Disease
     description: Disease term sourced from the Disease branch of the DOID ontology.
-    id: https://repo.metadatacenter.org/template-fields/7a3d0c6e-9b2f-4a5c-8d1e-3f6b9c2a5d8e
+    id: https://repo.metadatacenter.org/template-fields/c4b30a07-d812-48fa-8b78-f860f5236eb9
+    status: draft
+    version: 0.0.1
+    modelVersion: 1.6.0
     datatype: iri
     values:
       - type: branch
@@ -260,6 +330,8 @@ children:
         termLabel: disease
         iri: http://purl.obolibrary.org/obo/DOID_4
         maxDepth: 0
+    configuration:
+      propertyIri: https://schema.metadatacenter.org/properties/Disease
 ```
 
 The LLM adds the Disease field to the new template. The template is auto-assigned
@@ -275,8 +347,8 @@ the Disease field.*
 ```yaml
 type: instance
 name: Study
-id: https://repo.metadatacenter.org/template-instances/1e8b4d7a-2c5f-4b9e-a3d0-6c1f8a4d7b2e
-isBasedOn: https://repo.metadatacenter.org/templates/4c9e2a7d-3b6f-4d1a-9c8e-0a5b2f7d4e1c
+id: https://repo.metadatacenter.org/template-instances/44af1f3e-351f-46a1-a5bc-e579037e2c1c
+isBasedOn: https://repo.metadatacenter.org/templates/c074f646-655f-4367-8e3b-20964ad5add8
 children:
   Disease:
     id: http://purl.obolibrary.org/obo/DOID_10923
@@ -304,7 +376,7 @@ compact YAML serialization, and full CEDAR validation. The MCP exposes that
 machinery as MCP tools so an LLM can drive it directly: pulling a template
 in and out of YAML, attaching constraints, populating instance values,
 validating, and so on, without the calling LLM ever needing to know any
-Java. Artifacts move between tools as **YAML** — the lean exchange form (DESIGN.md
+Java. Artifacts move between tools as **YAML** — the expanded exchange form (DESIGN.md
 Principle 8). The `create_*` / `add_*` / `set_*` / `remove_*` tools wrap the library's
 typed builders and return YAML; the `*_to_json` tools export the canonical JSON Schema
 (for cedar-server and other downstream consumers) and `*_to_yaml` imports an external
@@ -312,35 +384,31 @@ JSON Schema artifact back into the YAML loop; `validate_instance` calls the cano
 CedarValidator. A non-error result from any tool is guaranteed to have round-tripped
 through the library and passed its structural validation.
 
-**Compact vs expanded (`isCompact`).** Artifact-returning tools take an optional
-`isCompact` flag. It is a **rendering flag, not a creation flag**: it never changes the
-artifact a tool builds or modifies, only the YAML view of it the tool returns. It appears
-on the `create_*` / `add_*` / `set_*` tools anyway because artifacts thread between tools
-*as* that returned YAML — the view you choose is the artifact the next tool receives.
-Schema artifacts (template/element/field) **default to compact** — the
-lean form that drops provenance (status, version, modelVersion) but keeps the full
-structure and `@id`; pass `isCompact: false` for the expanded, fully-provenanced form to
-persist to a repository. Instances are **sparse** in either mode — a field with no value is
-omitted entirely (no `null`, no `{}`, no empty `[]`); the empty slots the canonical JSON form requires are
-reconstructed from the template at the JSON boundary (`validate_instance`, `instance_to_json`).
-Instances default to expanded, where `isCompact` only governs whether provenance is shown.
-Note: provenance dropped by a compact hop isn't recoverable later, so a `version` that
-must survive should be threaded with `isCompact: false` or set at persistence time.
+**The exchange form.** Every tool that builds or modifies an artifact (`create_*`,
+`add_*`, `set_*`, `remove_child`) returns the **expanded, lossless YAML**: version, status,
+modelVersion, and any other provenance are always carried, so nothing set on an artifact can
+be silently dropped as it threads from tool to tool. Compaction is purely a display choice,
+and the `isCompact` flag therefore lives only on the `*_to_yaml` rendering tools
+(`isCompact: true` drops the provenance keys for a lean view). Instances are **sparse** in
+either form — a field with no value is omitted entirely (no `null`, no `{}`, no empty `[]`);
+the empty slots the canonical JSON form requires are reconstructed from the template at the
+JSON boundary (`validate_instance`, `instance_to_json`).
 
-### `create_template(name, description?, version?, id?, isCompact?)`
+### `create_template(name, description?, version?, status?, id?)`
 
-Creates a new, empty CEDAR template. Pass the returned template into
+Creates a new, empty CEDAR template. `version` and `status` are optional and default to
+`0.0.1` / `draft`. Pass the returned template into
 `add_field` or `add_element` to attach children, or into `create_instance` to
 make an empty instance of it. `id` is optional: supply one assigned by a CEDAR
 repository, or omit it and a fresh `templates` IRI is auto-minted.
 
-### `create_element(name, description?, version?, id?, isCompact?)`
+### `create_element(name, description?, version?, status?, id?)`
 
 Creates a new, empty CEDAR element — a reusable sub-schema that can be embedded
 inside templates or other elements. `id` is optional; omit it and a fresh
 `template-elements` IRI is auto-minted.
 
-### `create_field(name, type, description?, version?, id?, isCompact?, [type-specific config])`
+### `create_field(name, type, description?, version?, status?, id?, [type-specific config])`
 
 Creates a new CEDAR field of the requested kind: text, text-area, numeric,
 temporal, radio, checkbox, single- or multi-select list, controlled-term, link,
@@ -454,7 +522,7 @@ appends a new entry; any larger index errors.
 information on round-trip — the schema is the source of truth for which kind
 of field the value belongs to.
 
-### `create_instance(template_json, name?, description?, is_based_on?, id?, isCompact?)`
+### `create_instance(template_json, name?, description?, is_based_on?, id?)`
 
 Creates an instance from a template, ready to be populated with field values.
 The returned YAML is **sparse** — it carries the instance identity (`@id`,

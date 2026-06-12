@@ -44,7 +44,6 @@ public final class SetBranchConstraintTool
         "description",
         "Maximum depth from the branch root to include. Optional; defaults to 0 "
             + "(matches the library's convention for unbounded depth)."));
-    properties.put("isCompact", ArtifactExchange.isCompactSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
@@ -98,8 +97,7 @@ public final class SetBranchConstraintTool
     }
 
     return ControlledTermConstraints.apply(fieldJson, builder ->
-        builder.withBranchValueConstraint(iri, ontologyName, ontologyAcronym, branchLabel, maxDepth),
-        ArtifactExchange.readIsCompact(args));
+        builder.withBranchValueConstraint(iri, ontologyName, ontologyAcronym, branchLabel, maxDepth));
   }
 
   private static String stringArg(Map<String, Object> args, String key)

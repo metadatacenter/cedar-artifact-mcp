@@ -69,7 +69,6 @@ public final class SetIriFieldValueTool
         "description",
         "Optional human-readable label for the IRI (rdfs:label). Commonly supplied "
             + "alongside the URI when the LLM has resolved both."));
-    properties.put("isCompact", ArtifactExchange.isCompactInstanceSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
@@ -194,7 +193,7 @@ public final class SetIriFieldValueTool
     ObjectNode rendered = RENDERER.renderTemplateInstanceArtifact(updated);
     String yaml;
     try {
-      yaml = ArtifactExchange.jsonNodeToYaml(rendered, ArtifactExchange.readIsCompact(args, false));
+      yaml = ArtifactExchange.exchangeYaml(rendered);
     } catch (RuntimeException e) {
       return error("failed to render updated instance as YAML: " + e.getMessage());
     }

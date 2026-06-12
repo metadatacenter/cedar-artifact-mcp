@@ -48,8 +48,8 @@ final class CreateTemplateToolTest
 
     assertEquals("Patient demographics", yaml.get("name"));
     assertEquals("Minimal demographics template", yaml.get("description"));
-    // Default output is compact, which omits version/status/modelVersion (provenance).
-    assertFalse(yaml.containsKey("version"), "compact output should omit version; got: " + yaml);
+    // The exchange form is expanded: what was set at creation survives in the returned YAML.
+    assertEquals("0.1.0", String.valueOf(yaml.get("version")));
 
     ValidationReport report = cedarValidator.validateTemplate(renderJson(yaml));
     if (!"true".equals(report.getValidationStatus())) {
@@ -61,11 +61,9 @@ final class CreateTemplateToolTest
 
   @Test void createTemplate_setsNameAndVersion() throws Exception
   {
-    // version lives only in the expanded (persistence) form, so request isCompact: false.
     McpSchema.CallToolResult result = invoke(Map.of(
         "name", "Patient demographics",
-        "version", "0.1.0",
-        "isCompact", false));
+        "version", "0.1.0"));
 
     Map<String, Object> yaml = parseYaml(result);
     assertEquals("template", yaml.get("type"));
@@ -75,7 +73,7 @@ final class CreateTemplateToolTest
 
   @Test void createTemplate_defaultsVersionWhenOmitted() throws Exception
   {
-    McpSchema.CallToolResult result = invoke(Map.of("name", "Minimal", "isCompact", false));
+    McpSchema.CallToolResult result = invoke(Map.of("name", "Minimal"));
 
     assertFalse(result.isError(), "omitting optional fields should still succeed");
     Map<String, Object> yaml = parseYaml(result);
@@ -84,12 +82,28 @@ final class CreateTemplateToolTest
     assertFalse(yaml.containsKey("description"), "empty description should not be emitted");
   }
 
-  @Test void createTemplate_compactByDefaultOmitsProvenance() throws Exception
+  @Test void createTemplate_returnsExpandedExchangeYaml() throws Exception
   {
+    // Mutating tools return the expanded, lossless exchange form: version, status, and
+    // modelVersion all survive into the returned YAML (nothing is dropped between tools).
     Map<String, Object> yaml = parseYaml(invoke(Map.of("name", "Lean", "version", "0.2.0")));
     assertEquals("Lean", yaml.get("name"));
-    assertFalse(yaml.containsKey("version"), "compact default should omit version; got: " + yaml);
-    assertFalse(yaml.containsKey("modelVersion"), "compact default should omit modelVersion; got: " + yaml);
+    assertEquals("0.2.0", String.valueOf(yaml.get("version")));
+    assertEquals("draft", String.valueOf(yaml.get("status")), "status defaults to draft");
+    assertTrue(yaml.containsKey("modelVersion"), "expanded form carries modelVersion; got: " + yaml);
+  }
+
+  @Test void createTemplate_acceptsPublishedStatus() throws Exception
+  {
+    Map<String, Object> yaml = parseYaml(invoke(Map.of("name", "Done", "status", "published")));
+    assertEquals("published", String.valueOf(yaml.get("status")));
+  }
+
+  @Test void createTemplate_rejectsUnknownStatus()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of("name", "X", "status", "retracted"));
+    assertTrue(result.isError(), "unknown status should produce an error result");
+    assertTrue(errorText(result).contains("status"), errorText(result));
   }
 
   @Test void createTemplate_rejectsBlankName()

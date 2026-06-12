@@ -74,7 +74,6 @@ public final class CreateInstanceTool
             + "(https://repo.metadatacenter.org/template-instances/<uuid>). Supply one only "
             + "when you have an id assigned by a CEDAR repository. Must be an absolute IRI. "
             + "Distinct from is_based_on, which points to the template."));
-    properties.put("isCompact", ArtifactExchange.isCompactInstanceSchemaProperty());
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("template_json"), Boolean.FALSE, null, null);
@@ -198,7 +197,7 @@ public final class CreateInstanceTool
 
     String yaml;
     try {
-      yaml = ArtifactExchange.jsonNodeToYaml(rendered, ArtifactExchange.readIsCompact(args, false));
+      yaml = ArtifactExchange.exchangeYaml(rendered);
     } catch (RuntimeException e) {
       return error("failed to render instance as YAML: " + e.getMessage());
     }

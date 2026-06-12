@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.metadatacenter.artifacts.model.core.Artifact;
+import org.metadatacenter.artifacts.model.core.Status;
 import org.metadatacenter.artifacts.model.core.ElementSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.TemplateInstanceArtifact;
@@ -31,7 +32,7 @@ import java.util.Map;
 
 /**
  * Shared artifact I/O for the threading tools. CEDAR artifacts move between tool calls as
- * <strong>expanded YAML</strong> — the compact, lossless exchange currency (DESIGN.md
+ * <strong>expanded YAML</strong> — the lossless exchange currency (DESIGN.md
  * Principle 8). This helper centralizes the two operations every threading tool needs:
  *
  * <ul>
@@ -210,9 +211,10 @@ final class ArtifactExchange
   // ---------------------------------------------------------------------
 
   /**
-   * Render any artifact as YAML. {@code isCompact} true (the default the tools use) is the lean
-   * form — provenance, status, version, and modelVersion omitted; the canonical exchange/display
-   * form. {@code isCompact} false is the expanded, lossless form for persistence.
+   * Render any artifact as YAML. {@code isCompact} true is the lean display form — provenance,
+   * status, version, and modelVersion omitted; {@code isCompact} false is the expanded, lossless
+   * form. The flag is a rendering choice and is exposed only by the {@code *_to_yaml} rendering
+   * tools; every mutating tool returns {@link #exchangeYaml} unconditionally.
    */
   static String toYaml(Artifact artifact, boolean isCompact)
   {
@@ -220,52 +222,52 @@ final class ArtifactExchange
   }
 
   /**
-   * Read the optional {@code isCompact} tool argument. Defaults to {@code true} (compact) — the
-   * lean form is what callers want by default; expanded is requested explicitly for persistence.
-   * A non-boolean value is treated as the default rather than failing the call.
+   * The exchange form every mutating tool ({@code create_*}, {@code add_*}, {@code set_*},
+   * {@code remove_child}) returns: expanded, lossless YAML. Always expanded so that nothing set
+   * on an artifact — version, status, provenance, value-less instance slots — is ever silently
+   * dropped between tool calls; the returned YAML is the artifact the next tool receives.
+   * Compaction is a display choice, available via the {@code *_to_yaml} tools.
    */
-  static boolean readIsCompact(Map<String, Object> args)
+  static String exchangeYaml(Artifact artifact)
   {
-    return readIsCompact(args, true);
+    return toYaml(artifact, false);
   }
 
-  /** Read the optional {@code isCompact} argument, falling back to {@code defaultCompact}. */
-  static boolean readIsCompact(Map<String, Object> args, boolean defaultCompact)
+  /** {@link #exchangeYaml(Artifact)} for handlers whose internal logic holds a JSON node. */
+  static String exchangeYaml(ObjectNode node)
   {
-    Object raw = args.get("isCompact");
-    return raw instanceof Boolean b ? b : defaultCompact;
-  }
-
-  /**
-   * The shared {@code isCompact} input-schema property for schema artifacts (template/element/
-   * field), which default to compact: only provenance is dropped, the structure is intact.
-   */
-  static Map<String, Object> isCompactSchemaProperty()
-  {
-    return Map.of(
-        "type", "boolean",
-        "default", Boolean.TRUE,
-        "description",
-        "Whether to return the lean compact YAML (default true) — the form for threading into "
-            + "follow-up tools and for display. Pass false for the expanded, lossless form "
-            + "(carrying provenance, status, version, modelVersion) intended for persistence.");
+    return jsonNodeToYaml(node, false);
   }
 
   /**
-   * The {@code isCompact} property for instance-returning tools, which default to EXPANDED. A
-   * skeleton or partially-filled instance carries value-less field slots that compact YAML
-   * elides; those slots are structural (set_field_value needs them), so threading instances
-   * uses the expanded form. Pass true only to display a finished instance leanly.
+   * The shared {@code status} input-schema property for the schema-artifact {@code create_*}
+   * tools, complementing {@code version}.
    */
-  static Map<String, Object> isCompactInstanceSchemaProperty()
+  static Map<String, Object> statusSchemaProperty()
   {
     return Map.of(
-        "type", "boolean",
-        "default", Boolean.FALSE,
+        "type", "string",
+        "enum", List.of("draft", "published"),
         "description",
-        "Whether to return compact YAML. Defaults to false (expanded) for instances: compact "
-            + "elides value-less field slots, which are structural and needed to keep filling "
-            + "the instance via set_field_value. Pass true to display a finished instance leanly.");
+        "Artifact status (bibo:status): \"draft\" or \"published\". Optional; defaults to draft.");
+  }
+
+  /**
+   * Parse the optional {@code status} argument using the YAML vocabulary ({@code draft} /
+   * {@code published}). Absent defaults to {@link Status#DRAFT}; anything else throws
+   * {@link IllegalArgumentException} with a caller-facing message.
+   */
+  static Status readStatus(Map<String, Object> args)
+  {
+    Object raw = args.get("status");
+    if (raw == null)
+      return Status.DRAFT;
+    return switch (raw.toString().trim().toLowerCase()) {
+      case "", "draft" -> Status.DRAFT;
+      case "published" -> Status.PUBLISHED;
+      default -> throw new IllegalArgumentException(
+          "invalid status \"" + raw + "\": must be \"draft\" or \"published\"");
+    };
   }
 
   // ---------------------------------------------------------------------

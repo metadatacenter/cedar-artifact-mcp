@@ -19,23 +19,22 @@ architectural principles see [DESIGN.md](./DESIGN.md).
 
 Artifacts thread between tools as YAML; the in-memory model is canonical and the
 serialization is just transport (DESIGN.md Principle 8). The `ArtifactExchange` helper
-centralizes read (YAML or JSON, auto-detected) and render. Artifact-returning tools take
-an optional `isCompact` flag:
+centralizes read (YAML or JSON, auto-detected) and render.
 
-- **Schema artifacts (template/element/field) default to compact** — the lean form that
-  drops provenance (status/version/modelVersion) but keeps the full structure and `@id`.
-  Pass `isCompact: false` for the expanded, fully-provenanced form to persist to a repository.
-- **Instances default to expanded** — a skeleton/partial instance's value-less field slots
-  are structural (`set_field_value` needs them) and compact would elide them. Pass
-  `isCompact: true` to display a finished instance leanly.
+- **Every mutating tool returns the expanded, lossless exchange form** — version, status,
+  modelVersion, and value-less instance slots always carried, so nothing is silently
+  dropped between tool calls. `isCompact` is a display choice and lives only on the
+  `*_to_yaml` rendering tools (`isCompact: true` drops the provenance keys).
+- The schema-artifact `create_*` tools take optional `version` and `status` (defaults
+  `0.0.1` / `draft`).
 - Every returned artifact has round-tripped through the library and passed `CedarValidator`
   (rendered to JSON internally — DESIGN.md Principle 6).
 
 ### Builders
 
-- `create_template(name, description?, version?, id?, isCompact?)`
-- `create_element(name, description?, version?, id?, isCompact?)`
-- `create_field(name, type, description?, version?, id?, isCompact?, [type-specific config])`
+- `create_template(name, description?, version?, status?, id?)`
+- `create_element(name, description?, version?, status?, id?)`
+- `create_field(name, type, description?, version?, status?, id?, [type-specific config])`
   — `type` is the kebab-case vocabulary (text / text-area / numeric / temporal / radio /
   checkbox / single- and multi-select list / controlled-term / link / email / phone, the
   `ext-*` identifier fields, and the `static-*` placeholders). Numeric and temporal fields
@@ -46,17 +45,17 @@ an optional `isCompact` flag:
 
 ### Incremental builders
 
-- `add_field` / `add_element(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?, isCompact?)`
+- `add_field` / `add_element(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
   — graft an existing child artifact onto a template or element parent; parent kind inferred
   from the artifact. Per-add-site overrides for key, label, description, multi-instance flag,
   and cardinality bounds.
-- `remove_child(parent, key, isCompact?)` — removes a field or element child, updating the
+- `remove_child(parent, key)` — removes a field or element child, updating the
   parent's `_ui` order / label / description entries in lockstep.
 
 ### Controlled-term constraints
 
 - `set_class_constraint`, `set_ontology_constraint`, `set_branch_constraint`,
-  `set_valueset_constraint` (each `(field, …, isCompact?)`) — attach a value constraint to a
+  `set_valueset_constraint` (each `(field, …)`) — attach a value constraint to a
   controlled-term field. The canonical input tuples match what `bioportal-term-mcp` returns.
   All accept any TEXTFIELD-shape field; the library classifies a TEXTFIELD as controlled-term
   only once it carries a constraint (an empty controlled-term-field and a text-field are
@@ -73,7 +72,7 @@ an optional `isCompact` flag:
 
 ### Instances
 
-- `create_instance(template, name?, description?, is_based_on?, id?, isCompact?)` — walks a
+- `create_instance(template, name?, description?, is_based_on?, id?)` — walks a
   template and produces an empty instance skeleton that validates against it. Attribute-value
   fields are seeded as empty groups; static fields are skipped; the instance `@id` is
   auto-minted when omitted.
@@ -109,24 +108,19 @@ an optional `isCompact` flag:
 - **Replacing children in place** — replacing a child still requires `remove_child` + an
   `add_*`. A dedicated `replace_child` would be ergonomic if a workflow needs it.
 
-- **Collapse compact/expanded into one "render-if-present" YAML form** — idea, not yet
-  decided. Today artifact-returning tools default to compact (schema artifacts) or expanded
-  (instances) and expose an `isCompact` flag. A simpler model: drop the flag and the
-  compact/expanded distinction entirely, and instead render provenance (status, version,
-  modelVersion, created/modified, …) only when it is actually set — absent ⇒ omitted, present
-  ⇒ shown and round-tripped. Most freshly authored artifacts set none of it, so the default
-  view is naturally lean, and there is no lossy compaction (so the "provenance dropped by a
-  compact hop can't be recovered" footgun disappears). Instances would simply always render
-  their value slots (structural) plus any set provenance, removing the instance-specific
-  default. `modelVersion` (always `1.6.0`) would be omitted and re-defaulted on read.
+- **Render-if-present as the one YAML form** — idea, not yet decided. Mutating tools now
+  always return the expanded exchange form and `isCompact` survives only on the `*_to_yaml`
+  rendering tools; the remaining question is whether the compact/expanded distinction could
+  disappear entirely. A render-if-present form would emit provenance (status, version,
+  modelVersion, created/modified, …) only when actually set — absent ⇒ omitted, present ⇒
+  shown and round-tripped — making the default view naturally lean with no lossy compaction.
 
-  The load-bearing prerequisite: this only yields a lean default if `version` / `status` stop
-  being *injected* as defaults — both here (the MCP defaults `version` to `0.0.1`) and in the
-  library builder (defaults `0.0.1` / `draft`). That builder change is the reader-vs-builder
-  defaulting asymmetry already on the library ROADMAP and has cross-consumer reach
-  (cedar-server tooling, the CLI), so it needs coordinating, not just an MCP edit. Tradeoff to
-  weigh: a single form can no longer *hide* provenance that does exist (e.g. a server-loaded
-  artifact's timestamps), which compact could.
+  The load-bearing prerequisite: that only yields a lean default if `version` / `status` /
+  `modelVersion` stop being *injected* as defaults — both here and in the library builder
+  and readers (which now default them deliberately). That has cross-consumer reach
+  (cedar-server tooling, the CLI), so it needs coordinating, not just an MCP edit. Tradeoff
+  to weigh: a single form can no longer *hide* provenance that does exist (e.g. a
+  server-loaded artifact's timestamps), which `isCompact: true` can.
 
 Library-side items that surface through this MCP but whose fix lives in
 [`cedar-artifact-library`](https://github.com/metadatacenter/cedar-artifact-library/blob/develop/ROADMAP.md)
