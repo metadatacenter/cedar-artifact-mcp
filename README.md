@@ -335,8 +335,8 @@ through the library and passed its structural validation.
 |---|---|
 | Create | `create_template` · `create_element` · `create_field` · `create_instance` |
 | Compose | `add_field` · `add_element` · `remove_child` |
-| Constrain (controlled terms) | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` |
-| Schema defaults | `set_default_value` · `set_iri_default_value` · `set_controlled_term_default_value` |
+| Controlled term constraints | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` |
+| Default values | `set_default_value` · `set_iri_default_value` · `set_controlled_term_default_value` |
 | Instance values | `set_field_value` · `set_iri_field_value` · `set_controlled_term_field_value` |
 | Validate | `validate_template` · `validate_element` · `validate_field` · `validate_artifact` · `validate_instance` |
 | Render | `template_to_json` · `element_to_json` · `field_to_json` · `instance_to_json` · `template_to_yaml` · `element_to_yaml` · `field_to_yaml` · `instance_to_yaml` |
