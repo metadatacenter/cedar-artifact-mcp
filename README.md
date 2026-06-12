@@ -39,44 +39,54 @@ first example exercises the structural and instance tools end-to-end; a
 follow-on example adds the controlled-term piece by pairing this MCP with
 [`bioportal-term-mcp`](https://github.com/metadatacenter/bioportal-term-mcp).
 
-Each step shows the YAML the matching tool call returns — the **expanded
-exchange form**, reproduced verbatim. Every tool that builds or modifies an
-artifact returns this lossless form: provenance (`status`, `version`,
-`modelVersion`) is always carried — defaulting to `draft` / `0.0.1` / `1.6.0`
-when not supplied — so nothing set on an artifact is ever dropped as it
-threads from tool to tool. For interactive display the tool descriptions direct the LLM
-to show the user the lean view instead — the matching `*_to_yaml` tool with
-`isCompact: true` — while always threading the expanded form between calls.
+Two YAML forms are in play. Every tool that builds or modifies an artifact
+returns the **expanded exchange form** — provenance (`status`, `version`,
+`modelVersion`) always carried, defaulting to `draft` / `0.0.1` / `1.6.0` —
+and that is what threads from tool to tool, so nothing set on an artifact is
+ever dropped mid-chain. For *display*, the tool descriptions direct the LLM to
+show the user the lean **compact view** instead, produced by the matching
+`*_to_yaml` tool with `isCompact: true`. The blocks below show what the user
+sees: the compact view (the first step also shows the expanded form it was
+rendered from).
 
 Every top-level artifact is auto-assigned an `@id` of the right CEDAR form when
 you don't supply one — `https://repo.metadatacenter.org/{templates,
 template-elements,template-fields,template-instances}/<uuid>`. The `@id` is
-the artifact's *identity*; it shows up as the `id:` line in the YAML below.
-Minting is top-level only: a child authored inline inside a parent (a field in
-a template's `children:`, a value in a controlled-term field) is left id-less
-unless you set one explicitly — which is why `Street` and the controlled-term
-values further down carry no `id:`.
+the artifact's *identity*, so the compact view keeps it; it shows up as the
+`id:` line in the YAML below. Minting is top-level only: a child authored
+inline inside a parent (a field in a template's `children:`, a value in a
+controlled-term field) is left id-less unless you set one explicitly — which
+is why `Street` and the controlled-term values further down carry no `id:`.
 
 *Create a template called Patient Study.*
+
+The tool returns the expanded exchange form:
 
 ```yaml
 type: template
 name: Patient Study
-id: https://repo.metadatacenter.org/templates/974975f5-e798-42f9-a997-1cc1f7e49bf5
+id: https://repo.metadatacenter.org/templates/146cc4f1-b650-4a4a-aa4f-fb78b2813f50
 status: draft
 version: 0.0.1
 modelVersion: 1.6.0
 ```
+
+and the LLM displays the compact view:
+
+```yaml
+type: template
+name: Patient Study
+id: https://repo.metadatacenter.org/templates/146cc4f1-b650-4a4a-aa4f-fb78b2813f50
+```
+
+Subsequent steps show only the compact view the user sees.
 
 *Create a text field called Patient Name.*
 
 ```yaml
 type: text-field
 name: Patient Name
-id: https://repo.metadatacenter.org/template-fields/c06a3461-9e39-4bb5-9f42-00df3f27e51a
-status: draft
-version: 0.0.1
-modelVersion: 1.6.0
+id: https://repo.metadatacenter.org/template-fields/a6d4eec6-9798-4487-83eb-41672f1a2680
 ```
 
 *Create a numeric field called Age with type `xsd:int`.*
@@ -84,10 +94,7 @@ modelVersion: 1.6.0
 ```yaml
 type: numeric-field
 name: Age
-id: https://repo.metadatacenter.org/template-fields/fea353f2-0996-4560-93a1-378e72a1616e
-status: draft
-version: 0.0.1
-modelVersion: 1.6.0
+id: https://repo.metadatacenter.org/template-fields/7771a4f7-1e5e-44ec-8e9e-13ae9dbccd8e
 datatype: xsd:int
 ```
 
@@ -96,10 +103,7 @@ datatype: xsd:int
 ```yaml
 type: numeric-field
 name: Age
-id: https://repo.metadatacenter.org/template-fields/fea353f2-0996-4560-93a1-378e72a1616e
-status: draft
-version: 0.0.1
-modelVersion: 1.6.0
+id: https://repo.metadatacenter.org/template-fields/7771a4f7-1e5e-44ec-8e9e-13ae9dbccd8e
 datatype: xsd:int
 default: 42
 ```
@@ -109,57 +113,33 @@ default: 42
 ```yaml
 type: template
 name: Patient Study
-id: https://repo.metadatacenter.org/templates/974975f5-e798-42f9-a997-1cc1f7e49bf5
-status: draft
-version: 0.0.1
-modelVersion: 1.6.0
+id: https://repo.metadatacenter.org/templates/146cc4f1-b650-4a4a-aa4f-fb78b2813f50
 children:
   - key: Patient Name
     type: text-field
     name: Patient Name
-    id: https://repo.metadatacenter.org/template-fields/c06a3461-9e39-4bb5-9f42-00df3f27e51a
-    status: draft
-    version: 0.0.1
-    modelVersion: 1.6.0
-    configuration:
-      propertyIri: https://schema.metadatacenter.org/properties/Patient+Name
+    id: https://repo.metadatacenter.org/template-fields/a6d4eec6-9798-4487-83eb-41672f1a2680
   - key: Age
     type: numeric-field
     name: Age
-    id: https://repo.metadatacenter.org/template-fields/fea353f2-0996-4560-93a1-378e72a1616e
-    status: draft
-    version: 0.0.1
-    modelVersion: 1.6.0
+    id: https://repo.metadatacenter.org/template-fields/7771a4f7-1e5e-44ec-8e9e-13ae9dbccd8e
     datatype: xsd:int
     default: 42
-    configuration:
-      propertyIri: https://schema.metadatacenter.org/properties/Age
 ```
 
 The two fields keep the `@id`s they were minted with when they were created as
 standalone artifacts above; adding them into the template doesn't change them.
-The `configuration.propertyIri` on each child is the property IRI the parent
-maps the child key to, auto-derived from the key when the child doesn't carry
-one.
 
 *Create an element called Address with a text field Street.*
 
 ```yaml
 type: element
 name: Address
-id: https://repo.metadatacenter.org/template-elements/4b737aeb-74f3-4b51-9cad-94922b86bf56
-status: draft
-version: 0.0.1
-modelVersion: 1.6.0
+id: https://repo.metadatacenter.org/template-elements/3a59a0c0-3b74-41f8-8379-52ce16f02af8
 children:
   - key: Street
     type: text-field
     name: Street
-    status: draft
-    version: 0.0.1
-    modelVersion: 1.6.0
-    configuration:
-      propertyIri: https://schema.metadatacenter.org/properties/Street
 ```
 
 `Street` is authored inline as a child of the element, so it is not minted an
@@ -170,49 +150,26 @@ children:
 ```yaml
 type: template
 name: Patient Study
-id: https://repo.metadatacenter.org/templates/974975f5-e798-42f9-a997-1cc1f7e49bf5
-status: draft
-version: 0.0.1
-modelVersion: 1.6.0
+id: https://repo.metadatacenter.org/templates/146cc4f1-b650-4a4a-aa4f-fb78b2813f50
 children:
   - key: Patient Name
     type: text-field
     name: Patient Name
-    id: https://repo.metadatacenter.org/template-fields/c06a3461-9e39-4bb5-9f42-00df3f27e51a
-    status: draft
-    version: 0.0.1
-    modelVersion: 1.6.0
-    configuration:
-      propertyIri: https://schema.metadatacenter.org/properties/Patient+Name
+    id: https://repo.metadatacenter.org/template-fields/a6d4eec6-9798-4487-83eb-41672f1a2680
   - key: Age
     type: numeric-field
     name: Age
-    id: https://repo.metadatacenter.org/template-fields/fea353f2-0996-4560-93a1-378e72a1616e
-    status: draft
-    version: 0.0.1
-    modelVersion: 1.6.0
+    id: https://repo.metadatacenter.org/template-fields/7771a4f7-1e5e-44ec-8e9e-13ae9dbccd8e
     datatype: xsd:int
     default: 42
-    configuration:
-      propertyIri: https://schema.metadatacenter.org/properties/Age
   - key: Address
     type: element
     name: Address
-    id: https://repo.metadatacenter.org/template-elements/4b737aeb-74f3-4b51-9cad-94922b86bf56
-    status: draft
-    version: 0.0.1
-    modelVersion: 1.6.0
+    id: https://repo.metadatacenter.org/template-elements/3a59a0c0-3b74-41f8-8379-52ce16f02af8
     children:
       - key: Street
         type: text-field
         name: Street
-        status: draft
-        version: 0.0.1
-        modelVersion: 1.6.0
-        configuration:
-          propertyIri: https://schema.metadatacenter.org/properties/Street
-    configuration:
-      propertyIri: https://schema.metadatacenter.org/properties/Address
 ```
 
 *Create an instance of Patient Study.*
@@ -220,8 +177,8 @@ children:
 ```yaml
 type: instance
 name: Patient Study
-id: https://repo.metadatacenter.org/template-instances/27854341-d101-4c90-9562-b2124e52ce10
-isBasedOn: https://repo.metadatacenter.org/templates/974975f5-e798-42f9-a997-1cc1f7e49bf5
+id: https://repo.metadatacenter.org/template-instances/5d09635b-737d-4308-9f8b-d1dae0233ea1
+isBasedOn: https://repo.metadatacenter.org/templates/146cc4f1-b650-4a4a-aa4f-fb78b2813f50
 ```
 
 The instance gets its own minted `@id` (a `template-instances` IRI), distinct
@@ -233,8 +190,8 @@ no `version` / `status` — those are schema-artifact concerns.
 ```yaml
 type: instance
 name: Patient Study
-id: https://repo.metadatacenter.org/template-instances/27854341-d101-4c90-9562-b2124e52ce10
-isBasedOn: https://repo.metadatacenter.org/templates/974975f5-e798-42f9-a997-1cc1f7e49bf5
+id: https://repo.metadatacenter.org/template-instances/5d09635b-737d-4308-9f8b-d1dae0233ea1
+isBasedOn: https://repo.metadatacenter.org/templates/146cc4f1-b650-4a4a-aa4f-fb78b2813f50
 children:
   Patient Name:
     value: Alice
@@ -245,8 +202,8 @@ children:
 ```yaml
 type: instance
 name: Patient Study
-id: https://repo.metadatacenter.org/template-instances/27854341-d101-4c90-9562-b2124e52ce10
-isBasedOn: https://repo.metadatacenter.org/templates/974975f5-e798-42f9-a997-1cc1f7e49bf5
+id: https://repo.metadatacenter.org/template-instances/5d09635b-737d-4308-9f8b-d1dae0233ea1
+isBasedOn: https://repo.metadatacenter.org/templates/146cc4f1-b650-4a4a-aa4f-fb78b2813f50
 children:
   Patient Name:
     value: Alice
@@ -286,10 +243,7 @@ branch of the DOID ontology in BioPortal.*
 type: controlled-term-field
 name: Disease
 description: Disease term sourced from the Disease branch of the DOID ontology.
-id: https://repo.metadatacenter.org/template-fields/c4b30a07-d812-48fa-8b78-f860f5236eb9
-status: draft
-version: 0.0.1
-modelVersion: 1.6.0
+id: https://repo.metadatacenter.org/template-fields/b452bf87-ae7b-43de-9437-ae61eea595b0
 datatype: iri
 values:
   - type: branch
@@ -310,19 +264,13 @@ every descendant of `disease` in DOID is permitted.
 ```yaml
 type: template
 name: Study
-id: https://repo.metadatacenter.org/templates/c074f646-655f-4367-8e3b-20964ad5add8
-status: draft
-version: 0.0.1
-modelVersion: 1.6.0
+id: https://repo.metadatacenter.org/templates/5c1d5f0e-e019-4839-9961-ee528f78232e
 children:
   - key: Disease
     type: controlled-term-field
     name: Disease
     description: Disease term sourced from the Disease branch of the DOID ontology.
-    id: https://repo.metadatacenter.org/template-fields/c4b30a07-d812-48fa-8b78-f860f5236eb9
-    status: draft
-    version: 0.0.1
-    modelVersion: 1.6.0
+    id: https://repo.metadatacenter.org/template-fields/b452bf87-ae7b-43de-9437-ae61eea595b0
     datatype: iri
     values:
       - type: branch
@@ -331,8 +279,6 @@ children:
         termLabel: disease
         iri: http://purl.obolibrary.org/obo/DOID_4
         maxDepth: 0
-    configuration:
-      propertyIri: https://schema.metadatacenter.org/properties/Disease
 ```
 
 The LLM adds the Disease field to the new template. The template is auto-assigned
@@ -348,8 +294,8 @@ the Disease field.*
 ```yaml
 type: instance
 name: Study
-id: https://repo.metadatacenter.org/template-instances/44af1f3e-351f-46a1-a5bc-e579037e2c1c
-isBasedOn: https://repo.metadatacenter.org/templates/c074f646-655f-4367-8e3b-20964ad5add8
+id: https://repo.metadatacenter.org/template-instances/d5b860ac-7f34-473a-8ceb-2f9ec50c8b73
+isBasedOn: https://repo.metadatacenter.org/templates/5c1d5f0e-e019-4839-9961-ee528f78232e
 children:
   Disease:
     id: http://purl.obolibrary.org/obo/DOID_10923
