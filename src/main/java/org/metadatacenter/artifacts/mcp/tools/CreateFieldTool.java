@@ -4,7 +4,10 @@ import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifactBuilder;
+import org.metadatacenter.artifacts.model.core.CheckboxField;
+import org.metadatacenter.artifacts.model.core.ListField;
 import org.metadatacenter.artifacts.model.core.NumericField;
+import org.metadatacenter.artifacts.model.core.RadioField;
 import org.metadatacenter.artifacts.model.core.TemporalField;
 import org.metadatacenter.artifacts.model.core.TextAreaField;
 import org.metadatacenter.artifacts.model.core.TextField;
@@ -78,6 +81,14 @@ public final class CreateFieldTool
             + "have an id assigned by a CEDAR repository. Must be an absolute IRI."));
 
     // ---- Per-type configuration (all optional; applicable only to the matching type) ----
+
+    properties.put("options", Map.of(
+        "type", "array",
+        "items", Map.of("type", "string"),
+        "description",
+        "Option list for choice fields (radio-field, checkbox-field, single-/multi-select-"
+            + "list-field), in display order. Rejected for other field types. To change or "
+            + "reorder options later, use set_options."));
 
     properties.put("datatype", Map.of(
         "type", "string",
@@ -213,6 +224,8 @@ public final class CreateFieldTool
       builder.withJsonLdId(id);
       String configError = applyTypeSpecificConfig(builder, type, args);
       if (configError != null) return error(configError);
+      String optionsError = applyOptions(builder, args);
+      if (optionsError != null) return error(optionsError);
       field = builder.build();
     } catch (RuntimeException e) {
       return error("field build failed: " + e.getMessage());
@@ -239,6 +252,34 @@ public final class CreateFieldTool
   {
     String value = stringArg(args, key);
     return value == null ? fallback : value;
+  }
+
+  /**
+   * Apply the optional {@code options} list to a choice-field builder. Returns an error message
+   * for a non-choice builder or malformed list, {@code null} on success or when absent.
+   */
+  private static String applyOptions(FieldSchemaArtifactBuilder<?> builder, Map<String, Object> args)
+  {
+    Object raw = args.get("options");
+    if (raw == null)
+      return null;
+    if (!(raw instanceof java.util.List<?> list) || list.isEmpty())
+      return "options must be a non-empty array of strings";
+    for (Object option : list)
+      if (option == null || option.toString().isBlank())
+        return "options must not contain blank entries";
+
+    if (builder instanceof RadioField.RadioFieldBuilder radio) {
+      for (Object option : list) radio.withOption(option.toString());
+    } else if (builder instanceof CheckboxField.CheckboxFieldBuilder checkbox) {
+      for (Object option : list) checkbox.withOption(option.toString());
+    } else if (builder instanceof ListField.ListFieldBuilder listBuilder) {
+      for (Object option : list) listBuilder.withOption(option.toString());
+    } else {
+      return "options apply to choice fields only (radio-field, checkbox-field, "
+          + "single-/multi-select-list-field)";
+    }
+    return null;
   }
 
   private static McpSchema.CallToolResult error(String message)

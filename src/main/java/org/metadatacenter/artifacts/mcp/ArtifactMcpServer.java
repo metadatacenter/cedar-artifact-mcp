@@ -13,6 +13,7 @@ import org.metadatacenter.artifacts.mcp.tools.AddElementTool;
 import org.metadatacenter.artifacts.mcp.tools.AddFieldTool;
 import org.metadatacenter.artifacts.mcp.tools.SetIriDefaultValueTool;
 import org.metadatacenter.artifacts.mcp.tools.SetOntologyConstraintTool;
+import org.metadatacenter.artifacts.mcp.tools.SetOptionsTool;
 import org.metadatacenter.artifacts.mcp.tools.SetValueSetConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateElementTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateFieldTool;
@@ -75,6 +76,7 @@ public final class ArtifactMcpServer
         .toolCall(RemoveChildTool.tool(), RemoveChildTool::handler)
         .toolCall(SetClassConstraintTool.tool(), SetClassConstraintTool::handler)
         .toolCall(SetOntologyConstraintTool.tool(), SetOntologyConstraintTool::handler)
+        .toolCall(SetOptionsTool.tool(), SetOptionsTool::handler)
         .toolCall(SetBranchConstraintTool.tool(), SetBranchConstraintTool::handler)
         .toolCall(SetValueSetConstraintTool.tool(), SetValueSetConstraintTool::handler)
         .toolCall(SetDefaultValueTool.tool(), SetDefaultValueTool::handler)

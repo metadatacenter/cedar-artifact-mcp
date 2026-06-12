@@ -62,6 +62,13 @@ centralizes read (YAML or JSON, auto-detected) and render.
   only once it carries a constraint (an empty controlled-term-field and a text-field are
   wire-indistinguishable until then).
 
+### Literal options
+
+- `set_options(field, options, default_option?)` — replaces a choice field's (radio /
+  checkbox / single- and multi-select list) literal option list, in display order, with an
+  optional pre-selected default; `create_field` accepts the same `options` inline. The
+  literal-values counterpart of the `set_*_constraint` family.
+
 ### Default values (schema-side)
 
 - `set_default_value` — literal-valued fields (text, text-area, numeric, temporal, phone,

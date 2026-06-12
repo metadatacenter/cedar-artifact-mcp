@@ -342,6 +342,7 @@ through the library and passed its structural validation.
 | Create | `create_template` · `create_element` · `create_field` · `create_instance` |
 | Compose | `add_field` · `add_element` · `remove_child` |
 | Controlled term constraints | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` |
+| Literal options | `set_options` |
 | Default values | `set_default_value` · `set_iri_default_value` · `set_controlled_term_default_value` |
 | Instance values | `set_field_value` · `set_iri_field_value` · `set_controlled_term_field_value` |
 | Validate | `validate_template` · `validate_element` · `validate_field` · `validate_artifact` · `validate_instance` |
@@ -385,6 +386,8 @@ fields, common configuration is accepted inline:
 - numeric: `datatype`, `min_value`, `max_value`, `decimal_places`, `unit`
 - temporal: `datatype`, `granularity`, `input_time_format`, `input_time_zone`
 - text / text-area: `min_length`, `max_length`, `regex`
+- radio / checkbox / single- and multi-select list: `options` (the option list, in
+  display order; change or reorder later with `set_options`)
 
 For fields whose shape needs structured sub-objects (controlled-term values,
 inline radio/checkbox/list options, multi-instance configuration, default
@@ -442,6 +445,16 @@ All four constraint tools accept either an empty controlled-term field or a
 plain text-field as input — the library only classifies a field as
 controlled-term once it carries at least one constraint, so the two are wire-
 indistinguishable until then.
+
+### `set_options(field, options, default_option?)`
+
+Replaces the literal option list of a choice field — radio, checkbox, or single-/
+multi-select list — the literal-values counterpart of the `set_*_constraint` tools.
+`options` is the complete list in display order (replace semantics: state the full
+list every time; reordering is calling again with the new order). `default_option`
+optionally names the one option that is pre-selected; it must be a member of
+`options`. Other field kinds are rejected with a redirect. Inline options can also
+be supplied at creation time via `create_field`'s `options`.
 
 ### `set_default_value(field, value)`
 

@@ -54,7 +54,8 @@ public final class SetDefaultValueTool
         "description",
         "Default value to set. String for text/temporal/phone/email/radio/checkbox/"
             + "list fields; number for numeric fields. Type must match the field's "
-            + "input type."));
+            + "input type. For choice fields (radio/checkbox/list), pre-selecting one of "
+            + "the options is canonically done with set_options' default_option instead."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("field", "value"), Boolean.FALSE, null, null);
