@@ -158,6 +158,21 @@ final class ArtifactInputRobustnessTest
     assertCleanErrors("create_template_instance", CreateTemplateInstanceTool::handler, "template");
   }
 
+  @Test void create_element_instance_survives_garbage_elements()
+  {
+    assertCleanErrors("create_element_instance", CreateElementInstanceTool::handler, "element");
+  }
+
+  @Test void set_element_instance_survives_garbage_artifacts()
+  {
+    assertCleanErrors("set_element_instance", SetElementInstanceTool::handler, "template");
+  }
+
+  @Test void validate_element_instance_survives_garbage_elements()
+  {
+    assertCleanErrors("validate_element_instance", ValidateElementInstanceTool::handler, "element");
+  }
+
   @Test void set_literal_default_value_survives_garbage_fields()
   {
     assertCleanErrors("set_literal_default_value",

@@ -119,6 +119,107 @@ final class SetElementInstanceToolTest
         "the fresh sub-record must replace the old one; got: " + yaml);
   }
 
+  @Test void grafts_at_a_nested_path_inside_a_single_instance_element()
+  {
+    // contact (single element) containing addresses (multi element): the walker must
+    // descend through the single-element step before applying the leaf.
+    String contact = textOf(invokeTool(AddElementTool::handler, "add_element", Map.of(
+        "parent", textOf(invokeTool(CreateElementTool::handler, "create_element",
+            Map.of("name", "Contact"))),
+        "child", addressElement(),
+        "key", "addresses",
+        "isMultiInstance", true)));
+    String template = textOf(invokeTool(AddElementTool::handler, "add_element", Map.of(
+        "parent", createTemplate(),
+        "child", contact,
+        "key", "contact")));
+    String instance = createInstance(template);
+
+    instance = textOf(invokeTool(SetElementInstanceTool::handler, "set_element_instance", Map.of(
+        "template", template, "instance", instance,
+        "field_path", "contact/addresses[0]", "element_instance", createEntry())));
+    String yaml = textOf(invokeTool(SetLiteralFieldValueTool::handler, "set_literal_field_value", Map.of(
+        "template", template, "instance", instance,
+        "field_path", "contact/addresses[0]/street", "value", "Nested St")));
+
+    assertTrue(yaml.contains("Nested St"),
+        "the nested-path graft must be fillable; got: " + yaml);
+  }
+
+  @Test void grafts_below_an_indexed_multi_element_step()
+  {
+    // addresses (multi element) whose entries contain geo (single element): the walker's
+    // indexed-intermediate descent must rebuild the right list entry.
+    String geo = textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
+        "parent", textOf(invokeTool(CreateElementTool::handler, "create_element",
+            Map.of("name", "Geo"))),
+        "child", createField("Lat", "text-field"),
+        "key", "lat")));
+    String address = textOf(invokeTool(AddElementTool::handler, "add_element", Map.of(
+        "parent", addressElement(),
+        "child", geo,
+        "key", "geo")));
+    String template = textOf(invokeTool(AddElementTool::handler, "add_element", Map.of(
+        "parent", createTemplate(),
+        "child", address,
+        "key", "addresses",
+        "isMultiInstance", true)));
+    String instance = createInstance(template);
+
+    // Append an address entry, fill its geo's lat, then replace just the geo sub-record:
+    // the lat value must disappear while the street stays untouched.
+    String addressEntry = textOf(invokeTool(CreateElementInstanceTool::handler, "create_element_instance",
+        Map.of("element", address)));
+    instance = textOf(invokeTool(SetElementInstanceTool::handler, "set_element_instance", Map.of(
+        "template", template, "instance", instance,
+        "field_path", "addresses[0]", "element_instance", addressEntry)));
+    instance = textOf(invokeTool(SetLiteralFieldValueTool::handler, "set_literal_field_value", Map.of(
+        "template", template, "instance", instance,
+        "field_path", "addresses[0]/street", "value", "Kept St")));
+    instance = textOf(invokeTool(SetLiteralFieldValueTool::handler, "set_literal_field_value", Map.of(
+        "template", template, "instance", instance,
+        "field_path", "addresses[0]/geo/lat", "value", "42.0")));
+
+    String geoEntry = textOf(invokeTool(CreateElementInstanceTool::handler, "create_element_instance",
+        Map.of("element", geo)));
+    String yaml = textOf(invokeTool(SetElementInstanceTool::handler, "set_element_instance", Map.of(
+        "template", template, "instance", instance,
+        "field_path", "addresses[0]/geo", "element_instance", geoEntry)));
+
+    assertFalse(yaml.contains("42.0"), "the replaced geo must lose its lat; got: " + yaml);
+    assertTrue(yaml.contains("Kept St"), "the sibling street must survive; got: " + yaml);
+  }
+
+  @Test void appended_entries_can_be_deleted_with_unset()
+  {
+    // The full lifecycle across the new and existing tools: append two entries, fill one,
+    // delete the other, and the survivor keeps its value.
+    String template = multiAddressTemplate();
+    String instance = createInstance(template);
+    String entry = createEntry();
+
+    instance = textOf(invokeTool(SetElementInstanceTool::handler, "set_element_instance", Map.of(
+        "template", template, "instance", instance,
+        "field_path", "addresses[0]", "element_instance", entry)));
+    instance = textOf(invokeTool(SetElementInstanceTool::handler, "set_element_instance", Map.of(
+        "template", template, "instance", instance,
+        "field_path", "addresses[1]", "element_instance", entry)));
+    instance = textOf(invokeTool(SetLiteralFieldValueTool::handler, "set_literal_field_value", Map.of(
+        "template", template, "instance", instance,
+        "field_path", "addresses[1]/street", "value", "Survivor St")));
+
+    String yaml = textOf(invokeTool(UnsetFieldValueTool::handler, "unset_field_value", Map.of(
+        "template", template, "instance", instance, "field_path", "addresses[0]")));
+
+    assertTrue(yaml.contains("Survivor St"),
+        "the remaining entry keeps its value; got: " + yaml);
+    String refilled = textOf(invokeTool(SetLiteralFieldValueTool::handler, "set_literal_field_value", Map.of(
+        "template", template, "instance", yaml,
+        "field_path", "addresses[0]/street", "value", "Updated St")));
+    assertTrue(refilled.contains("Updated St"),
+        "the survivor must have shifted to index 0 after the delete; got: " + refilled);
+  }
+
   @Test void rejects_an_index_gap()
   {
     McpSchema.CallToolResult result = SetElementInstanceTool.handler(null,
