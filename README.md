@@ -528,21 +528,6 @@ expanded-YAML artifact for a lean display (`isCompact: true`, no JSON detour) an
 **import** an external JSON Schema artifact into the YAML loop. `isCompact` defaults to
 `true`; pass `false` for the expanded, provenance-preserving exchange form.
 
-Example YAML an export tool accepts (and the create/add/set tools emit):
-
-```yaml
-type: template
-name: Patient demographics
-description: Minimal demographics template
-version: 0.1.0
-status: draft
-modelVersion: 1.6.0
-children:
-  - key: patient_name
-    type: text-field
-    name: Patient name
-    description: Free-text patient name
-```
 
 ### `ping(message)`
 
