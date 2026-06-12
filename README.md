@@ -313,7 +313,11 @@ CedarValidator. A non-error result from any tool is guaranteed to have round-tri
 through the library and passed its structural validation.
 
 **Compact vs expanded (`isCompact`).** Artifact-returning tools take an optional
-`isCompact` flag. Schema artifacts (template/element/field) **default to compact** — the
+`isCompact` flag. It is a **rendering flag, not a creation flag**: it never changes the
+artifact a tool builds or modifies, only the YAML view of it the tool returns. It appears
+on the `create_*` / `add_*` / `set_*` tools anyway because artifacts thread between tools
+*as* that returned YAML — the view you choose is the artifact the next tool receives.
+Schema artifacts (template/element/field) **default to compact** — the
 lean form that drops provenance (status, version, modelVersion) but keeps the full
 structure and `@id`; pass `isCompact: false` for the expanded, fully-provenanced form to
 persist to a repository. Instances are **sparse** in either mode — a field with no value is
