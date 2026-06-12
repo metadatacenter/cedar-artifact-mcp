@@ -13,16 +13,16 @@ import java.util.function.BiConsumer;
 
 /**
  * Walks a CEDAR template instance to a {@code field_path} whose leaf names an
- * <em>element</em> child and sets a whole sub-record there — the element counterpart of
+ * <em>element</em> child and sets a whole element instance there — the element counterpart of
  * {@link InstanceFieldValues}, which sets leaf field values.
  *
  * <p>Leaf semantics, decided against the schema:
  * <ul>
- *   <li>single-instance element, no index — replace the sub-record;</li>
+ *   <li>single-instance element, no index — replace the element instance;</li>
  *   <li>multi-instance element with {@code [N]} — N &lt; size replaces entry N, N == size
  *       appends (the same append rule as multi-instance leaf fields), N &gt; size errors;</li>
  *   <li>multi-instance element without an index — an error; entries are positional, so the
- *       call must say where the sub-record goes.</li>
+ *       call must say where the element instance goes.</li>
  * </ul>
  *
  * <p>Intermediate segments follow the same rules as the other instance walkers: element
@@ -42,7 +42,7 @@ final class InstanceElementValues
   {
     List<SchemaPaths.Segment> segments = SchemaPaths.parse(path);
     ElementSchemaArtifact leafSchema = classifyLeaf(template, segments, path);
-    // Inflate the incoming sub-record against its schema so every child slot exists. This is
+    // Inflate the incoming element instance against its schema so every child slot exists. This is
     // what keeps the entry recognizable as an element at the serialization boundaries (the
     // JSON form derives its @context from the children) and immediately addressable by the
     // set_*_field_value walkers.
@@ -73,7 +73,7 @@ final class InstanceElementValues
     SchemaPaths.Segment leaf = segments.get(segments.size() - 1);
     if (!current.isElement(leaf.key()))
       throw new IllegalArgumentException("'" + leaf.key() + "' is not an element child of "
-          + "the schema — set_element_instance places whole sub-records; for field values "
+          + "the schema — set_element_instance places whole element instances; for field values "
           + "use the set_*_field_value tools (looking up field_path '" + path + "')");
     ElementSchemaArtifact leafSchema = current.getElementSchemaArtifact(leaf.key());
     if (leafSchema.isMultiple() && !leaf.hasIndex())

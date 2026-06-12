@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Tests for {@code validate_element_instance} — an element artifact is itself the JSON
  * Schema its instances validate against, so the tool runs the canonical
  * CedarValidator.validateTemplateInstance with the element as the schema document. The
- * sub-record is checked in its nested shape (standalone identity keys dropped).
+ * element instance is checked in its nested shape (standalone identity keys dropped).
  */
 final class ValidateElementInstanceToolTest
 {
@@ -42,7 +42,7 @@ final class ValidateElementInstanceToolTest
 
     assertFalse(result.isError(), errorText(result));
     assertTrue(textOf(result).contains("\"valid\" : false"),
-        "a misshapen sub-record must yield an invalid report; got: " + textOf(result));
+        "a misshapen element instance must yield an invalid report; got: " + textOf(result));
   }
 
   @Test void an_unknown_child_is_reported_invalid()

@@ -15,8 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for {@code create_element_instance} + {@code set_element_instance} — the
- * instance-side compose pair that makes multi-instance elements fillable: create a
- * sub-record from the element schema, graft it into the parent instance (append at
+ * instance-side compose pair that makes multi-instance elements fillable: create an
+ * element instance from the element schema, graft it into the parent instance (append at
  * index == size), then fill its fields with the regular value tools.
  */
 final class SetElementInstanceToolTest
@@ -55,7 +55,7 @@ final class SetElementInstanceToolTest
   @Test void appends_entries_and_fills_them_end_to_end()
   {
     // The full workflow the pair exists for: a repeated element starts as an empty list;
-    // appending sub-records at index == size creates the entries, and the regular value
+    // appending element instances at index == size creates the entries, and the regular value
     // tools then address fields inside them.
     String template = multiAddressTemplate();
     String instance = createInstance(template);
@@ -116,7 +116,7 @@ final class SetElementInstanceToolTest
         "field_path", "address", "element_instance", createEntry())));
 
     assertFalse(yaml.contains("Old St"),
-        "the fresh sub-record must replace the old one; got: " + yaml);
+        "the fresh element instance must replace the old one; got: " + yaml);
   }
 
   @Test void grafts_at_a_nested_path_inside_a_single_instance_element()
@@ -166,7 +166,7 @@ final class SetElementInstanceToolTest
         "isMultiInstance", true)));
     String instance = createInstance(template);
 
-    // Append an address entry, fill its geo's lat, then replace just the geo sub-record:
+    // Append an address entry, fill its geo's lat, then replace just the geo element instance:
     // the lat value must disappear while the street stays untouched.
     String addressEntry = textOf(invokeTool(CreateElementInstanceTool::handler, "create_element_instance",
         Map.of("element", address)));

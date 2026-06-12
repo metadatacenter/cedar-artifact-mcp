@@ -14,14 +14,14 @@ import java.util.Map;
 
 /**
  * MCP tool {@code create_element_instance} — walks an element schema and produces an
- * empty element-instance sub-record, the element counterpart of
+ * empty element instance, the element counterpart of
  * {@code create_template_instance}. The result is a standalone artifact
  * ({@code type: element-instance}) meant to be grafted into a template instance with
  * {@code set_element_instance} — most usefully into a multi-instance element list, which
  * is the one slot kind {@code create_template_instance} cannot pre-populate (it has no
  * way to know how many entries an instance will need).
  *
- * <p>No CedarValidator step at creation: validate the sub-record standalone with
+ * <p>No CedarValidator step at creation: validate the element instance standalone with
  * {@code validate_element_instance}, or in context once attached via
  * {@code validate_instance}.
  */
@@ -40,15 +40,15 @@ public final class CreateElementInstanceTool
     properties.put("name", Map.of(
         "type", "string",
         "description",
-        "Human-readable name for the sub-record. Optional; defaults to the element's own "
+        "Human-readable name for the element instance. Optional; defaults to the element's own "
             + "schema:name."));
     properties.put("description", Map.of(
         "type", "string",
-        "description", "Optional description for the sub-record."));
+        "description", "Optional description for the element instance."));
     properties.put("id", Map.of(
         "type", "string",
         "description",
-        "Optional @id for the sub-record. Omit it and a fresh "
+        "Optional @id for the element instance. Omit it and a fresh "
             + "'https://repo.metadatacenter.org/template-element-instances/<uuid>' IRI is "
             + "auto-minted."));
 
@@ -59,11 +59,11 @@ public final class CreateElementInstanceTool
         .name("create_element_instance")
         .title("Create an empty element instance from a CEDAR element")
         .description(
-            "Walks a CEDAR element and produces an empty element-instance sub-record — the "
+            "Walks a CEDAR element and produces an empty element instance — the "
                 + "element counterpart of create_template_instance. Graft it into a template "
                 + "instance with set_element_instance (e.g. to append an entry to a "
                 + "multi-instance element list), then fill its fields with the "
-                + "set_*_field_value tools. Returns the standalone sub-record as expanded "
+                + "set_*_field_value tools. Returns the standalone element instance as expanded "
                 + "YAML; validate it with validate_element_instance, or in context via "
                 + "validate_instance once attached."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)

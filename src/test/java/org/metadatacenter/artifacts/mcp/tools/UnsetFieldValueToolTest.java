@@ -130,8 +130,8 @@ final class UnsetFieldValueToolTest
 
     assertFalse(result.isError(), errorText(result));
     String yaml = textOf(result);
-    assertFalse(yaml.contains("First St"), "deleted sub-record must disappear; got: " + yaml);
-    assertTrue(yaml.contains("Second St"), "remaining sub-record must survive; got: " + yaml);
+    assertFalse(yaml.contains("First St"), "deleted element instance must disappear; got: " + yaml);
+    assertTrue(yaml.contains("Second St"), "remaining element instance must survive; got: " + yaml);
   }
 
   @Test void rejects_an_out_of_range_delete_index()
@@ -234,7 +234,7 @@ final class UnsetFieldValueToolTest
         "isMultiInstance", true)));
   }
 
-  /** A sparse address sub-record carrying just a street value. */
+  /** A sparse address element instance carrying just a street value. */
   private static ElementInstanceArtifact addressEntry(String street)
   {
     return ElementInstanceArtifact.builder()

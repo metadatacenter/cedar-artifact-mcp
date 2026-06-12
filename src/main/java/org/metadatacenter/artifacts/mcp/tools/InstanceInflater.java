@@ -48,7 +48,7 @@ final class InstanceInflater
     return builder.build();
   }
 
-  /** Inflate a (possibly sparse) element sub-record to a complete one against its element schema. */
+  /** Inflate a (possibly sparse) element instance to a complete one against its element schema. */
   static ElementInstanceArtifact inflateElement(ElementSchemaArtifact schema, ElementInstanceArtifact sparse)
   {
     ElementInstanceArtifact.Builder builder = ElementInstanceArtifact.builder(sparse);
@@ -61,7 +61,7 @@ final class InstanceInflater
     return builder.build();
   }
 
-  /** An all-empty sub-record matching the element schema — every regular child present, value-less. */
+  /** An all-empty element instance matching the element schema — every regular child present, value-less. */
   static ElementInstanceArtifact emptyElement(ElementSchemaArtifact schema)
   {
     ElementInstanceArtifact.Builder builder = ElementInstanceArtifact.builder();

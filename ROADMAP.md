@@ -89,12 +89,12 @@ centralizes read (YAML or JSON, auto-detected) and render.
   fields are seeded as empty groups; static fields are skipped; the instance `@id` is
   auto-minted when omitted.
 - `create_element_instance(element, name?, description?, id?)` — the element counterpart:
-  an empty sub-record as a standalone `type: element-instance` document (`@id` minted in the
+  an empty element instance as a standalone `type: element-instance` document (`@id` minted in the
   `template-element-instances` collection), to be grafted in with `set_element_instance`.
   Backed by the library's standalone element-instance serialization (readers, renderers, and
   the YAML `element-instance` document kind added for this).
-- `set_element_instance(template, instance, field_path, element_instance)` — grafts a
-  sub-record at an element path: single-instance replaces; `addresses[N]` replaces entry N or
+- `set_element_instance(template, instance, field_path, element_instance)` — grafts an
+  element instance at an element path: single-instance replaces; `addresses[N]` replaces entry N or
   appends when N equals the list size. This is what makes multi-instance elements fillable —
   repeated-element entries can now be appended, filled via `addresses[N]/...` paths, and
   deleted with `unset_field_value`.
@@ -110,7 +110,7 @@ centralizes read (YAML or JSON, auto-detected) and render.
 - `validate_instance(template, instance)` — `CedarValidator.validateTemplateInstance`.
 - `validate_element_instance(element, element_instance)` — `CedarValidator.validateElementInstance`
   with the element as the schema document (an element artifact is itself the JSON Schema its
-  instances validate against); the sub-record is checked in its nested shape.
+  instances validate against); the element instance is checked in its nested shape.
 
 ### Export / import
 

@@ -25,7 +25,7 @@ import java.util.function.BiConsumer;
  *   <li>multi-instance field with {@code [N]} — delete entry N (the list shrinks and
  *       later indices shift down);</li>
  *   <li>multi-instance field without an index — clear the whole list;</li>
- *   <li>multi-instance element with {@code [N]} — delete that sub-record entirely;</li>
+ *   <li>multi-instance element with {@code [N]} — delete that element instance entirely;</li>
  *   <li>multi-instance element without an index — clear the whole list.</li>
  * </ul>
  *

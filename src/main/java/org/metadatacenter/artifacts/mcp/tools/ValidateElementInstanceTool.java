@@ -15,13 +15,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code validate_element_instance} — validates an element-instance sub-record
+ * MCP tool {@code validate_element_instance} — validates an element instance
  * against its element. A CEDAR element artifact <em>is</em> the JSON Schema that
  * validates its instances in situ, so {@link CedarValidator#validateElementInstance}
  * is the same schema-against-document check the template-level tool makes, with the
  * element schema as the schema document.
  *
- * <p>The sub-record is validated in its <em>nested</em> shape — as it would sit inside a
+ * <p>The element instance is validated in its <em>nested</em> shape — as it would sit inside a
  * parent instance: the standalone document's identity keys ({@code schema:name},
  * {@code schema:description}) are not part of that shape ({@code additionalProperties:
  * false} in the element schema) and are dropped before validating.
@@ -39,12 +39,12 @@ public final class ValidateElementInstanceTool
     properties.put("element", Map.of(
         "type", "string",
         "description",
-        "CEDAR element as YAML (the kind 'create_element' returns). The sub-record is "
+        "CEDAR element as YAML (the kind 'create_element' returns). The element instance is "
             + "validated against this element. JSON Schema is also accepted."));
     properties.put("element_instance", Map.of(
         "type", "string",
         "description",
-        "Element-instance sub-record as YAML — the kind 'create_element_instance' returns "
+        "Element instance as YAML — the kind 'create_element_instance' returns "
             + "(type: element-instance). JSON is also accepted."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
@@ -55,9 +55,9 @@ public final class ValidateElementInstanceTool
         .name("validate_element_instance")
         .title("Validate an element instance against its element")
         .description(
-            "Validates an element-instance sub-record against its element using the "
+            "Validates an element instance against its element using the "
                 + "canonical CedarValidator (an element is itself the JSON Schema its "
-                + "instances validate against). The sub-record is checked in its nested "
+                + "instances validate against). The element instance is checked in its nested "
                 + "shape — exactly as it would sit inside a parent instance. Returns a "
                 + "structured report: {\"valid\": true} on success, or {\"valid\": false, "
                 + "\"errors\": [...]} with the validator's diagnostics on failure.")
@@ -86,7 +86,7 @@ public final class ValidateElementInstanceTool
     }
 
     // The exchange YAML is sparse (unset fields omitted); the JSON shape the validator checks
-    // requires every slot present, so inflate against the element first. If the sub-record
+    // requires every slot present, so inflate against the element first. If the element instance
     // can't be parsed/inflated as an element instance, validate it in its raw form so the
     // validator's diagnostics come back as a normal {"valid": false, ...} report rather than
     // a tool error.

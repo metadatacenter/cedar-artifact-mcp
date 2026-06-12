@@ -493,7 +493,7 @@ text-field is refused with a redirect to the constraint tools.
 
 ### `create_element_instance(element, name?, description?, id?)`
 
-Walks an element and produces an empty element-instance sub-record — the
+Walks an element and produces an empty element instance — the
 element counterpart of `create_template_instance`, returned as a standalone
 `type: element-instance` YAML document. Its purpose is composition: graft it
 into a template instance with `set_element_instance`, most usefully to append
@@ -501,7 +501,7 @@ an entry to a multi-instance element list (the one slot kind
 `create_template_instance` cannot pre-populate, since it can't know how many
 entries an instance will need), then fill its fields with the value tools.
 The `@id` is auto-minted as a `template-element-instances` IRI when omitted.
-Validate the sub-record standalone with `validate_element_instance`, or in
+Validate the element instance standalone with `validate_element_instance`, or in
 context via `validate_instance` once attached.
 
 ### `set_literal_field_value(template, instance, field_path, value)`
@@ -521,15 +521,15 @@ as controlled-term (with at least one `set_*_constraint` already attached).
 
 ### `set_element_instance(template, instance, field_path, element_instance)`
 
-Grafts an element-instance sub-record (from `create_element_instance`) into a
+Grafts an element instance (from `create_element_instance`) into a
 template instance at a `field_path` naming an *element* child. A
-single-instance element path (`address`) replaces the sub-record; an indexed
+single-instance element path (`address`) replaces the element instance; an indexed
 multi-instance path (`addresses[2]`) replaces that entry, or **appends** when
 the index equals the current list size — the way to add entries to a repeated
 element, which is otherwise impossible (a fresh instance's repeated elements
 are empty lists, and the value tools require entries to exist). After
 appending, fill the entry's fields at `addresses[N]/...` paths. The incoming
-sub-record is inflated against the element schema on the way in, so every
+element instance is inflated against the element schema on the way in, so every
 child slot is immediately addressable.
 
 ### `unset_field_value(template, instance, field_path)`
@@ -581,10 +581,10 @@ diagnostics on failure.
 
 ### `validate_element_instance(element, element_instance)`
 
-Validates an element-instance sub-record (the kind `create_element_instance`
+Validates an element instance (the kind `create_element_instance`
 returns) against its element — an element artifact is itself the JSON Schema
 its instances validate against, so this is the same canonical validator call
-with the element as the schema document. The sub-record is checked in its
+with the element as the schema document. The element instance is checked in its
 *nested* shape, exactly as it would sit inside a parent instance (the
 standalone document's `name`/`description` identity keys are not part of that
 shape and are dropped before validating).

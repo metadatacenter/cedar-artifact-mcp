@@ -70,8 +70,8 @@ public final class ReplaceElementTool
         "type", "boolean",
         "default", Boolean.FALSE,
         "description",
-        "Whether the element appears as a list (array of sub-records) rather than a single "
-            + "sub-record in instances of the parent. Optional; defaults to false. Overrides "
+        "Whether the element appears as a list (array of nested objects) rather than a "
+            + "single nested object in instances of the parent. Optional; defaults to false. Overrides "
             + "whatever isMultiple setting the child JSON already carries — this is the "
             + "per-add-site control, since the same reusable element may be single-instance "
             + "in one parent and multi-instance in another."));

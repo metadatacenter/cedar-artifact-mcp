@@ -15,14 +15,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code set_element_instance} — grafts an element-instance sub-record (the kind
+ * MCP tool {@code set_element_instance} — grafts an element instance (the kind
  * {@code create_element_instance} returns) into a template instance at a slash-separated
  * {@code field_path} naming an element child.
  *
  * <p>This is the instance-side compose step that makes multi-instance elements fillable:
  * {@code create_template_instance} seeds them as empty lists, and the
- * {@code set_*_field_value} walkers require intermediate entries to exist. Appending a
- * sub-record here ({@code addresses[N]} with N == current size) creates the entry; its
+ * {@code set_*_field_value} walkers require intermediate entries to exist. Appending an
+ * element instance here ({@code addresses[N]} with N == current size) creates the entry; its
  * fields are then set with the regular value tools at {@code addresses[N]/...} paths.
  */
 public final class SetElementInstanceTool
@@ -49,13 +49,13 @@ public final class SetElementInstanceTool
         "description",
         "Slash-separated path to the element child. Same syntax as "
             + "'set_literal_field_value', but the leaf must name an element: a "
-            + "single-instance path ('address') replaces the sub-record; an indexed "
+            + "single-instance path ('address') replaces the element instance; an indexed "
             + "multi-instance path ('addresses[2]') replaces entry 2, or appends when the "
             + "index equals the current list size."));
     properties.put("element_instance", Map.of(
         "type", "string",
         "description",
-        "Element-instance sub-record as YAML — the kind 'create_element_instance' returns "
+        "Element instance as YAML — the kind 'create_element_instance' returns "
             + "(type: element-instance). JSON is also accepted."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
@@ -65,11 +65,11 @@ public final class SetElementInstanceTool
 
     return McpSchema.Tool.builder()
         .name("set_element_instance")
-        .title("Set an element sub-record on an instance")
+        .title("Set an element instance on a template instance")
         .description(
-            "Grafts an element-instance sub-record (from create_element_instance) into a "
+            "Grafts an element instance (from create_element_instance) into a "
                 + "CEDAR template instance at a slash-separated field_path naming an element "
-                + "child. A single-instance element path replaces the sub-record; an indexed "
+                + "child. A single-instance element path replaces the element instance; an indexed "
                 + "multi-instance path replaces that entry, or appends when the index equals "
                 + "the current list size — the way to add entries to a repeated element. "
                 + "Fill the entry's fields afterwards with the set_*_field_value tools at "
