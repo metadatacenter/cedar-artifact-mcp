@@ -334,7 +334,7 @@ through the library and passed its structural validation.
 | Group | Tools |
 |---|---|
 | Create | `create_template` · `create_element` · `create_field` · `create_instance` |
-| Compose | `add_field` · `add_element` · `remove_child` |
+| Compose | `add_child` · `remove_child` |
 | Controlled term constraints | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` |
 | Default values | `set_default_value` · `set_iri_default_value` · `set_controlled_term_default_value` |
 | Instance values | `set_field_value` · `set_iri_field_value` · `set_controlled_term_field_value` |
@@ -358,7 +358,7 @@ JSON boundary (`validate_instance`, `instance_to_json`).
 
 Creates a new, empty CEDAR template. `version` and `status` are optional and default to
 `0.0.1` / `draft`. Pass the returned template into
-`add_field` or `add_element` to attach children, or into `create_instance` to
+`add_child` to attach children, or into `create_instance` to
 make an empty instance of it. `id` is optional: supply one assigned by a CEDAR
 repository, or omit it and a fresh `templates` IRI is auto-minted.
 
@@ -383,25 +383,21 @@ fields, common configuration is accepted inline:
 For fields whose shape needs structured sub-objects (controlled-term values,
 inline radio/checkbox/list options, multi-instance configuration, default
 values), author the field directly as YAML and pass it to whatever consumes it
-(`add_field`, the `set_*` tools, …) — the threading tools accept YAML. Constraints
+(`add_child`, the `set_*` tools, …) — the threading tools accept YAML. Constraints
 and default values can also be layered on via the `set_*_constraint` and `set_*_default_value`
 tools. `id` is optional; omit it and a fresh `template-fields` IRI is
 auto-minted (a field is a first-class, reusable CEDAR artifact, so a standalone
 one gets an id like any other top-level artifact).
 
-### `add_field(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
+### `add_child(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
 
-Adds an existing field as a child of a template or element parent. The
-per-add-site overrides set how the field appears in *this* parent — the key it
-binds to, the label and description shown in the UI, whether it's
-single-instance or multi-instance (with optional `minItems` / `maxItems`).
-They're per-add-site because the same reusable field may be used differently in
-different parents.
-
-### `add_element(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
-
-Element variant of `add_field`: adds an existing element as a child of a
-template or element parent. Same per-add-site overrides apply.
+Adds an existing field or element as a child of a template or element parent — the
+inverse of `remove_child`. Both kinds are inferred from the artifacts themselves, so
+there is nothing to classify. The per-add-site overrides set how the child appears in
+*this* parent — the key it binds to, the label and description shown in the UI, whether
+it's single-instance or multi-instance (with optional `minItems` / `maxItems`). They're
+per-add-site because the same reusable child may be used differently in different
+parents.
 
 ### `remove_child(parent, key)`
 

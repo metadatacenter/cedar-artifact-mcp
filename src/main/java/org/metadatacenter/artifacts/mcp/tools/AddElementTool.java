@@ -18,12 +18,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code add_element} — adds an existing element (passed as YAML) as a child
- * of an existing parent (template or element) artifact.
- *
- * <p>Pairs with {@link AddFieldTool}: this is the "add an entire sub-tree" path where
- * the child element has already been composed (likely by an earlier
- * {@code create_element} call).
+ * The element-grafting half of the {@code add_child} tool ({@link AddChildTool} detects the
+ * child's kind and dispatches here). Takes a pre-built child — the kind {@code create_element}
+ * returns — and grafts it onto a template or element parent under the supplied key.
  */
 public final class AddElementTool
 {
@@ -32,73 +29,6 @@ public final class AddElementTool
   private static final ModelValidator VALIDATOR = new CedarValidator();
 
   private AddElementTool() {}
-
-  public static McpSchema.Tool tool()
-  {
-    Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("parent", Map.of(
-        "type", "string",
-        "description",
-        "Parent CEDAR template or element as YAML (the exchange form). Kind is inferred "
-            + "from the artifact. JSON Schema is also accepted."));
-    properties.put("child", Map.of(
-        "type", "string",
-        "description",
-        "Child CEDAR element as YAML to add — the kind of artifact 'create_element' "
-            + "returns. JSON Schema is also accepted."));
-    properties.put("key", Map.of(
-        "type", "string",
-        "description",
-        "Property key under which the child element appears in the parent (the JSON "
-            + "Schema 'properties' map key). Optional; defaults to the child element's "
-            + "own schema:name. The library rejects duplicate keys, so supply an "
-            + "explicit key when adding two children with the same name."));
-    properties.put("name", Map.of(
-        "type", "string",
-        "description",
-        "Optional property label override for the parent's _ui block. If omitted, the "
-            + "child element's own schema:name is used."));
-    properties.put("description", Map.of(
-        "type", "string",
-        "description",
-        "Optional property description override for the parent's _ui block. If omitted, "
-            + "the child element's own schema:description is used."));
-    properties.put("isMultiInstance", Map.of(
-        "type", "boolean",
-        "default", Boolean.FALSE,
-        "description",
-        "Whether the element appears as a list (array of nested objects) rather than a "
-            + "single object in instances of the parent. Optional; defaults to false. "
-            + "Overrides whatever isMultiple setting the child JSON already carries — "
-            + "this is the per-add-site control, since the same reusable element may be "
-            + "single-instance in one parent and multi-instance in another."));
-    properties.put("minItems", Map.of(
-        "type", "integer",
-        "description",
-        "Minimum number of instances when isMultiInstance is true. Optional; left unset "
-            + "if omitted. Only meaningful for multi-instance elements."));
-    properties.put("maxItems", Map.of(
-        "type", "integer",
-        "description",
-        "Maximum number of instances when isMultiInstance is true. Optional; left unset "
-            + "if omitted. Only meaningful for multi-instance elements."));
-
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties,
-        List.of("parent", "child"),
-        Boolean.FALSE, null, null);
-
-    return McpSchema.Tool.builder()
-        .name("add_element")
-        .title("Add a CEDAR element to a template or element parent")
-        .description(
-            "Adds an existing CEDAR element (as YAML) as a child of a CEDAR template or "
-                + "element. Parent kind is inferred from the artifact. Returns the "
-                + "updated parent as expanded YAML, re-validated with CedarValidator."
-                + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
-        .build();
-  }
 
   public static McpSchema.CallToolResult handler(
       McpSyncServerExchange exchange, McpSchema.CallToolRequest request)

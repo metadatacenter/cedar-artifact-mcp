@@ -6,7 +6,7 @@ import org.metadatacenter.model.ModelNodeNames;
 
 /**
  * Inspects an incoming CEDAR JSON Schema artifact and tells callers whether it's a
- * template or an element parent. Shared by the {@code add_field} and {@code add_element}
+ * template or an element parent. Shared by the {@code add_child} grafting
  * tools, both of which dispatch on parent kind when calling into the library's
  * reader / builder / renderer triangle.
  */

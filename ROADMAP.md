@@ -45,7 +45,7 @@ centralizes read (YAML or JSON, auto-detected) and render.
 
 ### Incremental builders
 
-- `add_field` / `add_element(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
+- `add_child(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
   — graft an existing child artifact onto a template or element parent; parent kind inferred
   from the artifact. Per-add-site overrides for key, label, description, multi-instance flag,
   and cardinality bounds.
@@ -106,7 +106,7 @@ centralizes read (YAML or JSON, auto-detected) and render.
   target state.
 
 - **Replacing children in place** — replacing a child still requires `remove_child` + an
-  `add_*`. A dedicated `replace_child` would be ergonomic if a workflow needs it.
+  `add_child`. A dedicated `replace_child` would be ergonomic if a workflow needs it.
 
 - **Render-if-present as the one YAML form** — idea, not yet decided. Mutating tools now
   always return the expanded exchange form and `isCompact` survives only on the `*_to_yaml`

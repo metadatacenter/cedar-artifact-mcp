@@ -97,7 +97,7 @@ final class ArtifactExchange
    */
   static final String STANDALONE_NOTICE =
       " The artifact is returned standalone — it is NOT added to any template or element. "
-          + "Attach it to a parent only via add_field / add_element, and only when the user "
+          + "Attach it to a parent only via add_child, and only when the user "
           + "explicitly asks for that step.";
 
   /**

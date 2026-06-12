@@ -54,7 +54,7 @@ public final class CreateElementTool
             "Builds an empty CEDAR element schema artifact with the supplied name, description, "
                 + "version, and status. Returns the artifact as expanded YAML — the exchange form. Reusable "
                 + "elements are first-class CEDAR artifacts; the returned YAML can be added to "
-                + "templates (add_element) or composed via other tools. Use 'element_to_json' to "
+                + "templates (add_child) or composed via other tools. Use 'element_to_json' to "
                 + "export the canonical JSON Schema." + ArtifactExchange.STANDALONE_NOTICE
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
