@@ -50,6 +50,9 @@ centralizes read (YAML or JSON, auto-detected) and render.
   — graft an existing child artifact onto a template or element parent; parent kind inferred
   from the artifact. Per-add-site overrides for key, label, description, multi-instance flag,
   and cardinality bounds.
+- `replace_field(parent, child, key, …)` / `replace_element(parent, child, key, …)` — replace
+  the child at a key in place, keeping its position in the parent's display order (where
+  `remove_child` + `add_*` would append). Same per-add-site overrides as the `add_*` pair.
 - `remove_child(parent, key)` — removes a field or element child, updating the
   parent's `_ui` order / label / description entries in lockstep.
 
@@ -113,9 +116,6 @@ centralizes read (YAML or JSON, auto-detected) and render.
   released, non-SNAPSHOT artifacts to a public Maven repository and pin this MCP to a
   released version. `cedar-cee-mcp` already resolves entirely from Maven Central and is the
   target state.
-
-- **Replacing children in place** — replacing a child still requires `remove_child` + an
-  `add_*`. A dedicated `replace_child` would be ergonomic if a workflow needs it.
 
 - **Child ordering is not exposed.** CEDAR templates and elements carry an explicit child
   order for display purposes (the `_ui.order` list; the order forms render fields in), and

@@ -340,7 +340,7 @@ through the library and passed its structural validation.
 | Group | Tools |
 |---|---|
 | Create | `create_template` · `create_element` · `create_field` · `create_instance` |
-| Compose | `add_field` · `add_element` · `remove_child` |
+| Compose | `add_field` · `add_element` · `replace_field` · `replace_element` · `remove_child` |
 | Controlled term constraints | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` |
 | Literal options | `set_options` |
 | Default values | `set_literal_default_value` · `set_iri_default_value` |
@@ -414,6 +414,20 @@ carries is preserved.
 Element variant of `add_field`: adds an existing element as a child of a
 template or element parent. The same per-add-site overrides apply except
 `isRequired` / `isHidden`, which are field-only.
+
+### `replace_field(parent, child, key, name?, description?, isMultiInstance?, minItems?, maxItems?, isRequired?, isHidden?)`
+
+Replaces the child at `key` with the supplied field, keeping the key and its
+position in the parent's display order (`remove_child` + `add_field` would move
+it to the end). The per-add-site overrides are the same as `add_field`'s and
+apply to the incoming field. The outgoing child may be a field or an element —
+the slot keeps its key either way. The typical workflow: pull a field out of
+the parent's YAML, refine it with the `set_*` tools, then swap it back in.
+
+### `replace_element(parent, child, key, name?, description?, isMultiInstance?, minItems?, maxItems?)`
+
+Element variant of `replace_field`, with the same per-add-site overrides as
+`add_element` (no `isRequired` / `isHidden`, which are field-only).
 
 ### `remove_child(parent, key)`
 
