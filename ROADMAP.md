@@ -88,7 +88,7 @@ centralizes read (YAML or JSON, auto-detected) and render.
   fields are seeded as empty groups; static fields are skipped; the instance `@id` is
   auto-minted when omitted.
 - `set_literal_field_value` / `set_iri_field_value` — set a value (the latter covers plain
-  IRI fields and controlled-term fields, which add a required `label` and optional `pref_label`)
+  IRI fields and controlled-term fields, which require a `label`)
   at a slash-separated `field_path` (bracketed indices for multi-instance leaves, e.g.
   `address/street`, `addresses[2]/street`, `emails[0]`; an index equal to the current list
   size appends).

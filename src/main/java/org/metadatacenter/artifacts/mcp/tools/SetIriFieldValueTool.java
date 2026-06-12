@@ -35,8 +35,8 @@ import java.util.Map;
  *
  * <p>IRI fields cover link, ROR, ORCID, PFAS, RRID, PubMed, NIH-grant-ID, DOI, and
  * controlled-term — anything whose instance carries an {@code @id} URI rather than a
- * literal {@code @value}. The controlled-term case additionally requires the label
- * (an {@code rdfs:label}) and takes an optional {@code skos:prefLabel}; the schema
+ * literal {@code @value}. The controlled-term case additionally requires the label,
+ * written as both {@code rdfs:label} and {@code skos:prefLabel}; the schema
  * must already declare the field controlled-term (it carries a class/ontology/branch/
  * value-set constraint), because a TEXTFIELD without a constraint isn't classified as
  * ControlledTermField on JSON round-trip.
@@ -73,11 +73,6 @@ public final class SetIriFieldValueTool
         "Human-readable label for the IRI (rdfs:label). Optional for plain IRI fields "
             + "(commonly supplied alongside the URI when the LLM has resolved both); "
             + "required for controlled-term fields."));
-    properties.put("pref_label", Map.of(
-        "type", "string",
-        "description",
-        "Preferred label (skos:prefLabel); controlled-term fields only. Optional; "
-            + "defaults to the label when omitted."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
@@ -91,8 +86,8 @@ public final class SetIriFieldValueTool
             "Sets the @id of an IRI-valued field instance (link, ROR, ORCID, PFAS, "
                 + "RRID, PubMed, NIH-grant-ID, DOI, controlled-term) at a slash-separated "
                 + "field_path. label (rdfs:label) is optional for plain IRI fields and "
-                + "required for controlled-term fields, which also take an optional "
-                + "pref_label (skos:prefLabel). Returns the updated instance as expanded YAML."
+                + "required for controlled-term fields. Returns the updated instance as "
+                + "expanded YAML."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
@@ -127,7 +122,6 @@ public final class SetIriFieldValueTool
     }
 
     String label = stringArg(args, "label");  // optional for plain IRI fields
-    String prefLabel = stringArg(args, "pref_label");  // controlled-term only
 
     ObjectNode templateObject;
     try {
@@ -185,16 +179,14 @@ public final class SetIriFieldValueTool
       if (inputType != FieldInputType.TEXTFIELD)
         return error("controlled-term fields must have input type TEXTFIELD; got "
             + inputType);
-      String finalPrefLabel = (prefLabel == null || prefLabel.isBlank()) ? label : prefLabel;
+      // The label doubles as the skos:prefLabel — the instance carries both keys, but
+      // the tool keeps a single label parameter.
       newFieldInstance = ControlledTermFieldInstance.builder()
           .withValue(iri)
           .withLabel(label)
-          .withPreferredLabel(finalPrefLabel)
+          .withPreferredLabel(label)
           .build();
     } else {
-      if (prefLabel != null && !prefLabel.isBlank())
-        return error("pref_label applies only to controlled-term fields; a plain IRI "
-            + "value carries just an @id and an optional rdfs:label");
       FieldInputType inputType = schemaField.fieldUi().inputType();
       if (!inputType.isIri())
         return error("field at '" + fieldPath + "' has input type " + inputType

@@ -492,14 +492,14 @@ Sets the value of a literal-valued field on an instance — text, numeric,
 temporal, phone, email, radio, checkbox, list, or text-area. The value type
 must match the schema's input type.
 
-### `set_iri_field_value(template, instance, field_path, iri, label?, pref_label?)`
+### `set_iri_field_value(template, instance, field_path, iri, label?)`
 
 Sets the URI of any IRI-valued field on an instance — link, ROR, ORCID, PFAS,
 RRID, PubMed, NIH-grant-ID, DOI, or controlled-term. For the plain IRI kinds
 `label` (`rdfs:label`) is optional and typically supplied. For controlled-term
-fields `label` is required and `pref_label` (`skos:prefLabel`) is optional,
-defaulting to the label; the schema must declare the field as controlled-term
-(with at least one `set_*_constraint` already attached).
+fields `label` is required and is written as both `rdfs:label` and
+`skos:prefLabel`; the schema must declare the field as controlled-term (with at
+least one `set_*_constraint` already attached).
 
 #### Notes shared by the two instance-side value tools
 

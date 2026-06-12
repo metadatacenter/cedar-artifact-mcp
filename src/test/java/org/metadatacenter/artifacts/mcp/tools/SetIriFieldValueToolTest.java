@@ -96,32 +96,13 @@ final class SetIriFieldValueToolTest
         "instance", instanceJson,
         "field_path", "diagnosis",
         "iri", "http://purl.obolibrary.org/obo/DOID_1612",
-        "label", "breast cancer",
-        "pref_label", "breast cancer"));
+        "label", "breast cancer"));
 
     assertFalse(result.isError(), errorText(result));
     Map<String, Object> diag = child(parseYaml(result), "diagnosis");
     assertEquals("http://purl.obolibrary.org/obo/DOID_1612", diag.get("id"), "diagnosis id; got: " + diag);
     assertEquals("breast cancer", diag.get("label"), "diagnosis label; got: " + diag);
     assertEquals("breast cancer", diag.get("prefLabel"), "diagnosis prefLabel; got: " + diag);
-  }
-
-  @Test void pref_label_defaults_to_label_for_controlled_term()
-  {
-    String templateJson = controlledTermTemplate("diagnosis");
-    String instanceJson = createInstance(templateJson, "P");
-
-    McpSchema.CallToolResult result = invoke(Map.of(
-        "template", templateJson,
-        "instance", instanceJson,
-        "field_path", "diagnosis",
-        "iri", "http://purl.obolibrary.org/obo/DOID_1612",
-        "label", "breast cancer"));
-
-    assertFalse(result.isError(), errorText(result));
-    Map<String, Object> diag = child(parseYaml(result), "diagnosis");
-    assertEquals("breast cancer", diag.get("prefLabel"),
-        "prefLabel must default to label; got: " + diag);
   }
 
   @Test void rejects_controlled_term_value_without_label()
@@ -137,22 +118,6 @@ final class SetIriFieldValueToolTest
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("label"),
         "error should demand the label; got: " + errorText(result));
-  }
-
-  @Test void rejects_pref_label_on_a_plain_iri_field()
-  {
-    String templateJson = templateWithField(createField("ROR", "ext-ror-field"), "ror");
-    String instanceJson = createInstance(templateJson, "I");
-
-    McpSchema.CallToolResult result = invoke(Map.of(
-        "template", templateJson,
-        "instance", instanceJson,
-        "field_path", "ror",
-        "iri", "https://ror.org/00f54p054",
-        "pref_label", "Stanford"));
-    assertTrue(result.isError());
-    assertTrue(errorText(result).contains("pref_label"),
-        "error should explain pref_label is controlled-term only; got: " + errorText(result));
   }
 
   // -----------------------------------------------------------------
