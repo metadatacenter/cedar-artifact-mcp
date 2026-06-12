@@ -267,21 +267,6 @@ final class ArtifactExchange
   }
 
   /**
-   * The shared {@code identifier} input-schema property for the schema-artifact
-   * {@code create_*} tools: the user-assigned {@code schema:identifier}, distinct from the
-   * system {@code @id}.
-   */
-  static Map<String, Object> identifierSchemaProperty()
-  {
-    return Map.of(
-        "type", "string",
-        "description",
-        "User-assigned identifier for the artifact (schema:identifier) - e.g. a local "
-            + "accession or catalog code. Optional; distinct from the @id, which is the "
-            + "system identity IRI.");
-  }
-
-  /**
    * Parse the optional {@code status} argument using the YAML vocabulary ({@code draft} /
    * {@code published}). Absent defaults to {@link Status#DRAFT}; anything else throws
    * {@link IllegalArgumentException} with a caller-facing message.

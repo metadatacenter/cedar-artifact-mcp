@@ -343,22 +343,21 @@ either form — a field with no value is omitted entirely (no `null`, no `{}`, n
 the empty slots the canonical JSON form requires are reconstructed from the template at the
 JSON boundary (`validate_instance`, `instance_to_json`).
 
-### `create_template(name, description?, identifier?, version?, status?, id?)`
+### `create_template(name, description?, version?, status?, id?)`
 
 Creates a new, empty CEDAR template. `version` and `status` are optional and default to
-`0.0.1` / `draft`; `identifier` is an optional user-assigned `schema:identifier`,
-distinct from the system `@id`. Pass the returned template into
+`0.0.1` / `draft`. Pass the returned template into
 `add_field` or `add_element` to attach children, or into `create_instance` to
 make an empty instance of it. `id` is optional: supply one assigned by a CEDAR
 repository, or omit it and a fresh `templates` IRI is auto-minted.
 
-### `create_element(name, description?, identifier?, version?, status?, id?)`
+### `create_element(name, description?, version?, status?, id?)`
 
 Creates a new, empty CEDAR element — a reusable sub-schema that can be embedded
 inside templates or other elements. `id` is optional; omit it and a fresh
 `template-elements` IRI is auto-minted.
 
-### `create_field(type, name, description?, identifier?, version?, status?, id?, [type-specific config])`
+### `create_field(type, name, description?, version?, status?, id?, [type-specific config])`
 
 Creates a new CEDAR field of the requested kind: text, text-area, numeric,
 temporal, radio, checkbox, single- or multi-select list, controlled-term, link,

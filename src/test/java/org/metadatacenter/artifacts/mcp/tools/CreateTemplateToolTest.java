@@ -93,12 +93,6 @@ final class CreateTemplateToolTest
     assertTrue(yaml.containsKey("modelVersion"), "expanded form carries modelVersion; got: " + yaml);
   }
 
-  @Test void createTemplate_carriesIdentifierWhenSupplied() throws Exception
-  {
-    Map<String, Object> yaml = parseYaml(invoke(Map.of("name", "Catalogued", "identifier", "ACC-0042")));
-    assertEquals("ACC-0042", yaml.get("identifier"), "schema:identifier must round-trip; got: " + yaml);
-  }
-
   @Test void createTemplate_acceptsPublishedStatus() throws Exception
   {
     Map<String, Object> yaml = parseYaml(invoke(Map.of("name", "Done", "status", "published")));

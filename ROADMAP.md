@@ -32,9 +32,9 @@ centralizes read (YAML or JSON, auto-detected) and render.
 
 ### Builders
 
-- `create_template(name, description?, identifier?, version?, status?, id?)`
-- `create_element(name, description?, identifier?, version?, status?, id?)`
-- `create_field(type, name, description?, identifier?, version?, status?, id?, [type-specific config])`
+- `create_template(name, description?, version?, status?, id?)`
+- `create_element(name, description?, version?, status?, id?)`
+- `create_field(type, name, description?, version?, status?, id?, [type-specific config])`
   — `type` is the kebab-case vocabulary (text / text-area / numeric / temporal / radio /
   checkbox / single- and multi-select list / controlled-term / link / email / phone, the
   `ext-*` identifier fields, and the `static-*` placeholders). Numeric and temporal fields
