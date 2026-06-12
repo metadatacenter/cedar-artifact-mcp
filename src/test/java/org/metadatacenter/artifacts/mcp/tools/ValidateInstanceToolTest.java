@@ -24,10 +24,8 @@ final class ValidateInstanceToolTest
     // and a matching minimal instance. The instance carries the required JSON-LD
     // skeleton; the template has no child properties to enforce.
     String templateJson = createTemplate("Demographics");
-    // Build the matching instance from the same template. A freshly created template has
-    // no @id, so is_based_on must be supplied explicitly.
-    String instanceJson = createInstance(templateJson, "Patient 42", "One patient record",
-        "https://repo.metadatacenter.org/templates/abc");
+    // Build the matching instance from the same template; isBasedOn derives from its @id.
+    String instanceJson = createInstance(templateJson, "Patient 42", "One patient record");
 
     McpSchema.CallToolResult result = invoke(Map.of(
         "template", templateJson,
@@ -101,14 +99,13 @@ final class ValidateInstanceToolTest
   }
 
   private static String createInstance(
-      String templateJson, String name, String description, String isBasedOn)
+      String templateJson, String name, String description)
   {
     McpSchema.CallToolResult result = CreateInstanceTool.handler(null,
         new McpSchema.CallToolRequest("create_instance", Map.of(
             "template", templateJson,
             "name", name,
-            "description", description,
-            "is_based_on", isBasedOn)));
+            "description", description)));
     assertFalse(result.isError(),
         "fixture instance must build cleanly; got: " + errorText(result));
     return textOf(result);

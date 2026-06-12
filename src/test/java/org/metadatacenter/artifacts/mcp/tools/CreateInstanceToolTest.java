@@ -24,8 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 final class CreateInstanceToolTest
 {
-  private static final String FAKE_BASED_ON = "https://example.org/templates/test-fixture";
-
   private ObjectMapper jackson;
 
   @BeforeEach void setUp() { jackson = new ObjectMapper(); }
@@ -35,15 +33,14 @@ final class CreateInstanceToolTest
     String templateJson = createTemplate("Demographics");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template", templateJson,
-        "is_based_on", FAKE_BASED_ON));
+        "template", templateJson));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
 
     assertEquals("Demographics", rendered.path("schema:name").asText(),
         "default name should be the template's schema:name");
-    assertEquals(FAKE_BASED_ON, rendered.path("schema:isBasedOn").asText());
+    assertEquals(templateId(templateJson), rendered.path("schema:isBasedOn").asText());
 
     assertValidatesAgainst(rendered, templateJson);
   }
@@ -65,7 +62,6 @@ final class CreateInstanceToolTest
 
     McpSchema.CallToolResult result = invoke(Map.of(
         "template", templateJson,
-        "is_based_on", FAKE_BASED_ON,
         "name", "Patient 42"));
 
     assertFalse(result.isError(), errorText(result));
@@ -98,8 +94,7 @@ final class CreateInstanceToolTest
             + "    datatype: xsd:int\n");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template", templateJson,
-        "is_based_on", FAKE_BASED_ON));
+        "template", templateJson));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = inflatedJson(result, templateJson);
@@ -131,8 +126,7 @@ final class CreateInstanceToolTest
             + "    granularity: day\n");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template", templateJson,
-        "is_based_on", FAKE_BASED_ON));
+        "template", templateJson));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = inflatedJson(result, templateJson);
@@ -162,8 +156,7 @@ final class CreateInstanceToolTest
             + "      multiple: true\n");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template", templateJson,
-        "is_based_on", FAKE_BASED_ON));
+        "template", templateJson));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = inflatedJson(result, templateJson);
@@ -195,8 +188,7 @@ final class CreateInstanceToolTest
             + "        name: Street\n");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template", templateJson,
-        "is_based_on", FAKE_BASED_ON));
+        "template", templateJson));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = inflatedJson(result, templateJson);
@@ -229,8 +221,7 @@ final class CreateInstanceToolTest
             + "    name: Extras\n");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template", templateJson,
-        "is_based_on", FAKE_BASED_ON));
+        "template", templateJson));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = inflatedJson(result, templateJson);
@@ -264,8 +255,7 @@ final class CreateInstanceToolTest
             + "    name: Note\n");
 
     McpSchema.CallToolResult result = invoke(Map.of(
-        "template", templateJson,
-        "is_based_on", FAKE_BASED_ON));
+        "template", templateJson));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = inflatedJson(result, templateJson);
@@ -293,8 +283,7 @@ final class CreateInstanceToolTest
             + "  - key: Age\n    type: numeric-field\n    name: Age\n    datatype: xsd:int\n"
             + "  - key: tags\n    type: text-field\n    name: Tag\n    configuration:\n      multiple: true\n");
 
-    McpSchema.CallToolResult result = invoke(Map.of(
-        "template", templateJson, "is_based_on", FAKE_BASED_ON));
+    McpSchema.CallToolResult result = invoke(Map.of("template", templateJson));
     assertFalse(result.isError(), errorText(result));
     String yaml = textOf(result);
 
@@ -316,15 +305,14 @@ final class CreateInstanceToolTest
   @Test void mints_instance_id_when_omitted() throws Exception
   {
     // The instance's own @id is auto-minted when absent (DESIGN.md Principle 10), distinct
-    // from is_based_on which points at the template.
-    McpSchema.CallToolResult result = invoke(Map.of(
-        "template", createTemplate("Demographics"),
-        "is_based_on", FAKE_BASED_ON));
+    // from isBasedOn, which is derived from the template's @id.
+    String templateJson = createTemplate("Demographics");
+    McpSchema.CallToolResult result = invoke(Map.of("template", templateJson));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
     MintedIds.assertMintedId(rendered.get("@id"), "template-instances");
-    assertEquals(FAKE_BASED_ON, rendered.path("schema:isBasedOn").asText(),
+    assertEquals(templateId(templateJson), rendered.path("schema:isBasedOn").asText(),
         "minting the instance @id must not disturb isBasedOn");
   }
 
@@ -333,7 +321,6 @@ final class CreateInstanceToolTest
     String id = "https://repo.metadatacenter.org/template-instances/abc-123";
     McpSchema.CallToolResult result = invoke(Map.of(
         "template", createTemplate("Demographics"),
-        "is_based_on", FAKE_BASED_ON,
         "id", id));
 
     assertFalse(result.isError(), errorText(result));
@@ -345,37 +332,11 @@ final class CreateInstanceToolTest
   {
     McpSchema.CallToolResult result = invoke(Map.of(
         "template", createTemplate("Demographics"),
-        "is_based_on", FAKE_BASED_ON,
         "id", "template-instances/abc-123"));
 
     assertTrue(result.isError(), "a non-absolute instance id should produce an error result");
     assertTrue(errorText(result).toLowerCase().contains("absolute"),
         "error should explain the id must be absolute; got: " + errorText(result));
-  }
-
-  @Test void rejects_template_without_at_id_and_no_is_based_on() throws Exception
-  {
-    // create_template now mints an @id (DESIGN.md Principle 10), so we use a hand-authored
-    // template YAML with no id to reach the @id-less path. Without an explicit is_based_on
-    // argument, such an instance has no canonical reference to "the template" — surface that
-    // as a clean error rather than building a bogus instance.
-    String templateJson = "type: template\nname: Unsaved\n";
-
-    McpSchema.CallToolResult result = invoke(Map.of("template", templateJson));
-
-    assertTrue(result.isError(),
-        "missing is_based_on with @id-less template must produce isError=true");
-    assertTrue(errorText(result).contains("is_based_on"),
-        "error should mention is_based_on; got: " + errorText(result));
-  }
-
-  @Test void rejects_invalid_is_based_on_uri()
-  {
-    McpSchema.CallToolResult result = invoke(Map.of(
-        "template", createTemplate("X"),
-        "is_based_on", "not a uri with spaces"));
-    assertTrue(result.isError());
-    assertTrue(errorText(result).contains("is_based_on"));
   }
 
   @Test void rejects_missing_template()
@@ -471,4 +432,22 @@ final class CreateInstanceToolTest
     if (result.content() == null || result.content().isEmpty()) return "(no content)";
     return ((McpSchema.TextContent) result.content().get(0)).text();
   }
+  /** The minted @id the fixture template carries; isBasedOn must always equal it. */
+  private String templateId(String templateYaml)
+  {
+    java.util.regex.Matcher m =
+        java.util.regex.Pattern.compile("(?m)^id: (\\S+)$").matcher(templateYaml);
+    assertTrue(m.find(), "fixture template must carry a minted id:; got:\n" + templateYaml);
+    return m.group(1);
+  }
+
+  @Test void template_without_id_is_rejected_with_guidance()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "template", "type: template\nname: No Identity\n"));
+    assertTrue(result.isError(), "an id-less template cannot yield an isBasedOn");
+    assertTrue(errorText(result).contains("@id"), errorText(result));
+    assertTrue(errorText(result).contains("create_template"), errorText(result));
+  }
+
 }

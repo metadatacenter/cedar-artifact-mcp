@@ -22,8 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 final class SetControlledTermFieldValueToolTest
 {
-  private static final String FAKE_BASED_ON = "https://example.org/templates/test-fixture";
-
   @Test void sets_controlled_term_value()
   {
     String templateJson = controlledTermTemplate("diagnosis");
@@ -162,7 +160,6 @@ final class SetControlledTermFieldValueToolTest
   {
     return textOf(invokeTool(CreateInstanceTool::handler, "create_instance", Map.of(
         "template", templateJson,
-        "is_based_on", FAKE_BASED_ON,
         "name", name)));
   }
 

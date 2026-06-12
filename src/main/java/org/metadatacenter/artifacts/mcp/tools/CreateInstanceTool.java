@@ -31,9 +31,10 @@ import java.util.Map;
  * (see {@link InstanceInflater}) by {@code validate_instance} and {@code instance_to_json}. The
  * LLM fills values via {@code set_field_value} and friends.
  *
- * <p>The {@code isBasedOn} URI defaults to the template's {@code @id} when present;
- * for freshly-built templates without an {@code @id} the caller must supply
- * {@code is_based_on} explicitly.
+ * <p>The {@code isBasedOn} URI is always derived from the template's {@code @id} — the
+ * instance points at exactly the template it was built from, by construction. A template
+ * without an {@code @id} is rejected with guidance ({@code create_template} and
+ * {@code template_to_json} mint one automatically).
  */
 public final class CreateInstanceTool
 {
@@ -60,12 +61,6 @@ public final class CreateInstanceTool
         "description",
         "Free-text instance description. Optional. Falls back to the template's own "
             + "description when present; otherwise the instance carries no description."));
-    properties.put("is_based_on", Map.of(
-        "type", "string",
-        "description",
-        "URI of the template the instance is based on. Optional; defaults to the "
-            + "template's @id when present. Required when the template has no @id "
-            + "(e.g. a freshly-built template from 'create_template')."));
     properties.put("id", Map.of(
         "type", "string",
         "description",
@@ -73,7 +68,7 @@ public final class CreateInstanceTool
             + "CEDAR instance IRI is auto-minted "
             + "(https://repo.metadatacenter.org/template-instances/<uuid>). Supply one only "
             + "when you have an id assigned by a CEDAR repository. Must be an absolute IRI. "
-            + "Distinct from is_based_on, which points to the template."));
+            + "Distinct from isBasedOn, which is always derived from the template's @id."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("template"), Boolean.FALSE, null, null);
@@ -107,7 +102,6 @@ public final class CreateInstanceTool
 
     String nameOverride = stringArg(args, "name");
     String descriptionOverride = stringArg(args, "description");
-    String isBasedOnOverride = stringArg(args, "is_based_on");
 
     String idText = stringArg(args, "id");
     URI id;
@@ -142,19 +136,11 @@ public final class CreateInstanceTool
           + ": " + e.getMessage());
     }
 
-    URI isBasedOn;
-    if (isBasedOnOverride != null && !isBasedOnOverride.isBlank()) {
-      try {
-        isBasedOn = new URI(isBasedOnOverride);
-      } catch (URISyntaxException e) {
-        return error("is_based_on is not a valid URI: " + e.getMessage());
-      }
-    } else if (template.jsonLdId().isPresent()) {
-      isBasedOn = template.jsonLdId().get();
-    } else {
-      return error("template has no @id; supply is_based_on explicitly "
-          + "(a freshly-built template from create_template has no @id until saved)");
-    }
+    if (template.jsonLdId().isEmpty())
+      return error("the template carries no @id, so the instance's isBasedOn cannot be "
+          + "derived. Add an id: to the template, or build it with create_template / export "
+          + "it with template_to_json - both mint one automatically.");
+    URI isBasedOn = template.jsonLdId().get();
 
     String name = nameOverride == null || nameOverride.isBlank() ? template.name() : nameOverride;
     // No auto-stand-in: if the caller didn't supply a description and the template doesn't

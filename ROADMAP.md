@@ -72,7 +72,7 @@ centralizes read (YAML or JSON, auto-detected) and render.
 
 ### Instances
 
-- `create_instance(template, name?, description?, is_based_on?, id?)` — walks a
+- `create_instance(template, name?, description?, id?)` — walks a
   template and produces an empty instance skeleton that validates against it. Attribute-value
   fields are seeded as empty groups; static fields are skipped; the instance `@id` is
   auto-minted when omitted.

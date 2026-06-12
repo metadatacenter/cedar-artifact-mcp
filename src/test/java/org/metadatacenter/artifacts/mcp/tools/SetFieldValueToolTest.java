@@ -29,8 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 final class SetFieldValueToolTest
 {
-  private static final String FAKE_BASED_ON = "https://example.org/templates/test-fixture";
-
   @Test void sets_text_field_value_at_top_level()
   {
     String templateJson = templateWithField(createField("Patient name", "text-field"), "patient_name");
@@ -329,7 +327,6 @@ final class SetFieldValueToolTest
   {
     return textOf(invokeTool(CreateInstanceTool::handler, "create_instance", Map.of(
         "template", templateJson,
-        "is_based_on", FAKE_BASED_ON,
         "name", name)));
   }
 

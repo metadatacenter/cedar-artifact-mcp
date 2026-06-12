@@ -20,8 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 final class SetIriFieldValueToolTest
 {
-  private static final String FAKE_BASED_ON = "https://example.org/templates/test-fixture";
-
   @Test void sets_ror_field_value_with_label()
   {
     String templateJson = templateWithField(createField("ROR", "ext-ror-field"), "ror");
@@ -134,7 +132,6 @@ final class SetIriFieldValueToolTest
   {
     return textOf(invokeTool(CreateInstanceTool::handler, "create_instance", Map.of(
         "template", templateJson,
-        "is_based_on", FAKE_BASED_ON,
         "name", name)));
   }
 

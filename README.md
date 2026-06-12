@@ -471,18 +471,19 @@ appends a new entry; any larger index errors.
 information on round-trip — the schema is the source of truth for which kind
 of field the value belongs to.
 
-### `create_instance(template, name?, description?, is_based_on?, id?)`
+### `create_instance(template, name?, description?, id?)`
 
 Creates an instance from a template, ready to be populated with field values.
 The returned YAML is **sparse** — it carries the instance identity (`@id`,
-`name`, `is_based_on`) and only fields that hold a value, so a fresh instance is
+`name`, `isBasedOn`) and only fields that hold a value, so a fresh instance is
 essentially just its identity. Unset fields are reconstructed from the template
 when JSON is produced (`validate_instance`, `instance_to_json`), so the instance
-is still structurally complete. `is_based_on` defaults to the template's `@id`
-when present; supply it explicitly only if the template has no `@id` (templates
-from `create_template` / `template_to_json` now always carry a minted one). `id`
-is the instance's own identity — optional, and auto-minted as a fresh
-`template-instances` IRI when omitted; it is independent of `is_based_on`.
+is still structurally complete. `isBasedOn` is always derived from the
+template's `@id` — the instance points at exactly the template it was built
+from, by construction; a template without an `@id` is rejected with guidance
+(`create_template` and `template_to_json` mint one automatically). `id` is the
+instance's own identity — optional, and auto-minted as a fresh
+`template-instances` IRI when omitted.
 
 ### `validate_instance(template, instance)`
 
