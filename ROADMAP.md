@@ -54,7 +54,9 @@ centralizes read (YAML or JSON, auto-detected) and render.
 - `reorder_children(parent, keys)` — sets the display order (`_ui.order`) from a complete
   permutation of the existing child keys; partial lists are rejected (the library prunes
   children absent from the order, so a partial list would delete). Declarative and
-  idempotent; one tool for both child kinds, static fields included.
+  idempotent; one tool for both child kinds, static fields included. Instance-side: child
+  order never affects validity, and every instance the tools return is serialized in its
+  template's display order (the inflater canonicalizes order on every instance operation).
 - `replace_field(parent, child, key, …)` / `replace_element(parent, child, key, …)` — replace
   the child at a key in place, keeping its position in the parent's display order (where
   `remove_child` + `add_*` would append). Same per-add-site overrides as the `add_*` pair.

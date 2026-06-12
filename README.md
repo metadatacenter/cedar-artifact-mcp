@@ -533,6 +533,12 @@ Static fields (section breaks, rich text) participate like any other child.
 The `add_*` tools append, so building in the right order needs no call here;
 this is for rearranging a parent that already exists.
 
+Display order is a schema concern, with two instance-side consequences: child
+order never affects an instance's *validity*, and every instance the tools
+return is *serialized* with its children in the template's display order
+(nested children in their element's order) — so reordering a template
+reorders its instances on their next edit.
+
 ### `remove_child(parent, key)`
 
 Removes a field or element child from a template or element parent by key.
