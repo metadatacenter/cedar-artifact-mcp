@@ -517,8 +517,8 @@ of field the value belongs to.
 ### `create_instance(template, name?, description?, id?)`
 
 Creates an instance from a template, ready to be populated with field values.
-The returned YAML is **sparse** — it carries the instance identity (`@id`,
-`name`, `isBasedOn`) and only fields that hold a value, so a fresh instance is
+The returned instance is **sparse** — it carries its identity (`@id`, `name`,
+`isBasedOn`) and only fields that hold a value, so a fresh instance is
 essentially just its identity. Unset fields are reconstructed from the template
 when JSON is produced (`validate_instance`, `instance_to_json`), so the instance
 is still structurally complete. `isBasedOn` is always derived from the
