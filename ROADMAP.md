@@ -108,6 +108,16 @@ centralizes read (YAML or JSON, auto-detected) and render.
 - **Replacing children in place** — replacing a child still requires `remove_child` + an
   `add_child`. A dedicated `replace_child` would be ergonomic if a workflow needs it.
 
+- **Child ordering is not exposed.** CEDAR templates and elements carry an explicit child
+  order for display purposes (the `_ui.order` list; the order forms render fields in), and
+  the model round-trips it — but this MCP offers no way to control it. `add_child` always
+  appends, so the only route to a particular order is adding children in that order, and
+  re-ordering an existing parent has no route at all (hand-editing the YAML is ruled out by
+  the verbatim directive). Expose it — either an optional `position` on `add_child`, or a
+  dedicated `reorder_children(parent, keys)` that takes the full key list and re-orders the
+  parent's `_ui.order` (the library prunes children absent from the order, so the tool must
+  require a complete permutation of the existing keys).
+
 - **Render-if-present as the one YAML form** — idea, not yet decided. Mutating tools now
   always return the expanded exchange form and `isCompact` survives only on the `*_to_yaml`
   rendering tools; the remaining question is whether the compact/expanded distinction could
