@@ -51,6 +51,10 @@ centralizes read (YAML or JSON, auto-detected) and render.
   from the artifact. Per-add-site overrides for key, label, description, multi-instance flag,
   cardinality bounds, and the ontology property the child maps to in instances (`property_iri`,
   the JSON-LD `@context` mapping for the key).
+- `reorder_children(parent, keys)` — sets the display order (`_ui.order`) from a complete
+  permutation of the existing child keys; partial lists are rejected (the library prunes
+  children absent from the order, so a partial list would delete). Declarative and
+  idempotent; one tool for both child kinds, static fields included.
 - `replace_field(parent, child, key, …)` / `replace_element(parent, child, key, …)` — replace
   the child at a key in place, keeping its position in the parent's display order (where
   `remove_child` + `add_*` would append). Same per-add-site overrides as the `add_*` pair.
@@ -134,16 +138,6 @@ centralizes read (YAML or JSON, auto-detected) and render.
   released, non-SNAPSHOT artifacts to a public Maven repository and pin this MCP to a
   released version. `cedar-cee-mcp` already resolves entirely from Maven Central and is the
   target state.
-
-- **Child ordering is not exposed.** CEDAR templates and elements carry an explicit child
-  order for display purposes (the `_ui.order` list; the order forms render fields in), and
-  the model round-trips it — but this MCP offers no way to control it. `add_child` always
-  appends, so the only route to a particular order is adding children in that order, and
-  re-ordering an existing parent has no route at all (hand-editing the YAML is ruled out by
-  the verbatim directive). Expose it — either an optional `position` on `add_child`, or a
-  dedicated `reorder_children(parent, keys)` that takes the full key list and re-orders the
-  parent's `_ui.order` (the library prunes children absent from the order, so the tool must
-  require a complete permutation of the existing keys).
 
 - **Attribute-value instances cannot be populated.** `create_template_instance` seeds an
   attribute-value field as an empty group, and the library models

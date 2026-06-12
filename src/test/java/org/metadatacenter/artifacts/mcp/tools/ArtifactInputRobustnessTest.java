@@ -158,6 +158,11 @@ final class ArtifactInputRobustnessTest
     assertCleanErrors("create_template_instance", CreateTemplateInstanceTool::handler, "template");
   }
 
+  @Test void reorder_children_survives_garbage_parents()
+  {
+    assertCleanErrors("reorder_children", ReorderChildrenTool::handler, "parent");
+  }
+
   @Test void create_element_instance_survives_garbage_elements()
   {
     assertCleanErrors("create_element_instance", CreateElementInstanceTool::handler, "element");

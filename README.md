@@ -429,7 +429,7 @@ through the library and passed its structural validation.
 | Group | Tools |
 |---|---|
 | Create | `create_template` · `create_element` · `create_field` · `create_template_instance` · `create_element_instance` |
-| Compose | `add_field` · `add_element` · `replace_field` · `replace_element` · `remove_child` |
+| Compose | `add_field` · `add_element` · `replace_field` · `replace_element` · `reorder_children` · `remove_child` |
 | Controlled term constraints | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` |
 | Literal options | `set_options` |
 | Default values | `set_literal_default_value` · `set_iri_default_value` |
@@ -520,6 +520,18 @@ the parent's YAML, refine it with the `set_*` tools, then swap it back in.
 
 Element variant of `replace_field`, with the same per-add-site overrides as
 `add_element` (no `isRequired` / `isHidden`, which are field-only).
+
+### `reorder_children(parent, keys)`
+
+Sets the display order of a template or element's children — the order forms
+render fields in. `keys` is the complete permutation of the existing child
+keys (the parent's YAML lists the current children in order, so producing it
+is reading, not remembering); reordering again is calling again with a
+different order. A partial list is rejected with the current order echoed
+back — omitting a key would delete the child, not just leave it unordered.
+Static fields (section breaks, rich text) participate like any other child.
+The `add_*` tools append, so building in the right order needs no call here;
+this is for rearranging a parent that already exists.
 
 ### `remove_child(parent, key)`
 

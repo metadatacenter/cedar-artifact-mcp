@@ -6,14 +6,28 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 /**
- * Helper for the {@code replace_*} tools. The library's parent builders only ever append
- * to {@code _ui.order} — there is no insert-at-position primitive — so replacing a child
- * via remove + re-add moves its key to the end of the display order. This puts the key
- * back where it was, operating on the rendered JSON.
+ * Order manipulation on a rendered parent's {@code _ui.order}, for the {@code replace_*}
+ * and {@code reorder_children} tools. The library's parent builders only ever append to
+ * the order — there is no insert-at-position or reorder primitive — so position control
+ * operates on the rendered JSON.
  */
 final class UiOrders
 {
   private UiOrders() {}
+
+  /** Replace the whole display order. The caller guarantees {@code keys} is a permutation. */
+  static void setOrder(ObjectNode rendered, java.util.List<String> keys)
+  {
+    JsonNode ui = rendered.path("_ui");
+    if (!(ui instanceof ObjectNode))
+      return;
+    JsonNode order = ui.path("order");
+    if (!(order instanceof ArrayNode orderNode))
+      return;
+    orderNode.removeAll();
+    for (String key : keys)
+      orderNode.add(key);
+  }
 
   static void restorePosition(ObjectNode rendered, String key, int originalIndex)
   {

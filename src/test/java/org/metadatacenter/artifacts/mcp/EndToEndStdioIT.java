@@ -127,6 +127,8 @@ final class EndToEndStdioIT
           "replace_field tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("replace_element"),
           "replace_element tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("reorder_children"),
+          "reorder_children tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("remove_child"),
           "remove_child tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("set_class_constraint"),
