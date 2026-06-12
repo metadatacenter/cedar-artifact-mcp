@@ -525,8 +525,7 @@ Element variant of `replace_field`, with the same per-add-site overrides as
 
 Sets the display order of a template or element's children — the order forms
 render fields in. `keys` is the complete permutation of the existing child
-keys (the parent's YAML lists the current children in order, so producing it
-is reading, not remembering); reordering again is calling again with a
+keys, in the desired order; reordering again is calling again with a
 different order. A partial list is rejected with the current order echoed
 back — omitting a key would delete the child, not just leave it unordered.
 Static fields (section breaks, rich text) participate like any other child.

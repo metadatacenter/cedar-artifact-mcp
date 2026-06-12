@@ -55,9 +55,8 @@ public final class ReorderChildrenTool
         "minItems", 1,
         "description",
         "The parent's child keys in the desired display order — the COMPLETE list, each "
-            + "existing key exactly once (the parent's YAML lists the current children in "
-            + "order). A partial list is rejected: omitting a key would delete the child, "
-            + "not just leave it unordered."));
+            + "existing key exactly once. A partial list is rejected: omitting a key would "
+            + "delete the child, not just leave it unordered."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("parent", "keys"), Boolean.FALSE, null, null);
