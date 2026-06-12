@@ -49,7 +49,7 @@ public final class SetOntologyConstraintTool
             "Attaches an ontology-level value constraint to a CEDAR controlled-term field, "
                 + "scoping its permissible values to all classes from a named ontology. "
                 + "Returns the updated field as expanded YAML, re-validated with CedarValidator."
-                + ArtifactExchange.VERBATIM_NOTICE)
+                + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
   }

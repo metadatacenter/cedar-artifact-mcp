@@ -155,9 +155,11 @@ The library's YAML reader/renderer must round-trip both forms losslessly — see
 that guard this (ext-* link fields, instance `@type` seeds, value-less and empty
 multi-instance slots, link/temporal defaults, etc.).
 
-A consequence: the LLM threads the expanded exchange YAML between tools and shows it to
-the user as returned, reaching for `*_to_yaml` with `isCompact: true` when a lean display
-of a finished artifact is wanted, and for `*_to_json` when a JSON deliverable calls for it.
+A consequence: the LLM threads the expanded exchange YAML between tools, but shows the
+user the lean `*_to_yaml` (`isCompact: true`) view in interactive sessions — every mutating
+tool's description directs it to (`ArtifactExchange.DISPLAY_NOTICE`), and warns that the
+compacted display view drops provenance and must never be threaded onward. `*_to_json` is
+for when a JSON deliverable calls for it.
 
 ## Principle 9 — Test the MCP, not the library
 

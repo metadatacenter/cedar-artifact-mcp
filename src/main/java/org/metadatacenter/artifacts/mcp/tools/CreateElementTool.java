@@ -56,7 +56,7 @@ public final class CreateElementTool
                 + "elements are first-class CEDAR artifacts; the returned YAML can be added to "
                 + "templates (add_element) or composed via other tools. Use 'element_to_json' to "
                 + "export the canonical JSON Schema." + ArtifactExchange.STANDALONE_NOTICE
-                + ArtifactExchange.VERBATIM_NOTICE)
+                + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
   }

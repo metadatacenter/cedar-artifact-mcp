@@ -44,8 +44,9 @@ exchange form**, reproduced verbatim. Every tool that builds or modifies an
 artifact returns this lossless form: provenance (`status`, `version`,
 `modelVersion`) is always carried — defaulting to `draft` / `0.0.1` / `1.6.0`
 when not supplied — so nothing set on an artifact is ever dropped as it
-threads from tool to tool. A leaner display that omits the provenance keys is
-available on request through the `*_to_yaml` tools (`isCompact: true`).
+threads from tool to tool. For interactive display the tool descriptions direct the LLM
+to show the user the lean view instead — the matching `*_to_yaml` tool with
+`isCompact: true` — while always threading the expanded form between calls.
 
 Every top-level artifact is auto-assigned an `@id` of the right CEDAR form when
 you don't supply one — `https://repo.metadatacenter.org/{templates,
@@ -389,7 +390,9 @@ through the library and passed its structural validation.
 modelVersion, and any other provenance are always carried, so nothing set on an artifact can
 be silently dropped as it threads from tool to tool. Compaction is purely a display choice,
 and the `isCompact` flag therefore lives only on the `*_to_yaml` rendering tools
-(`isCompact: true` drops the provenance keys for a lean view). Instances are **sparse** in
+(`isCompact: true` drops the provenance keys for a lean view). Each mutating tool's
+description directs the LLM to use exactly that for interactive display, while threading
+the expanded form onward. Instances are **sparse** in
 either form — a field with no value is omitted entirely (no `null`, no `{}`, no empty `[]`);
 the empty slots the canonical JSON form requires are reconstructed from the template at the
 JSON boundary (`validate_instance`, `instance_to_json`).

@@ -67,7 +67,7 @@ public final class SetDefaultValueTool
                 + "Returns the updated field as expanded YAML, re-validated with "
                 + "CedarValidator. Use set_iri_default_value for link/ROR/ORCID/etc. "
                 + "fields, or set_controlled_term_default_value for controlled-term fields."
-                + ArtifactExchange.VERBATIM_NOTICE)
+                + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
   }

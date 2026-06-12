@@ -51,7 +51,7 @@ public final class SetValueSetConstraintTool
             "Attaches a value-set constraint to a CEDAR controlled-term field, scoping "
                 + "its permissible values to a curated value set hosted in BioPortal. "
                 + "Returns the updated field as expanded YAML, re-validated with CedarValidator."
-                + ArtifactExchange.VERBATIM_NOTICE)
+                + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
   }

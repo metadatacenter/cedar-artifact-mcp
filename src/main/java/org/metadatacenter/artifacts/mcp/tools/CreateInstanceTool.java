@@ -91,7 +91,7 @@ public final class CreateInstanceTool
                 + "'validate_instance' and 'instance_to_json' (given the template) inflate them. "
                 + "Fill values with set_field_value / set_iri_field_value / "
                 + "set_controlled_term_field_value."
-                + ArtifactExchange.VERBATIM_NOTICE)
+                + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
   }

@@ -138,7 +138,7 @@ public final class CreateFieldTool
                 + "artifact as expanded YAML (the exchange form), validated by CedarValidator. "
                 + "A field is a first-class, reusable CEDAR artifact; use 'field_to_json' to "
                 + "export the canonical JSON Schema." + ArtifactExchange.STANDALONE_NOTICE
-                + ArtifactExchange.VERBATIM_NOTICE + "\n\n"
+                + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE + "\n\n"
                 + "Beyond name/type/description/version, the tool accepts type-specific "
                 + "configuration for the common literal-field cases: numeric-field "
                 + "(datatype, min_value, max_value, decimal_places, unit), temporal-field "

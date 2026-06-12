@@ -89,7 +89,7 @@ public final class SetFieldValueTool
                 + "slash-separated field_path. Returns the updated instance as expanded "
                 + "YAML. Use set_iri_field_value for link/ROR/ORCID/etc. fields, or "
                 + "set_controlled_term_field_value for controlled-term fields."
-                + ArtifactExchange.VERBATIM_NOTICE)
+                + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
   }

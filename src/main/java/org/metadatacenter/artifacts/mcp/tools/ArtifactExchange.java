@@ -76,6 +76,20 @@ final class ArtifactExchange
           + "with a table that omits content.";
 
   /**
+   * Display directive appended to every mutating tool description (after
+   * {@link #VERBATIM_NOTICE}). The exchange form is expanded and therefore verbose; in
+   * interactive sessions the lean compact view is the better thing to put in front of a person —
+   * but only as a display, produced by a rendering tool, never as the artifact that threads
+   * onward (compaction drops provenance).
+   */
+  static final String DISPLAY_NOTICE =
+      " This result is the expanded exchange form. When showing the artifact to the user in an "
+          + "interactive session, prefer the lean view: call the matching *_to_yaml tool with "
+          + "isCompact: true and display its output instead. But ALWAYS pass THIS returned YAML "
+          + "into subsequent tool calls — the compacted display view drops provenance (version, "
+          + "status) and must never be threaded onward.";
+
+  /**
    * Extra directive for the {@code create_*} builders that return a standalone, reusable
    * artifact. Curbs the over-eager pattern of silently grafting a freshly created field or
    * element onto a template the user did not ask to modify.
