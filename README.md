@@ -65,7 +65,7 @@ The tool returns the expanded exchange form:
 ```yaml
 type: template
 name: Patient Study
-id: https://repo.metadatacenter.org/templates/146cc4f1-b650-4a4a-aa4f-fb78b2813f50
+id: https://repo.metadatacenter.org/templates/76cf7229-d0ae-462a-a40a-e2f8eeb5d041
 status: draft
 version: 0.0.1
 modelVersion: 1.6.0
@@ -76,7 +76,7 @@ and the LLM displays the compact view:
 ```yaml
 type: template
 name: Patient Study
-id: https://repo.metadatacenter.org/templates/146cc4f1-b650-4a4a-aa4f-fb78b2813f50
+id: https://repo.metadatacenter.org/templates/76cf7229-d0ae-462a-a40a-e2f8eeb5d041
 ```
 
 Subsequent steps show only the compact view the user sees.
@@ -86,7 +86,7 @@ Subsequent steps show only the compact view the user sees.
 ```yaml
 type: text-field
 name: Patient Name
-id: https://repo.metadatacenter.org/template-fields/a6d4eec6-9798-4487-83eb-41672f1a2680
+id: https://repo.metadatacenter.org/template-fields/0252465c-1c51-4fae-a41a-a9263bc9dc31
 ```
 
 *Create a numeric field called Age with type `xsd:int`.*
@@ -94,7 +94,7 @@ id: https://repo.metadatacenter.org/template-fields/a6d4eec6-9798-4487-83eb-4167
 ```yaml
 type: numeric-field
 name: Age
-id: https://repo.metadatacenter.org/template-fields/7771a4f7-1e5e-44ec-8e9e-13ae9dbccd8e
+id: https://repo.metadatacenter.org/template-fields/cbb34a8a-d754-4425-b0e9-52f3db4ade08
 datatype: xsd:int
 ```
 
@@ -103,39 +103,43 @@ datatype: xsd:int
 ```yaml
 type: numeric-field
 name: Age
-id: https://repo.metadatacenter.org/template-fields/7771a4f7-1e5e-44ec-8e9e-13ae9dbccd8e
+id: https://repo.metadatacenter.org/template-fields/cbb34a8a-d754-4425-b0e9-52f3db4ade08
 datatype: xsd:int
 default: 42
 ```
 
-*Add Patient Name and Age to Patient Study.*
+*Add Patient Name and Age to Patient Study; Patient Name is required.*
 
 ```yaml
 type: template
 name: Patient Study
-id: https://repo.metadatacenter.org/templates/146cc4f1-b650-4a4a-aa4f-fb78b2813f50
+id: https://repo.metadatacenter.org/templates/76cf7229-d0ae-462a-a40a-e2f8eeb5d041
 children:
   - key: Patient Name
     type: text-field
     name: Patient Name
-    id: https://repo.metadatacenter.org/template-fields/a6d4eec6-9798-4487-83eb-41672f1a2680
+    id: https://repo.metadatacenter.org/template-fields/0252465c-1c51-4fae-a41a-a9263bc9dc31
+    configuration:
+      required: true
   - key: Age
     type: numeric-field
     name: Age
-    id: https://repo.metadatacenter.org/template-fields/7771a4f7-1e5e-44ec-8e9e-13ae9dbccd8e
+    id: https://repo.metadatacenter.org/template-fields/cbb34a8a-d754-4425-b0e9-52f3db4ade08
     datatype: xsd:int
     default: 42
 ```
 
 The two fields keep the `@id`s they were minted with when they were created as
 standalone artifacts above; adding them into the template doesn't change them.
+`add_field`'s `isRequired: true` marked the embedded Patient Name copy required —
+visible as `configuration: required: true` on the child.
 
 *Create an element called Address with a text field Street.*
 
 ```yaml
 type: element
 name: Address
-id: https://repo.metadatacenter.org/template-elements/3a59a0c0-3b74-41f8-8379-52ce16f02af8
+id: https://repo.metadatacenter.org/template-elements/4384440e-ad84-4f4e-80d9-73893742026b
 children:
   - key: Street
     type: text-field
@@ -150,22 +154,24 @@ children:
 ```yaml
 type: template
 name: Patient Study
-id: https://repo.metadatacenter.org/templates/146cc4f1-b650-4a4a-aa4f-fb78b2813f50
+id: https://repo.metadatacenter.org/templates/76cf7229-d0ae-462a-a40a-e2f8eeb5d041
 children:
   - key: Patient Name
     type: text-field
     name: Patient Name
-    id: https://repo.metadatacenter.org/template-fields/a6d4eec6-9798-4487-83eb-41672f1a2680
+    id: https://repo.metadatacenter.org/template-fields/0252465c-1c51-4fae-a41a-a9263bc9dc31
+    configuration:
+      required: true
   - key: Age
     type: numeric-field
     name: Age
-    id: https://repo.metadatacenter.org/template-fields/7771a4f7-1e5e-44ec-8e9e-13ae9dbccd8e
+    id: https://repo.metadatacenter.org/template-fields/cbb34a8a-d754-4425-b0e9-52f3db4ade08
     datatype: xsd:int
     default: 42
   - key: Address
     type: element
     name: Address
-    id: https://repo.metadatacenter.org/template-elements/3a59a0c0-3b74-41f8-8379-52ce16f02af8
+    id: https://repo.metadatacenter.org/template-elements/4384440e-ad84-4f4e-80d9-73893742026b
     children:
       - key: Street
         type: text-field
@@ -177,8 +183,8 @@ children:
 ```yaml
 type: instance
 name: Patient Study
-id: https://repo.metadatacenter.org/template-instances/5d09635b-737d-4308-9f8b-d1dae0233ea1
-isBasedOn: https://repo.metadatacenter.org/templates/146cc4f1-b650-4a4a-aa4f-fb78b2813f50
+id: https://repo.metadatacenter.org/template-instances/8f785ae9-d33d-4566-a785-5f868b20bd75
+isBasedOn: https://repo.metadatacenter.org/templates/76cf7229-d0ae-462a-a40a-e2f8eeb5d041
 ```
 
 The instance gets its own minted `@id` (a `template-instances` IRI), distinct
@@ -190,8 +196,8 @@ no `version` / `status` — those are schema-artifact concerns.
 ```yaml
 type: instance
 name: Patient Study
-id: https://repo.metadatacenter.org/template-instances/5d09635b-737d-4308-9f8b-d1dae0233ea1
-isBasedOn: https://repo.metadatacenter.org/templates/146cc4f1-b650-4a4a-aa4f-fb78b2813f50
+id: https://repo.metadatacenter.org/template-instances/8f785ae9-d33d-4566-a785-5f868b20bd75
+isBasedOn: https://repo.metadatacenter.org/templates/76cf7229-d0ae-462a-a40a-e2f8eeb5d041
 children:
   Patient Name:
     value: Alice
@@ -202,8 +208,8 @@ children:
 ```yaml
 type: instance
 name: Patient Study
-id: https://repo.metadatacenter.org/template-instances/5d09635b-737d-4308-9f8b-d1dae0233ea1
-isBasedOn: https://repo.metadatacenter.org/templates/146cc4f1-b650-4a4a-aa4f-fb78b2813f50
+id: https://repo.metadatacenter.org/template-instances/8f785ae9-d33d-4566-a785-5f868b20bd75
+isBasedOn: https://repo.metadatacenter.org/templates/76cf7229-d0ae-462a-a40a-e2f8eeb5d041
 children:
   Patient Name:
     value: Alice
@@ -243,7 +249,7 @@ branch of the DOID ontology in BioPortal.*
 type: controlled-term-field
 name: Disease
 description: Disease term sourced from the Disease branch of the DOID ontology.
-id: https://repo.metadatacenter.org/template-fields/b452bf87-ae7b-43de-9437-ae61eea595b0
+id: https://repo.metadatacenter.org/template-fields/9cbbefa4-d408-4170-91ba-fde7edb06b2f
 datatype: iri
 values:
   - type: branch
@@ -264,13 +270,13 @@ every descendant of `disease` in DOID is permitted.
 ```yaml
 type: template
 name: Study
-id: https://repo.metadatacenter.org/templates/5c1d5f0e-e019-4839-9961-ee528f78232e
+id: https://repo.metadatacenter.org/templates/f2e8500d-3c42-4f89-9dc6-4a9f564b39f1
 children:
   - key: Disease
     type: controlled-term-field
     name: Disease
     description: Disease term sourced from the Disease branch of the DOID ontology.
-    id: https://repo.metadatacenter.org/template-fields/b452bf87-ae7b-43de-9437-ae61eea595b0
+    id: https://repo.metadatacenter.org/template-fields/9cbbefa4-d408-4170-91ba-fde7edb06b2f
     datatype: iri
     values:
       - type: branch
@@ -294,8 +300,8 @@ the Disease field.*
 ```yaml
 type: instance
 name: Study
-id: https://repo.metadatacenter.org/template-instances/d5b860ac-7f34-473a-8ceb-2f9ec50c8b73
-isBasedOn: https://repo.metadatacenter.org/templates/5c1d5f0e-e019-4839-9961-ee528f78232e
+id: https://repo.metadatacenter.org/template-instances/24bbf170-4035-468f-8840-a7a87f12759c
+isBasedOn: https://repo.metadatacenter.org/templates/f2e8500d-3c42-4f89-9dc6-4a9f564b39f1
 children:
   Disease:
     id: http://purl.obolibrary.org/obo/DOID_10923
@@ -403,7 +409,8 @@ carries is preserved.
 ### `add_element(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
 
 Element variant of `add_field`: adds an existing element as a child of a
-template or element parent. Same per-add-site overrides apply.
+template or element parent. The same per-add-site overrides apply except
+`isRequired` / `isHidden`, which are field-only.
 
 ### `remove_child(parent, key)`
 
