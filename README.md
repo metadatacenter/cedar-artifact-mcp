@@ -36,8 +36,9 @@ See [DESIGN.md](./DESIGN.md) for the architectural principles and
 A typical authoring session looks like the following — natural-language prompts
 the user gives the LLM, which the LLM translates into MCP tool calls. The
 first example exercises the structural and instance tools end-to-end; a
-follow-on example adds the controlled-term piece by pairing this MCP with
-[`bioportal-term-mcp`](https://github.com/metadatacenter/bioportal-term-mcp).
+follow-on adds the controlled-term piece by pairing this MCP with
+[`bioportal-term-mcp`](https://github.com/metadatacenter/bioportal-term-mcp);
+a last one works with repeated groups.
 
 Two YAML forms are in play. Every tool that builds or modifies an artifact
 returns the **expanded exchange form** — provenance (`status`, `version`,
@@ -57,6 +58,8 @@ the artifact's *identity*, so the compact view keeps it; it shows up as the
 inline inside a parent (a field in a template's `children:`, a value in a
 controlled-term field) is left id-less unless you set one explicitly — which
 is why `Street` and the controlled-term values further down carry no `id:`.
+
+### A first template, end to end
 
 *Create a template called Patient Study.*
 
