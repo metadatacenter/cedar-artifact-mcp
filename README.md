@@ -389,14 +389,16 @@ tools. `id` is optional; omit it and a fresh `template-fields` IRI is
 auto-minted (a field is a first-class, reusable CEDAR artifact, so a standalone
 one gets an id like any other top-level artifact).
 
-### `add_field(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
+### `add_field(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?, isRequired?, isHidden?)`
 
 Adds an existing field as a child of a template or element parent. The
 per-add-site overrides set how the field appears in *this* parent — the key it
 binds to, the label and description shown in the UI, whether it's
 single-instance or multi-instance (with optional `minItems` / `maxItems`).
 They're per-add-site because the same reusable field may be used differently in
-different parents.
+different parents. `isRequired` / `isHidden` optionally set the embedded copy's
+required-value constraint and hidden flag; when omitted, whatever the child already
+carries is preserved.
 
 ### `add_element(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
 

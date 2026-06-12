@@ -85,6 +85,19 @@ public final class AddFieldTool
         "description",
         "Maximum number of instances when isMultiInstance is true. Optional; left unset "
             + "if omitted. Only meaningful for multi-instance fields."));
+    properties.put("isRequired", Map.of(
+        "type", "boolean",
+        "description",
+        "Whether a value for this field is required in instances of the parent (the field's "
+            + "requiredValue constraint). Optional; when omitted, whatever the child already "
+            + "carries is preserved. Applies to the copy embedded in THIS parent — the "
+            + "standalone child artifact is unchanged."));
+    properties.put("isHidden", Map.of(
+        "type", "boolean",
+        "description",
+        "Whether the field is hidden in forms rendered from the parent (the field's _ui "
+            + "hidden flag). Optional; when omitted, whatever the child already carries is "
+            + "preserved. Applies to the copy embedded in THIS parent."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
@@ -96,8 +109,10 @@ public final class AddFieldTool
         .title("Add a CEDAR field to a template or element parent")
         .description(
             "Adds an existing CEDAR field (as YAML) as a child of a CEDAR template or "
-                + "element. Parent kind is inferred from the artifact. Returns the "
-                + "updated parent as expanded YAML, re-validated with CedarValidator."
+                + "element. Parent kind is inferred from the artifact. isRequired / isHidden "
+                + "optionally set the embedded copy's required-value constraint and hidden "
+                + "flag for this parent. Returns the updated parent as expanded YAML, "
+                + "re-validated with CedarValidator."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
@@ -129,6 +144,26 @@ public final class AddFieldTool
     } else {
       return error("isMultiInstance must be a boolean (got "
           + rawIsMulti.getClass().getSimpleName() + ")");
+    }
+
+    Boolean isRequired;
+    Object rawRequired = args.get("isRequired");
+    if (rawRequired == null) {
+      isRequired = null;
+    } else if (rawRequired instanceof Boolean b) {
+      isRequired = b;
+    } else {
+      return error("isRequired must be a boolean (got " + rawRequired.getClass().getSimpleName() + ")");
+    }
+
+    Boolean isHidden;
+    Object rawHidden = args.get("isHidden");
+    if (rawHidden == null) {
+      isHidden = null;
+    } else if (rawHidden instanceof Boolean b) {
+      isHidden = b;
+    } else {
+      return error("isHidden must be a boolean (got " + rawHidden.getClass().getSimpleName() + ")");
     }
 
     Integer minItems;
@@ -176,6 +211,10 @@ public final class AddFieldTool
           .withIsMultiple(isMultiInstance);
       if (minItems != null) rebuild.withMinItems(minItems);
       if (maxItems != null) rebuild.withMaxItems(maxItems);
+      // Tri-state: only override when supplied, so adding a field never silently strips a
+      // required/hidden setting the child already carries.
+      if (isRequired != null) rebuild.withRequiredValue(isRequired);
+      if (isHidden != null) rebuild.withHidden(isHidden);
       child = rebuild.build();
     } catch (ArtifactParseException e) {
       return error("child rejected by reader (must be a CEDAR field): " + e.getMessage());

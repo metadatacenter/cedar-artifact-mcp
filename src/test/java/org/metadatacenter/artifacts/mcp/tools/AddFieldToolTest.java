@@ -397,4 +397,50 @@ final class AddFieldToolTest
     if (result.content() == null || result.content().isEmpty()) return "(no content)";
     return ((McpSchema.TextContent) result.content().get(0)).text();
   }
+  @Test void isRequired_and_isHidden_apply_to_the_embedded_copy()
+  {
+    String parent = textOf(CreateTemplateTool.handler(null,
+        new McpSchema.CallToolRequest("create_template", Map.of("name", "Flags"))));
+    String child = textOf(CreateFieldTool.handler(null,
+        new McpSchema.CallToolRequest("create_field", Map.of("type", "text-field", "name", "P"))));
+
+    McpSchema.CallToolResult result = AddFieldTool.handler(null,
+        new McpSchema.CallToolRequest("add_field",
+            Map.of("parent", parent, "child", child, "isRequired", true, "isHidden", true)));
+
+    assertFalse(result.isError(), textOf(result));
+    String yaml = textOf(result);
+    assertTrue(yaml.contains("required: true"), "embedded copy must be required; got:\n" + yaml);
+    assertTrue(yaml.contains("hidden: true"), "embedded copy must be hidden; got:\n" + yaml);
+  }
+
+  @Test void omitted_flags_preserve_what_the_child_carries()
+  {
+    String parent = textOf(CreateTemplateTool.handler(null,
+        new McpSchema.CallToolRequest("create_template", Map.of("name", "Preserve"))));
+    String child = "type: text-field\nname: Already Required\nconfiguration:\n  required: true\n";
+
+    McpSchema.CallToolResult result = AddFieldTool.handler(null,
+        new McpSchema.CallToolRequest("add_field", Map.of("parent", parent, "child", child)));
+
+    assertFalse(result.isError(), textOf(result));
+    assertTrue(textOf(result).contains("required: true"),
+        "an already-required child must stay required when the flag is omitted; got:\n" + textOf(result));
+  }
+
+  @Test void isRequired_false_clears_a_required_child()
+  {
+    String parent = textOf(CreateTemplateTool.handler(null,
+        new McpSchema.CallToolRequest("create_template", Map.of("name", "Clear"))));
+    String child = "type: text-field\nname: Was Required\nconfiguration:\n  required: true\n";
+
+    McpSchema.CallToolResult result = AddFieldTool.handler(null,
+        new McpSchema.CallToolRequest("add_field",
+            Map.of("parent", parent, "child", child, "isRequired", false)));
+
+    assertFalse(result.isError(), textOf(result));
+    assertFalse(textOf(result).contains("required: true"),
+        "isRequired: false must clear the embedded copy's flag; got:\n" + textOf(result));
+  }
+
 }
