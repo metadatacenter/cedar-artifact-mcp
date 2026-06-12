@@ -167,6 +167,8 @@ final class EndToEndStdioIT
           "create_element_instance tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("set_element_instance"),
           "set_element_instance tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("validate_element_instance"),
+          "validate_element_instance tool should be listed; got " + toolNames);
 
       // 4. tools/call create_template -----------------------------------------------
       // The exchange form is expanded, so the supplied version survives into the returned YAML.

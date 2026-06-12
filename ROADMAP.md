@@ -108,6 +108,9 @@ centralizes read (YAML or JSON, auto-detected) and render.
   deletes the entry, an unindexed multi-instance path clears the list. Idempotent; required
   fields may be unset (`requiredValue` is enforced at validation time).
 - `validate_instance(template, instance)` — `CedarValidator.validateTemplateInstance`.
+- `validate_element_instance(element, element_instance)` — the same validator call with the
+  element as the schema document (an element artifact is itself the JSON Schema its instances
+  validate against); the sub-record is checked in its nested shape.
 
 ### Export / import
 

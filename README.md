@@ -344,7 +344,7 @@ through the library and passed its structural validation.
 | Literal options | `set_options` |
 | Default values | `set_literal_default_value` · `set_iri_default_value` |
 | Instance values | `set_literal_field_value` · `set_iri_field_value` · `set_element_instance` · `unset_field_value` |
-| Validate | `validate_template` · `validate_element` · `validate_field` · `validate_artifact` · `validate_instance` |
+| Validate | `validate_template` · `validate_element` · `validate_field` · `validate_artifact` · `validate_instance` · `validate_element_instance` |
 | Render | `template_to_json` · `element_to_json` · `field_to_json` · `instance_to_json` · `template_to_yaml` · `element_to_yaml` · `field_to_yaml` · `instance_to_yaml` |
 | Diagnostics | `ping` |
 
@@ -501,9 +501,8 @@ an entry to a multi-instance element list (the one slot kind
 `create_template_instance` cannot pre-populate, since it can't know how many
 entries an instance will need), then fill its fields with the value tools.
 The `@id` is auto-minted as a `template-element-instances` IRI when omitted.
-There is no CedarValidator step — CEDAR's validator validates whole template
-instances only, so the sub-record is validated in context by
-`validate_instance` once attached.
+Validate the sub-record standalone with `validate_element_instance`, or in
+context via `validate_instance` once attached.
 
 ### `set_literal_field_value(template, instance, field_path, value)`
 
@@ -579,6 +578,16 @@ Validates a template instance against its template — both accepted as YAML or 
 (auto-detected), like every other artifact parameter. Returns
 `{"valid": true}` on success, or `{"valid": false, "errors": [...]}` with
 diagnostics on failure.
+
+### `validate_element_instance(element, element_instance)`
+
+Validates an element-instance sub-record (the kind `create_element_instance`
+returns) against its element — an element artifact is itself the JSON Schema
+its instances validate against, so this is the same canonical validator call
+with the element as the schema document. The sub-record is checked in its
+*nested* shape, exactly as it would sit inside a parent instance (the
+standalone document's `name`/`description` identity keys are not part of that
+shape and are dropped before validating).
 
 ### `validate_template` / `validate_element` / `validate_field` / `validate_artifact` `(artifact)`
 

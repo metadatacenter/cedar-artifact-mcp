@@ -35,6 +35,7 @@ import org.metadatacenter.artifacts.mcp.tools.UnsetFieldValueTool;
 import org.metadatacenter.artifacts.mcp.tools.TemplateToJsonTool;
 import org.metadatacenter.artifacts.mcp.tools.TemplateToYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.ValidateArtifactTool;
+import org.metadatacenter.artifacts.mcp.tools.ValidateElementInstanceTool;
 import org.metadatacenter.artifacts.mcp.tools.ValidateElementTool;
 import org.metadatacenter.artifacts.mcp.tools.ValidateFieldTool;
 import org.metadatacenter.artifacts.mcp.tools.ValidateInstanceTool;
@@ -91,6 +92,7 @@ public final class ArtifactMcpServer
         .toolCall(InstanceToJsonTool.tool(), InstanceToJsonTool::handler)
         .toolCall(InstanceToYamlTool.tool(), InstanceToYamlTool::handler)
         .toolCall(ValidateInstanceTool.tool(), ValidateInstanceTool::handler)
+        .toolCall(ValidateElementInstanceTool.tool(), ValidateElementInstanceTool::handler)
         .toolCall(ValidateTemplateTool.tool(), ValidateTemplateTool::handler)
         .toolCall(ValidateElementTool.tool(), ValidateElementTool::handler)
         .toolCall(ValidateFieldTool.tool(), ValidateFieldTool::handler)
