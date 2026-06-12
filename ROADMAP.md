@@ -127,6 +127,21 @@ centralizes read (YAML or JSON, auto-detected) and render.
   parent's `_ui.order` (the library prunes children absent from the order, so the tool must
   require a complete permutation of the existing keys).
 
+- **Attribute-value instances cannot be populated.** `create_instance` seeds an
+  attribute-value field as an empty group, and the library models
+  `AttributeValueFieldInstance` fully — but no tool adds a name/value pair to the group, so
+  a template using attribute-value fields can be authored while its instances cannot be
+  filled. The biggest functional hole in the instance-side surface; needs a setter (and,
+  with it, a remove) addressing pairs within the group.
+
+- **Annotations are not exposed.** The library's `withAnnotations` carries the arbitrary
+  IRI-keyed annotation block any artifact may hold (DataCite-style templates use it); no
+  tool sets it. Annotations on input artifacts are preserved on round-trip — they just
+  can't be authored here.
+
+- **Template header / footer are not exposed.** `TemplateUi` carries display header and
+  footer text (`withHeader` / `withFooter`); preserved on round-trip, not settable.
+
 - **Render-if-present as the one YAML form** — idea, not yet decided. Mutating tools now
   always return the expanded exchange form and `isCompact` survives only on the `*_to_yaml`
   rendering tools; the remaining question is whether the compact/expanded distinction could
