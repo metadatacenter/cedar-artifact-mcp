@@ -3,6 +3,7 @@ package org.metadatacenter.artifacts.mcp.tools;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
+import org.metadatacenter.artifacts.model.core.ElementInstanceArtifact;
 import org.metadatacenter.artifacts.model.core.TemplateInstanceArtifact;
 import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
 import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
@@ -14,24 +15,22 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code unset_field_value} — clears or deletes a value on a template instance
- * at a slash-separated {@code field_path}. The inverse of the {@code set_*_field_value}
- * pair; one tool rather than a literal/IRI split because unsetting takes no value, so
- * the signature is identical for every field kind.
+ * MCP tool {@code set_element_instance} — grafts an element-instance sub-record (the kind
+ * {@code create_element_instance} returns) into a template instance at a slash-separated
+ * {@code field_path} naming an element child.
  *
- * <p>The path decides the operation (see {@link InstanceValueRemover}): a
- * single-instance field path clears the value back to unset, an indexed multi-instance
- * path deletes that entry, an unindexed multi-instance path clears the whole list.
- * Clearing is idempotent. Required fields may be unset — an in-progress instance is
- * allowed to be incomplete, and {@code requiredValue} is enforced by
- * {@code validate_instance}, not mid-edit.
+ * <p>This is the instance-side compose step that makes multi-instance elements fillable:
+ * {@code create_template_instance} seeds them as empty lists, and the
+ * {@code set_*_field_value} walkers require intermediate entries to exist. Appending a
+ * sub-record here ({@code addresses[N]} with N == current size) creates the entry; its
+ * fields are then set with the regular value tools at {@code addresses[N]/...} paths.
  */
-public final class UnsetFieldValueTool
+public final class SetElementInstanceTool
 {
   private static final JsonArtifactReader READER = new JsonArtifactReader();
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
 
-  private UnsetFieldValueTool() {}
+  private SetElementInstanceTool() {}
 
   public static McpSchema.Tool tool()
   {
@@ -39,8 +38,8 @@ public final class UnsetFieldValueTool
     properties.put("template", Map.of(
         "type", "string",
         "description",
-        "CEDAR template the instance is based on, as YAML. Used to resolve the "
-            + "field_path and decide what unsetting means at the leaf."));
+        "CEDAR template the instance is based on, as YAML. Used to resolve the field_path "
+            + "and check the leaf names an element child."));
     properties.put("instance", Map.of(
         "type", "string",
         "description",
@@ -48,29 +47,33 @@ public final class UnsetFieldValueTool
     properties.put("field_path", Map.of(
         "type", "string",
         "description",
-        "Slash-separated path to unset. Same syntax as 'set_literal_field_value'. A "
-            + "single-instance field path ('name', 'address/street') clears the value; "
-            + "an indexed multi-instance path ('emails[1]', 'addresses[2]') deletes that "
-            + "entry and shifts later entries down; an unindexed multi-instance path "
-            + "('emails') clears the whole list."));
+        "Slash-separated path to the element child. Same syntax as "
+            + "'set_literal_field_value', but the leaf must name an element: a "
+            + "single-instance path ('address') replaces the sub-record; an indexed "
+            + "multi-instance path ('addresses[2]') replaces entry 2, or appends when the "
+            + "index equals the current list size."));
+    properties.put("element_instance", Map.of(
+        "type", "string",
+        "description",
+        "Element-instance sub-record as YAML — the kind 'create_element_instance' returns "
+            + "(type: element-instance). JSON is also accepted."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
-        List.of("template", "instance", "field_path"),
+        List.of("template", "instance", "field_path", "element_instance"),
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
-        .name("unset_field_value")
-        .title("Unset a field value on an instance")
+        .name("set_element_instance")
+        .title("Set an element sub-record on an instance")
         .description(
-            "Clears or deletes a value on a CEDAR template instance at a slash-separated "
-                + "field_path — the inverse of the set_*_field_value tools, for any field "
-                + "kind. A single-instance field path clears the value back to unset; an "
-                + "indexed multi-instance path deletes that entry (later entries shift "
-                + "down); an unindexed multi-instance path clears the whole list. "
-                + "Idempotent: unsetting an already-unset field succeeds. Required fields "
-                + "may be unset — requiredValue is enforced by validate_instance, not "
-                + "here. Returns the updated instance as expanded YAML."
+            "Grafts an element-instance sub-record (from create_element_instance) into a "
+                + "CEDAR template instance at a slash-separated field_path naming an element "
+                + "child. A single-instance element path replaces the sub-record; an indexed "
+                + "multi-instance path replaces that entry, or appends when the index equals "
+                + "the current list size — the way to add entries to a repeated element. "
+                + "Fill the entry's fields afterwards with the set_*_field_value tools at "
+                + "'<path>[N]/<field>' paths. Returns the updated instance as expanded YAML."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
@@ -93,6 +96,10 @@ public final class UnsetFieldValueTool
     if (fieldPath == null || fieldPath.isBlank())
       return error("field_path is required and must not be blank");
 
+    String entryText = stringArg(args, "element_instance");
+    if (entryText == null || entryText.isBlank())
+      return error("element_instance is required and must not be blank");
+
     ObjectNode templateObject;
     try {
       templateObject = ArtifactExchange.toObjectNode(templateJsonText);
@@ -109,15 +116,9 @@ public final class UnsetFieldValueTool
       return error("template parse failed: " + e.getMessage());
     }
 
-    ObjectNode instanceObject;
-    try {
-      instanceObject = ArtifactExchange.toObjectNode(instanceJsonText);
-    } catch (RuntimeException e) {
-      return error("instance parse failed: " + e.getMessage());
-    }
-
     TemplateInstanceArtifact instance;
     try {
+      ObjectNode instanceObject = ArtifactExchange.toObjectNode(instanceJsonText);
       instance = READER.readTemplateInstanceArtifact(instanceObject);
     } catch (ArtifactParseException e) {
       return error("instance rejected by reader: " + e.getMessage());
@@ -125,9 +126,17 @@ public final class UnsetFieldValueTool
       return error("instance parse failed: " + e.getMessage());
     }
 
-    // A YAML instance is sparse — unset fields are omitted. Inflate against the template so
-    // the addressed slot exists; that is also what makes clearing idempotent (clearing a
-    // never-set field clears the freshly inflated empty slot).
+    ElementInstanceArtifact entry;
+    try {
+      entry = ArtifactExchange.readElementInstance(entryText);
+    } catch (ArtifactParseException e) {
+      return error("element_instance rejected by reader: " + e.getMessage());
+    } catch (RuntimeException e) {
+      return error("element_instance parse failed: " + e.getMessage());
+    }
+
+    // A YAML instance is sparse — unset slots are omitted. Inflate against the template so
+    // the addressed element slot (an empty list for a fresh multi-instance element) exists.
     try {
       instance = InstanceInflater.inflate(template, instance);
     } catch (RuntimeException e) {
@@ -136,11 +145,11 @@ public final class UnsetFieldValueTool
 
     TemplateInstanceArtifact updated;
     try {
-      updated = InstanceValueRemover.remove(template, instance, fieldPath);
+      updated = InstanceElementValues.set(template, instance, fieldPath, entry);
     } catch (IllegalArgumentException e) {
       return error(e.getMessage());
     } catch (RuntimeException e) {
-      return error("unset_field_value failed: " + e.getClass().getSimpleName()
+      return error("set_element_instance failed: " + e.getClass().getSimpleName()
           + ": " + e.getMessage());
     }
 

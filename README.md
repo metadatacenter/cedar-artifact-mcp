@@ -338,12 +338,12 @@ through the library and passed its structural validation.
 
 | Group | Tools |
 |---|---|
-| Create | `create_template` · `create_element` · `create_field` · `create_instance` |
+| Create | `create_template` · `create_element` · `create_field` · `create_template_instance` · `create_element_instance` |
 | Compose | `add_field` · `add_element` · `replace_field` · `replace_element` · `remove_child` |
 | Controlled term constraints | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` |
 | Literal options | `set_options` |
 | Default values | `set_literal_default_value` · `set_iri_default_value` |
-| Instance values | `set_literal_field_value` · `set_iri_field_value` · `unset_field_value` |
+| Instance values | `set_literal_field_value` · `set_iri_field_value` · `set_element_instance` · `unset_field_value` |
 | Validate | `validate_template` · `validate_element` · `validate_field` · `validate_artifact` · `validate_instance` |
 | Render | `template_to_json` · `element_to_json` · `field_to_json` · `instance_to_json` · `template_to_yaml` · `element_to_yaml` · `field_to_yaml` · `instance_to_yaml` |
 | Diagnostics | `ping` |
@@ -364,7 +364,7 @@ JSON boundary (`validate_instance`, `instance_to_json`).
 
 Creates a new, empty CEDAR template. `version` and `status` are optional and default to
 `0.0.1` / `draft`. Pass the returned template into
-`add_field` or `add_element` to attach children, or into `create_instance` to
+`add_field` or `add_element` to attach children, or into `create_template_instance` to
 make an empty instance of it. `id` is optional: supply one assigned by a CEDAR
 repository, or omit it and a fresh `templates` IRI is auto-minted.
 
@@ -491,6 +491,20 @@ the class IRI plus a human label, so `label` is required; the field must
 already carry at least one `set_*_constraint` constraint, and a plain
 text-field is refused with a redirect to the constraint tools.
 
+### `create_element_instance(element, name?, description?, id?)`
+
+Walks an element and produces an empty element-instance sub-record — the
+element counterpart of `create_template_instance`, returned as a standalone
+`type: element-instance` YAML document. Its purpose is composition: graft it
+into a template instance with `set_element_instance`, most usefully to append
+an entry to a multi-instance element list (the one slot kind
+`create_template_instance` cannot pre-populate, since it can't know how many
+entries an instance will need), then fill its fields with the value tools.
+The `@id` is auto-minted as a `template-element-instances` IRI when omitted.
+There is no CedarValidator step — CEDAR's validator validates whole template
+instances only, so the sub-record is validated in context by
+`validate_instance` once attached.
+
 ### `set_literal_field_value(template, instance, field_path, value)`
 
 Sets the value of a literal-valued field on an instance — text, numeric,
@@ -505,6 +519,19 @@ RRID, PubMed, NIH-grant-ID, DOI, or controlled-term. For the plain IRI kinds
 fields `label` is required, and the value is written as `@id` + `rdfs:label`
 only — the shape the CEDAR editor produces; the schema must declare the field
 as controlled-term (with at least one `set_*_constraint` already attached).
+
+### `set_element_instance(template, instance, field_path, element_instance)`
+
+Grafts an element-instance sub-record (from `create_element_instance`) into a
+template instance at a `field_path` naming an *element* child. A
+single-instance element path (`address`) replaces the sub-record; an indexed
+multi-instance path (`addresses[2]`) replaces that entry, or **appends** when
+the index equals the current list size — the way to add entries to a repeated
+element, which is otherwise impossible (a fresh instance's repeated elements
+are empty lists, and the value tools require entries to exist). After
+appending, fill the entry's fields at `addresses[N]/...` paths. The incoming
+sub-record is inflated against the element schema on the way in, so every
+child slot is immediately addressable.
 
 ### `unset_field_value(template, instance, field_path)`
 
@@ -532,7 +559,7 @@ appends a new entry; any larger index errors.
 information on round-trip — the schema is the source of truth for which kind
 of field the value belongs to.
 
-### `create_instance(template, name?, description?, id?)`
+### `create_template_instance(template, name?, description?, id?)`
 
 Creates an instance from a template, ready to be populated with field values.
 The returned instance is **sparse** — it carries its identity (`@id`, `name`,

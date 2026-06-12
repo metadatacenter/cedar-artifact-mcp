@@ -132,7 +132,7 @@ Because the model is canonical and the serialization is just transport, the MCP
 threads **YAML**. The tool surface:
 
 - **YAML is the exchange currency between tool calls.** Every tool that produces an
-  artifact (`create_*`, `add_*`, `remove_child`, the `set_*` family, `create_instance`)
+  artifact (`create_*`, `add_*`, `remove_child`, the `set_*` family, `create_template_instance`)
   returns YAML, and every tool that consumes one accepts YAML (JSON too — auto-detected).
   `ArtifactExchange` centralizes this: read → model, render model → YAML, with a
   `CedarValidator` pass (rendered to JSON internally) on the way out (Principle 6).

@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Tests for {@code set_literal_field_value}. The tool now exchanges artifacts as expanded YAML:
  * fixtures are built via {@code create_template} / {@code create_field} / {@code add_field}
- * / {@code create_instance} (all YAML), and the tool's output is the updated instance as
+ * / {@code create_template_instance} (all YAML), and the tool's output is the updated instance as
  * expanded YAML — parsed here with SnakeYAML and, where structural correctness matters,
  * re-read and revalidated against the template with {@link CedarValidator}.
  */
@@ -325,7 +325,7 @@ final class SetLiteralFieldValueToolTest
 
   private static String createInstance(String templateJson, String name)
   {
-    return textOf(invokeTool(CreateInstanceTool::handler, "create_instance", Map.of(
+    return textOf(invokeTool(CreateTemplateInstanceTool::handler, "create_template_instance", Map.of(
         "template", templateJson,
         "name", name)));
   }

@@ -60,7 +60,7 @@ public final class SetLiteralFieldValueTool
     properties.put("instance", Map.of(
         "type", "string",
         "description",
-        "CEDAR template instance as YAML (the kind 'create_instance' returns)."));
+        "CEDAR template instance as YAML (the kind 'create_template_instance' returns)."));
     properties.put("field_path", Map.of(
         "type", "string",
         "description",

@@ -48,7 +48,8 @@ final class InstanceInflater
     return builder.build();
   }
 
-  private static ElementInstanceArtifact inflateElement(ElementSchemaArtifact schema, ElementInstanceArtifact sparse)
+  /** Inflate a (possibly sparse) element sub-record to a complete one against its element schema. */
+  static ElementInstanceArtifact inflateElement(ElementSchemaArtifact schema, ElementInstanceArtifact sparse)
   {
     ElementInstanceArtifact.Builder builder = ElementInstanceArtifact.builder(sparse);
     ensureContext(schema.getChildPropertyUris(), sparse.jsonLdContext(), builder::withJsonLdContextEntry);
@@ -60,7 +61,8 @@ final class InstanceInflater
     return builder.build();
   }
 
-  private static ElementInstanceArtifact emptyElement(ElementSchemaArtifact schema)
+  /** An all-empty sub-record matching the element schema — every regular child present, value-less. */
+  static ElementInstanceArtifact emptyElement(ElementSchemaArtifact schema)
   {
     ElementInstanceArtifact.Builder builder = ElementInstanceArtifact.builder();
     for (Map.Entry<String, URI> entry : schema.getChildPropertyUris().entrySet())

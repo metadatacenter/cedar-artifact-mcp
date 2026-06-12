@@ -101,8 +101,8 @@ final class ValidateInstanceToolTest
   private static String createInstance(
       String templateJson, String name, String description)
   {
-    McpSchema.CallToolResult result = CreateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_instance", Map.of(
+    McpSchema.CallToolResult result = CreateTemplateInstanceTool.handler(null,
+        new McpSchema.CallToolRequest("create_template_instance", Map.of(
             "template", templateJson,
             "name", name,
             "description", description)));

@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for {@code set_iri_field_value}. Fixtures are built via the YAML-exchange tools
- * (create_template / create_field / add_field / create_instance); the tool returns the
+ * (create_template / create_field / add_field / create_template_instance); the tool returns the
  * updated instance as expanded YAML, asserted on via SnakeYAML. An IRI field instance
  * carries its URI under {@code children.<key>.id}, with an optional {@code label}.
  * Controlled-term values carry {@code id} + {@code label} only — no {@code prefLabel} —
@@ -189,7 +189,7 @@ final class SetIriFieldValueToolTest
 
   private static String createInstance(String templateJson, String name)
   {
-    return textOf(invokeTool(CreateInstanceTool::handler, "create_instance", Map.of(
+    return textOf(invokeTool(CreateTemplateInstanceTool::handler, "create_template_instance", Map.of(
         "template", templateJson,
         "name", name)));
   }

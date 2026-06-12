@@ -84,10 +84,20 @@ centralizes read (YAML or JSON, auto-detected) and render.
 
 ### Instances
 
-- `create_instance(template, name?, description?, id?)` — walks a
+- `create_template_instance(template, name?, description?, id?)` — walks a
   template and produces an empty instance skeleton that validates against it. Attribute-value
   fields are seeded as empty groups; static fields are skipped; the instance `@id` is
   auto-minted when omitted.
+- `create_element_instance(element, name?, description?, id?)` — the element counterpart:
+  an empty sub-record as a standalone `type: element-instance` document (`@id` minted in the
+  `template-element-instances` collection), to be grafted in with `set_element_instance`.
+  Backed by the library's standalone element-instance serialization (readers, renderers, and
+  the YAML `element-instance` document kind added for this).
+- `set_element_instance(template, instance, field_path, element_instance)` — grafts a
+  sub-record at an element path: single-instance replaces; `addresses[N]` replaces entry N or
+  appends when N equals the list size. This is what makes multi-instance elements fillable —
+  repeated-element entries can now be appended, filled via `addresses[N]/...` paths, and
+  deleted with `unset_field_value`.
 - `set_literal_field_value` / `set_iri_field_value` — set a value (the latter covers plain
   IRI fields and controlled-term fields, which require a `label`)
   at a slash-separated `field_path` (bracketed indices for multi-instance leaves, e.g.
@@ -132,7 +142,7 @@ centralizes read (YAML or JSON, auto-detected) and render.
   parent's `_ui.order` (the library prunes children absent from the order, so the tool must
   require a complete permutation of the existing keys).
 
-- **Attribute-value instances cannot be populated.** `create_instance` seeds an
+- **Attribute-value instances cannot be populated.** `create_template_instance` seeds an
   attribute-value field as an empty group, and the library models
   `AttributeValueFieldInstance` fully — but no tool adds a name/value pair to the group, so
   a template using attribute-value fields can be authored while its instances cannot be

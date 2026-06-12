@@ -15,14 +15,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests for the {@code create_instance} tool. A created instance is <em>sparse</em>: unset
+ * Tests for the {@code create_template_instance} tool. A created instance is <em>sparse</em>: unset
  * fields are omitted from the YAML (no `value: null`, no `{}`). The structural completeness the
  * template requires lives at the JSON boundary — {@code validate_instance} and
  * {@code instance_to_json} inflate the instance against the template. So the headline check is
  * that the instance validates, and structural assertions are made against the inflated JSON
  * (see {@link #inflatedJson}).
  */
-final class CreateInstanceToolTest
+final class CreateTemplateInstanceToolTest
 {
   private ObjectMapper jackson;
 
@@ -352,8 +352,8 @@ final class CreateInstanceToolTest
 
   private static McpSchema.CallToolResult invoke(Map<String, Object> arguments)
   {
-    return CreateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_instance", arguments));
+    return CreateTemplateInstanceTool.handler(null,
+        new McpSchema.CallToolRequest("create_template_instance", arguments));
   }
 
   private static String createTemplate(String name)

@@ -83,10 +83,10 @@ final class ArtifactInputRobustnessTest
     String yamlForm = templateYaml();
     String jsonForm = templateJson(yamlForm);
 
-    String fromYaml = textOf(CreateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_instance", Map.of("template", yamlForm))));
-    String fromJson = textOf(CreateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_instance", Map.of("template", jsonForm))));
+    String fromYaml = textOf(CreateTemplateInstanceTool.handler(null,
+        new McpSchema.CallToolRequest("create_template_instance", Map.of("template", yamlForm))));
+    String fromJson = textOf(CreateTemplateInstanceTool.handler(null,
+        new McpSchema.CallToolRequest("create_template_instance", Map.of("template", jsonForm))));
 
     // Identity (@id) is freshly minted per call; the derived isBasedOn line must agree.
     String basedOnFromYaml = lineStartingWith(fromYaml, "isBasedOn:");
@@ -100,8 +100,8 @@ final class ArtifactInputRobustnessTest
   {
     String templateYaml = templateYaml();
     String templateJson = templateJson(templateYaml);
-    String instanceYaml = textOf(CreateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_instance", Map.of("template", templateYaml))));
+    String instanceYaml = textOf(CreateTemplateInstanceTool.handler(null,
+        new McpSchema.CallToolRequest("create_template_instance", Map.of("template", templateYaml))));
 
     McpSchema.CallToolResult result = ValidateInstanceTool.handler(null,
         new McpSchema.CallToolRequest("validate_instance",
@@ -153,9 +153,9 @@ final class ArtifactInputRobustnessTest
         "parent");
   }
 
-  @Test void create_instance_survives_garbage_templates()
+  @Test void create_template_instance_survives_garbage_templates()
   {
-    assertCleanErrors("create_instance", CreateInstanceTool::handler, "template");
+    assertCleanErrors("create_template_instance", CreateTemplateInstanceTool::handler, "template");
   }
 
   @Test void set_literal_default_value_survives_garbage_fields()
@@ -176,11 +176,11 @@ final class ArtifactInputRobustnessTest
   {
     // An instance handed to a template parameter must be rejected, not half-read.
     String templateYaml = templateYaml();
-    String instanceYaml = textOf(CreateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_instance", Map.of("template", templateYaml))));
+    String instanceYaml = textOf(CreateTemplateInstanceTool.handler(null,
+        new McpSchema.CallToolRequest("create_template_instance", Map.of("template", templateYaml))));
 
-    McpSchema.CallToolResult result = CreateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_instance", Map.of("template", instanceYaml)));
+    McpSchema.CallToolResult result = CreateTemplateInstanceTool.handler(null,
+        new McpSchema.CallToolRequest("create_template_instance", Map.of("template", instanceYaml)));
 
     assertTrue(result.isError(), "an instance is not a template; got: " + textOf(result));
   }

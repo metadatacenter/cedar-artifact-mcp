@@ -214,7 +214,7 @@ final class UnsetFieldValueToolTest
 
   private static String createInstance(String template)
   {
-    return textOf(invokeTool(CreateInstanceTool::handler, "create_instance", Map.of(
+    return textOf(invokeTool(CreateTemplateInstanceTool::handler, "create_template_instance", Map.of(
         "template", template, "name", "Fixture instance")));
   }
 

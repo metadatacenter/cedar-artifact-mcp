@@ -41,7 +41,7 @@ public final class ValidateInstanceTool
     properties.put("instance", Map.of(
         "type", "string",
         "description",
-        "CEDAR template instance as YAML (the kind 'create_instance' returns, or what "
+        "CEDAR template instance as YAML (the kind 'create_template_instance' returns, or what "
             + "a CEDAR repository serves for a saved instance). JSON is also accepted."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(

@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * MCP tool {@code instance_to_yaml} — renders a CEDAR template instance as YAML.
  *
- * <p>Accepts the instance as YAML (the exchange form 'create_instance' returns) or JSON
+ * <p>Accepts the instance as YAML (the exchange form 'create_template_instance' returns) or JSON
  * (auto-detected). {@code isCompact} matches the schema-side {@code *_to_yaml} tools:
  * re-render an expanded YAML instance compact for display, or import a JSON instance into YAML.
  */
@@ -26,7 +26,7 @@ public final class InstanceToYamlTool
     properties.put("artifact", Map.of(
         "type", "string",
         "description",
-        "CEDAR template instance as YAML (the exchange form 'create_instance' returns) or as "
+        "CEDAR template instance as YAML (the exchange form 'create_template_instance' returns) or as "
             + "a JSON string (what a CEDAR repository serves for a saved instance). The format "
             + "is auto-detected."));
     properties.put("isCompact", Map.of(

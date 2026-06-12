@@ -21,7 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * MCP tool {@code create_instance} — builds a template instance from a CEDAR template.
+ * MCP tool {@code create_template_instance} — builds a template instance from a CEDAR template.
  *
  * <p>Walks the template and builds a complete instance model (an empty {@code FieldInstance}
  * per non-static, non-attribute-value child, recursing on elements). The rendered YAML, however,
@@ -36,12 +36,12 @@ import java.util.Map;
  * without an {@code @id} is rejected with guidance ({@code create_template} and
  * {@code template_to_json} mint one automatically).
  */
-public final class CreateInstanceTool
+public final class CreateTemplateInstanceTool
 {
   private static final JsonArtifactReader READER = new JsonArtifactReader();
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
 
-  private CreateInstanceTool() {}
+  private CreateTemplateInstanceTool() {}
 
   public static McpSchema.Tool tool()
   {
@@ -74,7 +74,7 @@ public final class CreateInstanceTool
         "object", properties, List.of("template"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
-        .name("create_instance")
+        .name("create_template_instance")
         .title("Create an empty CEDAR template instance")
         .description(
             "Builds a CEDAR template instance from a template. The returned YAML is sparse: it "

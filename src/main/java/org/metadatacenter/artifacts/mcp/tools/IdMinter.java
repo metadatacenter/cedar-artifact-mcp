@@ -43,6 +43,11 @@ public final class IdMinter
     return mint("template-instances");
   }
 
+  public static URI mintElementInstanceId()
+  {
+    return mint("template-element-instances");
+  }
+
   private static URI mint(String collection)
   {
     return URI.create(BASE + collection + "/" + UUID.randomUUID());

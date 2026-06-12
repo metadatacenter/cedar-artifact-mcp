@@ -29,7 +29,7 @@ import org.metadatacenter.artifacts.model.core.fields.constraints.TemporalValueC
 
 /**
  * Dispatch from a {@link FieldSchemaArtifact} to an empty (value-less)
- * {@link FieldInstanceArtifact} of the matching kind. Used by {@code create_instance}
+ * {@link FieldInstanceArtifact} of the matching kind. Used by {@code create_template_instance}
  * to populate the skeleton instance with one empty value per schema child.
  *
  * <p>Static fields (page-break, section-break, rich-text, image, youtube) and

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.metadatacenter.artifacts.model.core.Artifact;
 import org.metadatacenter.artifacts.model.core.Status;
+import org.metadatacenter.artifacts.model.core.ElementInstanceArtifact;
 import org.metadatacenter.artifacts.model.core.ElementSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.TemplateInstanceArtifact;
@@ -150,6 +151,13 @@ final class ArtifactExchange
     return looksLikeJson(text)
         ? JSON_READER.readTemplateInstanceArtifact(asObjectNode(text))
         : YAML_READER.readTemplateInstanceArtifact(parseYamlMap(text));
+  }
+
+  static ElementInstanceArtifact readElementInstance(String text)
+  {
+    return looksLikeJson(text)
+        ? JSON_READER.readElementInstanceArtifact(asObjectNode(text))
+        : YAML_READER.readElementInstanceArtifact(parseYamlMap(text));
   }
 
   /**
@@ -308,6 +316,7 @@ final class ArtifactExchange
       case "template" -> JSON_RENDERER.renderTemplateSchemaArtifact(YAML_READER.readTemplateSchemaArtifact(map));
       case "element" -> JSON_RENDERER.renderElementSchemaArtifact(YAML_READER.readElementSchemaArtifact(map));
       case "instance" -> JSON_RENDERER.renderTemplateInstanceArtifact(YAML_READER.readTemplateInstanceArtifact(map));
+      case "element-instance" -> JSON_RENDERER.renderElementInstanceArtifact(YAML_READER.readElementInstanceArtifact(map));
       // Every other top-level type discriminator is a field kind (text-field, numeric-field,
       // controlled-term-field, the ext-* and static-* families, ...).
       default -> JSON_RENDERER.renderFieldSchemaArtifact(YAML_READER.readFieldSchemaArtifact(map));

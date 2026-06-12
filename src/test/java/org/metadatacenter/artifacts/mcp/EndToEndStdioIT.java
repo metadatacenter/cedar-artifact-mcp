@@ -141,8 +141,8 @@ final class EndToEndStdioIT
           "set_literal_default_value tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("set_iri_default_value"),
           "set_iri_default_value tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("create_instance"),
-          "create_instance tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("create_template_instance"),
+          "create_template_instance tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("instance_to_json"),
           "instance_to_json tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("instance_to_yaml"),
@@ -163,6 +163,10 @@ final class EndToEndStdioIT
           "set_iri_field_value tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("unset_field_value"),
           "unset_field_value tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("create_element_instance"),
+          "create_element_instance tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("set_element_instance"),
+          "set_element_instance tool should be listed; got " + toolNames);
 
       // 4. tools/call create_template -----------------------------------------------
       // The exchange form is expanded, so the supplied version survives into the returned YAML.
