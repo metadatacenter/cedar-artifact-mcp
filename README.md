@@ -317,6 +317,90 @@ DOID class IRI of the chosen value, not a minted instance id — it's the value 
 field points at. The instance now carries the full identifier + label pair, not
 just a free-text string — which is what makes the data downstream-queryable.
 
+A last follow-on shows **repeated groups** — a multi-instance element, whose
+instances grow entry by entry.
+
+*Create a Contacts template with a repeatable Address element (a Street
+field, up to 3 addresses).*
+
+```yaml
+type: template
+name: Contacts
+id: https://repo.metadatacenter.org/templates/8765865e-f9b4-4e4f-8904-4b641f280c93
+children:
+  - key: Address
+    type: element
+    name: Address
+    id: https://repo.metadatacenter.org/template-elements/4f1b852c-2505-483f-87b6-a92ff32da64b
+    children:
+      - key: Street
+        type: text-field
+        name: Street
+        id: https://repo.metadatacenter.org/template-fields/f25a7ad8-6fc7-431a-aec5-d0a492451876
+    configuration:
+      multiple: true
+      minItems: 0
+      maxItems: 3
+```
+
+*Create an instance with two addresses.*
+
+```yaml
+type: instance
+name: Contacts
+id: https://repo.metadatacenter.org/template-instances/aae94f9a-5aca-436d-aef8-1a6f1c36537a
+isBasedOn: https://repo.metadatacenter.org/templates/8765865e-f9b4-4e4f-8904-4b641f280c93
+children:
+  Address:
+    - type: element-instance
+      id: https://repo.metadatacenter.org/template-element-instances/a5f49127-879a-4e7b-86d9-93d46f184afb
+    - type: element-instance
+      id: https://repo.metadatacenter.org/template-element-instances/dc8c3f5e-3ee7-43a9-81f0-1d2f00c39b1f
+```
+
+A fresh instance's `Address` list starts empty; each entry is created with
+`create_element_instance` (an element instance is a standalone artifact with
+its own minted `@id`) and appended with `set_element_instance`. An entry that
+holds no values yet displays as just its identity.
+
+*Set the first address's street to 123 Main St.*
+
+```yaml
+type: instance
+name: Contacts
+id: https://repo.metadatacenter.org/template-instances/aae94f9a-5aca-436d-aef8-1a6f1c36537a
+isBasedOn: https://repo.metadatacenter.org/templates/8765865e-f9b4-4e4f-8904-4b641f280c93
+children:
+  Address:
+    - id: https://repo.metadatacenter.org/template-element-instances/a5f49127-879a-4e7b-86d9-93d46f184afb
+      children:
+        Street:
+          value: 123 Main St
+    - type: element-instance
+      id: https://repo.metadatacenter.org/template-element-instances/dc8c3f5e-3ee7-43a9-81f0-1d2f00c39b1f
+```
+
+The value tools address into entries with bracketed indices —
+`Address[0]/Street` here.
+
+*Drop the second address.*
+
+```yaml
+type: instance
+name: Contacts
+id: https://repo.metadatacenter.org/template-instances/aae94f9a-5aca-436d-aef8-1a6f1c36537a
+isBasedOn: https://repo.metadatacenter.org/templates/8765865e-f9b4-4e4f-8904-4b641f280c93
+children:
+  Address:
+    - id: https://repo.metadatacenter.org/template-element-instances/a5f49127-879a-4e7b-86d9-93d46f184afb
+      children:
+        Street:
+          value: 123 Main St
+```
+
+`unset_field_value` with `Address[1]` deletes the entry; later entries shift
+down.
+
 ## Tools
 
 Each tool below is a thin wrapper over a corresponding operation in the
