@@ -66,6 +66,7 @@ public final class CreateFieldTool
     properties.put("description", Map.of(
         "type", "string",
         "description", "Free-text description of the field's purpose. Optional; defaults to an empty string."));
+    properties.put("identifier", ArtifactExchange.identifierSchemaProperty());
     properties.put("version", Map.of(
         "type", "string",
         "description", "Semantic version string in major.minor.patch form (e.g. \"0.0.1\"). Optional; defaults to 0.0.1."));
@@ -210,6 +211,9 @@ public final class CreateFieldTool
     try {
       FieldSchemaArtifactBuilder<?> builder = FieldBuilders.builderFor(type);
       builder.withName(name).withDescription(description).withVersion(version).withStatus(status);
+      String identifier = stringArg(args, "identifier");
+      if (identifier != null && !identifier.isBlank())
+        builder.withIdentifier(identifier.trim());
       builder.withJsonLdId(id);
       String configError = applyTypeSpecificConfig(builder, type, args);
       if (configError != null) return error(configError);
