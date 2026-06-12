@@ -77,6 +77,19 @@ final class ReplaceFieldToolTest
         "isHidden override; got: " + configuration);
   }
 
+  @Test void property_iri_maps_the_replacement_to_an_ontology_property()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent", templateWithThreeFields(),
+        "child", createField("Patient Name", "text-field"),
+        "key", "b",
+        "property_iri", "https://schema.org/name"));
+
+    assertFalse(result.isError(), errorText(result));
+    assertTrue(textOf(result).contains("propertyIri: https://schema.org/name"),
+        "the property IRI must appear on the embedded replacement; got: " + textOf(result));
+  }
+
   @Test void rejects_an_unknown_key()
   {
     McpSchema.CallToolResult result = invoke(Map.of(

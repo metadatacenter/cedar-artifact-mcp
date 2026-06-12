@@ -71,6 +71,26 @@ final class ReplaceElementToolTest
         "maxItems override; got: " + configuration);
   }
 
+  @Test void property_iri_maps_the_replacement_to_an_ontology_property()
+  {
+    String template = textOf(invokeTool(CreateTemplateTool::handler, "create_template",
+        Map.of("name", "Fixture")));
+    template = textOf(invokeTool(AddElementTool::handler, "add_element", Map.of(
+        "parent", template,
+        "child", elementWithStreet("Address"),
+        "key", "addr")));
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent", template,
+        "child", elementWithStreet("Address"),
+        "key", "addr",
+        "property_iri", "https://schema.org/address"));
+
+    assertFalse(result.isError(), errorText(result));
+    assertTrue(textOf(result).contains("propertyIri: https://schema.org/address"),
+        "the property IRI must appear on the embedded replacement; got: " + textOf(result));
+  }
+
   @Test void rejects_an_unknown_key()
   {
     String template = textOf(invokeTool(CreateTemplateTool::handler, "create_template",
