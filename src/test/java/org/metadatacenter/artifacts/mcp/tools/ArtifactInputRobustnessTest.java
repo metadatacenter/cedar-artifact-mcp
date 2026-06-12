@@ -1,0 +1,202 @@
+package org.metadatacenter.artifacts.mcp.tools;
+
+import io.modelcontextprotocol.spec.McpSchema;
+import org.junit.jupiter.api.Test;
+
+import java.util.Map;
+import java.util.function.BiFunction;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * Cross-cutting robustness of the artifact parameters, exercised through representative tools:
+ *
+ * <ul>
+ *   <li><strong>Format auto-detection</strong> — every artifact parameter accepts YAML or JSON
+ *       interchangeably (a JSON Schema export and the YAML exchange form of the same artifact
+ *       must behave identically);</li>
+ *   <li><strong>Garbage tolerance</strong> — malformed, mis-shaped, wrong-kind, or blank input
+ *       must come back as a clean {@code isError=true} result with a message, never as a thrown
+ *       exception.</li>
+ * </ul>
+ */
+final class ArtifactInputRobustnessTest
+{
+  // ---------------------------------------------------------------- fixtures
+
+  private static String templateYaml()
+  {
+    return textOf(CreateTemplateTool.handler(null,
+        new McpSchema.CallToolRequest("create_template", Map.of("name", "Robustness"))));
+  }
+
+  private static String templateJson(String templateYaml)
+  {
+    return textOf(TemplateToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("template_to_json", Map.of("artifact", templateYaml))));
+  }
+
+  private static String fieldYaml()
+  {
+    return textOf(CreateFieldTool.handler(null,
+        new McpSchema.CallToolRequest("create_field",
+            Map.of("type", "text-field", "name", "Probe"))));
+  }
+
+  private static String fieldJson(String fieldYaml)
+  {
+    return textOf(FieldToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("field_to_json", Map.of("artifact", fieldYaml))));
+  }
+
+  // ---------------------------------------------------------------- auto-detection
+
+  @Test void add_field_accepts_yaml_parent_with_json_child()
+  {
+    String template = templateYaml();
+    String field = fieldJson(fieldYaml());
+
+    McpSchema.CallToolResult result = AddFieldTool.handler(null,
+        new McpSchema.CallToolRequest("add_field", Map.of("parent", template, "child", field)));
+
+    assertFalse(result.isError(), textOf(result));
+    assertTrue(textOf(result).contains("key: Probe"),
+        "JSON child must graft like its YAML twin; got:\n" + textOf(result));
+  }
+
+  @Test void add_field_accepts_json_parent_with_yaml_child()
+  {
+    String template = templateJson(templateYaml());
+    String field = fieldYaml();
+
+    McpSchema.CallToolResult result = AddFieldTool.handler(null,
+        new McpSchema.CallToolRequest("add_field", Map.of("parent", template, "child", field)));
+
+    assertFalse(result.isError(), textOf(result));
+    assertTrue(textOf(result).contains("key: Probe"),
+        "YAML child must graft onto a JSON parent; got:\n" + textOf(result));
+  }
+
+  @Test void both_formats_of_the_same_template_create_equivalent_instances()
+  {
+    String yamlForm = templateYaml();
+    String jsonForm = templateJson(yamlForm);
+
+    String fromYaml = textOf(CreateInstanceTool.handler(null,
+        new McpSchema.CallToolRequest("create_instance", Map.of("template", yamlForm))));
+    String fromJson = textOf(CreateInstanceTool.handler(null,
+        new McpSchema.CallToolRequest("create_instance", Map.of("template", jsonForm))));
+
+    // Identity (@id) is freshly minted per call; the derived isBasedOn line must agree.
+    String basedOnFromYaml = lineStartingWith(fromYaml, "isBasedOn:");
+    String basedOnFromJson = lineStartingWith(fromJson, "isBasedOn:");
+    assertTrue(basedOnFromYaml != null && basedOnFromYaml.equals(basedOnFromJson),
+        "both serializations of one template must derive the same isBasedOn; got "
+            + basedOnFromYaml + " vs " + basedOnFromJson);
+  }
+
+  @Test void validate_instance_accepts_mixed_formats()
+  {
+    String templateYaml = templateYaml();
+    String templateJson = templateJson(templateYaml);
+    String instanceYaml = textOf(CreateInstanceTool.handler(null,
+        new McpSchema.CallToolRequest("create_instance", Map.of("template", templateYaml))));
+
+    McpSchema.CallToolResult result = ValidateInstanceTool.handler(null,
+        new McpSchema.CallToolRequest("validate_instance",
+            Map.of("template", templateJson, "instance", instanceYaml)));
+
+    assertFalse(result.isError(), textOf(result));
+    assertTrue(textOf(result).contains("\"valid\" : true") || textOf(result).contains("\"valid\": true"),
+        "JSON template + YAML instance must validate; got: " + textOf(result));
+  }
+
+  // ---------------------------------------------------------------- garbage tolerance
+
+  /** Inputs that must never crash a tool: prose, broken JSON, non-mapping YAML, a YAML mapping
+   *  that is not CEDAR, and whitespace. */
+  private static final String[] GARBAGE = {
+      "this is not an artifact, just prose",
+      "{ \"broken\": ",
+      "- a\n- b\n- c",
+      "type: nonsense\nfoo: [unclosed",
+      "   \n  \n",
+  };
+
+  private static void assertCleanErrors(
+      String toolName,
+      BiFunction<io.modelcontextprotocol.server.McpSyncServerExchange,
+          McpSchema.CallToolRequest, McpSchema.CallToolResult> handler,
+      String argName)
+  {
+    for (String garbage : GARBAGE) {
+      McpSchema.CallToolResult result;
+      try {
+        result = handler.apply(null, new McpSchema.CallToolRequest(toolName, Map.of(argName, garbage)));
+      } catch (RuntimeException e) {
+        throw new AssertionError(toolName + " threw instead of returning an error result for "
+            + "input <" + garbage.replace("\n", "\\n") + ">: " + e, e);
+      }
+      assertTrue(result.isError(),
+          toolName + " must flag garbage input <" + garbage.replace("\n", "\\n") + "> as an error");
+      assertFalse(textOf(result).isBlank(), toolName + " error must carry a message");
+    }
+  }
+
+  @Test void add_field_survives_garbage_parents()
+  {
+    assertCleanErrors("add_field",
+        (exchange, request) -> AddFieldTool.handler(null,
+            new McpSchema.CallToolRequest("add_field",
+                Map.of("parent", request.arguments().get("parent").toString(), "child", fieldYaml()))),
+        "parent");
+  }
+
+  @Test void create_instance_survives_garbage_templates()
+  {
+    assertCleanErrors("create_instance", CreateInstanceTool::handler, "template");
+  }
+
+  @Test void set_default_value_survives_garbage_fields()
+  {
+    assertCleanErrors("set_default_value",
+        (exchange, request) -> SetDefaultValueTool.handler(null,
+            new McpSchema.CallToolRequest("set_default_value",
+                Map.of("field", request.arguments().get("field").toString(), "value", "x"))),
+        "field");
+  }
+
+  @Test void template_to_yaml_survives_garbage()
+  {
+    assertCleanErrors("template_to_yaml", TemplateToYamlTool::handler, "artifact");
+  }
+
+  @Test void wrong_artifact_kind_is_a_clean_error()
+  {
+    // An instance handed to a template parameter must be rejected, not half-read.
+    String templateYaml = templateYaml();
+    String instanceYaml = textOf(CreateInstanceTool.handler(null,
+        new McpSchema.CallToolRequest("create_instance", Map.of("template", templateYaml))));
+
+    McpSchema.CallToolResult result = CreateInstanceTool.handler(null,
+        new McpSchema.CallToolRequest("create_instance", Map.of("template", instanceYaml)));
+
+    assertTrue(result.isError(), "an instance is not a template; got: " + textOf(result));
+  }
+
+  // ---------------------------------------------------------------- helpers
+
+  private static String textOf(McpSchema.CallToolResult result)
+  {
+    return ((McpSchema.TextContent) result.content().get(0)).text();
+  }
+
+  private static String lineStartingWith(String text, String prefix)
+  {
+    for (String line : text.split("\n"))
+      if (line.startsWith(prefix))
+        return line.trim();
+    return null;
+  }
+}
