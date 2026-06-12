@@ -96,8 +96,8 @@ centralizes read (YAML or JSON, auto-detected) and render.
 - `set_element_instance(template, instance, field_path, element_instance)` — grafts an
   element instance at an element path: single-instance replaces; `addresses[N]` replaces entry N or
   appends when N equals the list size. This is what makes multi-instance elements fillable —
-  repeated-element entries can now be appended, filled via `addresses[N]/...` paths, and
-  deleted with `unset_field_value`.
+  entries can now be appended, filled via `addresses[N]/...` paths, and deleted with
+  `unset_field_value`.
 - `set_literal_field_value` / `set_iri_field_value` — set a value (the latter covers plain
   IRI fields and controlled-term fields, which require a `label`)
   at a slash-separated `field_path` (bracketed indices for multi-instance leaves, e.g.

@@ -35,10 +35,10 @@ See [DESIGN.md](./DESIGN.md) for the architectural principles and
 
 A typical authoring session looks like the following — natural-language prompts
 the user gives the LLM, which the LLM translates into MCP tool calls. The
-first example exercises the structural and instance tools end-to-end; a
-follow-on adds the controlled-term piece by pairing this MCP with
+first example exercises the structural and instance tools end-to-end; the
+second adds the controlled-term piece by pairing this MCP with
 [`bioportal-term-mcp`](https://github.com/metadatacenter/bioportal-term-mcp);
-a last one works with repeated groups.
+the third works with multi-instance elements.
 
 Two YAML forms are in play. Every tool that builds or modifies an artifact
 returns the **expanded exchange form** — provenance (`status`, `version`,
@@ -322,8 +322,9 @@ just a free-text string — which is what makes the data downstream-queryable.
 
 ### Working with Elements
 
-A last follow-on shows **repeated groups** — a multi-instance element, whose
-instances grow entry by entry.
+A **multi-instance element** holds a list of sub-structures rather than a
+single one — here, a contact with several addresses. Its instances grow entry
+by entry.
 
 *Create a Contacts template with a repeatable Address element (a Street
 field, up to 3 addresses).*
@@ -614,9 +615,9 @@ Grafts an element instance (from `create_element_instance`) into a
 template instance at a `field_path` naming an *element* child. A
 single-instance element path (`address`) replaces the element instance; an indexed
 multi-instance path (`addresses[2]`) replaces that entry, or **appends** when
-the index equals the current list size — the way to add entries to a repeated
-element, which is otherwise impossible (a fresh instance's repeated elements
-are empty lists, and the value tools require entries to exist). After
+the index equals the current list size — the way to add entries to a
+multi-instance element, which is otherwise impossible (a fresh instance seeds
+them as empty lists, and the value tools require entries to exist). After
 appending, fill the entry's fields at `addresses[N]/...` paths. The incoming
 element instance is inflated against the element schema on the way in, so every
 child slot is immediately addressable.

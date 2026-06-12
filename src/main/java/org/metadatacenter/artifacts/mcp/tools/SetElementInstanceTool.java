@@ -71,7 +71,7 @@ public final class SetElementInstanceTool
                 + "CEDAR template instance at a slash-separated field_path naming an element "
                 + "child. A single-instance element path replaces the element instance; an indexed "
                 + "multi-instance path replaces that entry, or appends when the index equals "
-                + "the current list size — the way to add entries to a repeated element. "
+                + "the current list size — the way to add entries to a multi-instance element. "
                 + "Fill the entry's fields afterwards with the set_*_field_value tools at "
                 + "'<path>[N]/<field>' paths. Returns the updated instance as expanded YAML."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
