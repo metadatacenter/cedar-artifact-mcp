@@ -164,3 +164,10 @@ The following belong in other MCPs (or do not belong in any MCP at all):
 - Sample / dataset generation against templates.
 - Stateful handle-based tools — the MCP is intentionally stateless; every tool takes and
   returns a serialized artifact. See DESIGN.md Principle 3.
+- Setting provenance (`pav:createdOn` / `pav:createdBy`, `oslc:modifiedBy`, …) — these are
+  assigned by a repository server, so a construction-side tool for them would only fabricate
+  history. The readers and renderers round-trip whatever provenance a server-loaded artifact
+  carries, losslessly, which is the right behavior for a stateless MCP.
+- Version chains (`pav:previousVersion`, `pav:derivedFrom`) — only meaningful against a
+  repository that holds the artifacts they point at. Same treatment: preserved on round-trip,
+  never authored here.
