@@ -47,9 +47,6 @@ public final class CreateFieldTool
   public static McpSchema.Tool tool()
   {
     Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("name", Map.of(
-        "type", "string",
-        "description", "Human-readable field name (e.g. \"Patient name\")."));
     properties.put("type", Map.of(
         "type", "string",
         "enum", List.copyOf(FIELD_TYPES),
@@ -63,6 +60,9 @@ public final class CreateFieldTool
             + "ext-nih-grant-id-field, ext-doi-field), and the static-* placeholders "
             + "(static-page-break, static-section-break, static-image, static-rich-text, "
             + "static-youtube-video)."));
+    properties.put("name", Map.of(
+        "type", "string",
+        "description", "Human-readable field name (e.g. \"Patient name\")."));
     properties.put("description", Map.of(
         "type", "string",
         "description", "Free-text description of the field's purpose. Optional; defaults to an empty string."));
@@ -127,7 +127,7 @@ public final class CreateFieldTool
         "description", "text-field / text-area-field validation regex. Optional."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("name", "type"), Boolean.FALSE, null, null);
+        "object", properties, List.of("type", "name"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
         .name("create_field")

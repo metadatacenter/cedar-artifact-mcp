@@ -357,7 +357,7 @@ Creates a new, empty CEDAR element — a reusable sub-schema that can be embedde
 inside templates or other elements. `id` is optional; omit it and a fresh
 `template-elements` IRI is auto-minted.
 
-### `create_field(name, type, description?, version?, status?, id?, [type-specific config])`
+### `create_field(type, name, description?, version?, status?, id?, [type-specific config])`
 
 Creates a new CEDAR field of the requested kind: text, text-area, numeric,
 temporal, radio, checkbox, single- or multi-select list, controlled-term, link,
