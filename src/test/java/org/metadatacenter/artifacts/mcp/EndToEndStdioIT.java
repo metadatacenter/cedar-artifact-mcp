@@ -161,6 +161,8 @@ final class EndToEndStdioIT
           "set_literal_field_value tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("set_iri_field_value"),
           "set_iri_field_value tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("unset_field_value"),
+          "unset_field_value tool should be listed; got " + toolNames);
 
       // 4. tools/call create_template -----------------------------------------------
       // The exchange form is expanded, so the supplied version survives into the returned YAML.

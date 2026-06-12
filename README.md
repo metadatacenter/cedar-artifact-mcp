@@ -343,7 +343,7 @@ through the library and passed its structural validation.
 | Controlled term constraints | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` |
 | Literal options | `set_options` |
 | Default values | `set_literal_default_value` · `set_iri_default_value` |
-| Instance values | `set_literal_field_value` · `set_iri_field_value` |
+| Instance values | `set_literal_field_value` · `set_iri_field_value` · `unset_field_value` |
 | Validate | `validate_template` · `validate_element` · `validate_field` · `validate_artifact` · `validate_instance` |
 | Render | `template_to_json` · `element_to_json` · `field_to_json` · `instance_to_json` · `template_to_yaml` · `element_to_yaml` · `field_to_yaml` · `instance_to_yaml` |
 | Diagnostics | `ping` |
@@ -506,7 +506,22 @@ fields `label` is required, and the value is written as `@id` + `rdfs:label`
 only — the shape the CEDAR editor produces; the schema must declare the field
 as controlled-term (with at least one `set_*_constraint` already attached).
 
-#### Notes shared by the two instance-side value tools
+### `unset_field_value(template, instance, field_path)`
+
+The inverse of the two setters, for any field kind — unsetting takes no value,
+so one tool covers what setting needed two for. The path decides the
+operation: a single-instance field path (`name`, `address/street`) clears the
+value back to unset (instances are sparse, so it simply disappears); an
+indexed multi-instance path (`emails[1]`, `addresses[2]`) deletes that entry
+and shifts later entries down; an unindexed multi-instance path (`emails`)
+clears the whole list. Idempotent — unsetting an already-unset field succeeds.
+Required fields may be unset: an in-progress instance is allowed to be
+incomplete, and `requiredValue` is enforced by `validate_instance`, not
+mid-edit. Deleting at an out-of-range index is an error — unlike setting,
+where an index equal to the list size appends, there is nothing there to
+delete.
+
+#### Notes shared by the instance-side value tools
 
 `field_path` uses slash-separated nesting and bracketed indices for
 multi-instance children: `address/street`, `addresses[2]/street`, `emails[0]`.

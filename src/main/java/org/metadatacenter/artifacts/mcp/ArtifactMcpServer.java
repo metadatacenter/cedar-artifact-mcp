@@ -29,6 +29,7 @@ import org.metadatacenter.artifacts.mcp.tools.ReplaceElementTool;
 import org.metadatacenter.artifacts.mcp.tools.ReplaceFieldTool;
 import org.metadatacenter.artifacts.mcp.tools.SetLiteralFieldValueTool;
 import org.metadatacenter.artifacts.mcp.tools.SetIriFieldValueTool;
+import org.metadatacenter.artifacts.mcp.tools.UnsetFieldValueTool;
 import org.metadatacenter.artifacts.mcp.tools.TemplateToJsonTool;
 import org.metadatacenter.artifacts.mcp.tools.TemplateToYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.ValidateArtifactTool;
@@ -93,6 +94,7 @@ public final class ArtifactMcpServer
         .toolCall(ValidateArtifactTool.tool(), ValidateArtifactTool::handler)
         .toolCall(SetLiteralFieldValueTool.tool(), SetLiteralFieldValueTool::handler)
         .toolCall(SetIriFieldValueTool.tool(), SetIriFieldValueTool::handler)
+        .toolCall(UnsetFieldValueTool.tool(), UnsetFieldValueTool::handler)
         .build();
 
     // Stdio transport reads from System.in in a background thread. Keep the main thread

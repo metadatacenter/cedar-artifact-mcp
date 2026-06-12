@@ -93,6 +93,10 @@ centralizes read (YAML or JSON, auto-detected) and render.
   at a slash-separated `field_path` (bracketed indices for multi-instance leaves, e.g.
   `address/street`, `addresses[2]/street`, `emails[0]`; an index equal to the current list
   size appends).
+- `unset_field_value(template, instance, field_path)` — the inverse of the setters, one tool
+  for all field kinds: a single-instance path clears the value, an indexed multi-instance path
+  deletes the entry, an unindexed multi-instance path clears the list. Idempotent; required
+  fields may be unset (`requiredValue` is enforced at validation time).
 - `validate_instance(template, instance)` — `CedarValidator.validateTemplateInstance`.
 
 ### Export / import
