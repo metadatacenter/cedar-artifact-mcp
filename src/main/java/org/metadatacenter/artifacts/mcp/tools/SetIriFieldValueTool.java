@@ -35,8 +35,8 @@ import java.util.Map;
  *
  * <p>IRI fields cover link, ROR, ORCID, PFAS, RRID, PubMed, NIH-grant-ID, DOI, and
  * controlled-term — anything whose instance carries an {@code @id} URI rather than a
- * literal {@code @value}. The controlled-term case additionally requires the label,
- * written as both {@code rdfs:label} and {@code skos:prefLabel}; the schema
+ * literal {@code @value}. The controlled-term case additionally requires the label
+ * ({@code rdfs:label}); the schema
  * must already declare the field controlled-term (it carries a class/ontology/branch/
  * value-set constraint), because a TEXTFIELD without a constraint isn't classified as
  * ControlledTermField on JSON round-trip.
@@ -179,12 +179,11 @@ public final class SetIriFieldValueTool
       if (inputType != FieldInputType.TEXTFIELD)
         return error("controlled-term fields must have input type TEXTFIELD; got "
             + inputType);
-      // The label doubles as the skos:prefLabel — the instance carries both keys, but
-      // the tool keeps a single label parameter.
+      // @id + rdfs:label only — the shape the CEDAR editor writes. The model also
+      // supports skos:prefLabel on a value, but editor-produced instances never carry it.
       newFieldInstance = ControlledTermFieldInstance.builder()
           .withValue(iri)
           .withLabel(label)
-          .withPreferredLabel(label)
           .build();
     } else {
       FieldInputType inputType = schemaField.fieldUi().inputType();

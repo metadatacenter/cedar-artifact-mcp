@@ -306,7 +306,6 @@ children:
   Disease:
     id: http://purl.obolibrary.org/obo/DOID_10923
     label: sickle cell anemia
-    prefLabel: sickle cell anemia
 ```
 
 The LLM looks up `sickle cell anemia` in DOID via `bioportal-term-mcp`'s
@@ -433,12 +432,15 @@ Element variant of `replace_field`, with the same per-add-site overrides as
 
 Removes a field or element child from a template or element parent by key.
 
-### `set_class_constraint(field, class_iri, ontology_acronym, label, pref_label, value_type?)`
+### `set_class_constraint(field, class_iri, ontology_acronym, pref_label, label?, value_type?)`
 
 Pins a controlled-term field to a single ontology class. The input tuple
-matches what `bioportal-term-mcp`'s `get_class` returns. `value_type` defaults
-to `"class"` (a real ontology class) or `"value"` for permissible-value
-entries.
+matches what `bioportal-term-mcp`'s `get_class` returns. `pref_label` is the
+class's canonical name in its source ontology; `label` is an optional display
+override (how the value is shown in forms built from this field), defaulting
+to `pref_label` — the same distinction the CEDAR editor draws when a curator
+renames an option. `value_type` defaults to `"class"` (a real ontology class)
+or `"value"` for permissible-value entries.
 
 ### `set_ontology_constraint(field, ontology_iri, ontology_acronym, ontology_name)`
 
@@ -497,9 +499,9 @@ must match the schema's input type.
 Sets the URI of any IRI-valued field on an instance — link, ROR, ORCID, PFAS,
 RRID, PubMed, NIH-grant-ID, DOI, or controlled-term. For the plain IRI kinds
 `label` (`rdfs:label`) is optional and typically supplied. For controlled-term
-fields `label` is required and is written as both `rdfs:label` and
-`skos:prefLabel`; the schema must declare the field as controlled-term (with at
-least one `set_*_constraint` already attached).
+fields `label` is required, and the value is written as `@id` + `rdfs:label`
+only — the shape the CEDAR editor produces; the schema must declare the field
+as controlled-term (with at least one `set_*_constraint` already attached).
 
 #### Notes shared by the two instance-side value tools
 

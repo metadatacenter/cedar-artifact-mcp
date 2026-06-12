@@ -76,6 +76,36 @@ final class SetClassConstraintToolTest
         "rendered field must carry the class constraint; got: " + rendered.path("_valueConstraints"));
   }
 
+  @Test void label_defaults_to_pref_label_when_omitted() throws Exception
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "field", createControlledTermField("Disease"),
+        "class_iri", "http://purl.obolibrary.org/obo/DOID_4",
+        "ontology_acronym", "DOID",
+        "pref_label", "disease"));
+
+    assertFalse(result.isError(), errorText(result));
+    JsonNode entry = parseJson(result).path("_valueConstraints").path("classes").get(0);
+    assertEquals("disease", entry.path("prefLabel").asText(), "canonical name; got: " + entry);
+    assertEquals("disease", entry.path("label").asText(),
+        "label must default to pref_label; got: " + entry);
+  }
+
+  @Test void label_overrides_the_display_name() throws Exception
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "field", createControlledTermField("Disease"),
+        "class_iri", "http://purl.obolibrary.org/obo/DOID_4",
+        "ontology_acronym", "DOID",
+        "pref_label", "disease",
+        "label", "Condition"));
+
+    assertFalse(result.isError(), errorText(result));
+    JsonNode entry = parseJson(result).path("_valueConstraints").path("classes").get(0);
+    assertEquals("disease", entry.path("prefLabel").asText(), "canonical name; got: " + entry);
+    assertEquals("Condition", entry.path("label").asText(), "display override; got: " + entry);
+  }
+
   @Test void rejects_non_textfield_shape()
   {
     // Numeric, temporal, list, etc. fields have non-TEXTFIELD input types and can't carry

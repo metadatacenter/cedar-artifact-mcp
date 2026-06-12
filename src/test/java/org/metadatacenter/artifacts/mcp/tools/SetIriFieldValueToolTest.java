@@ -17,6 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * (create_template / create_field / add_field / create_instance); the tool returns the
  * updated instance as expanded YAML, asserted on via SnakeYAML. An IRI field instance
  * carries its URI under {@code children.<key>.id}, with an optional {@code label}.
+ * Controlled-term values carry {@code id} + {@code label} only — no {@code prefLabel} —
+ * matching what the CEDAR editor writes.
  */
 final class SetIriFieldValueToolTest
 {
@@ -102,7 +104,8 @@ final class SetIriFieldValueToolTest
     Map<String, Object> diag = child(parseYaml(result), "diagnosis");
     assertEquals("http://purl.obolibrary.org/obo/DOID_1612", diag.get("id"), "diagnosis id; got: " + diag);
     assertEquals("breast cancer", diag.get("label"), "diagnosis label; got: " + diag);
-    assertEquals("breast cancer", diag.get("prefLabel"), "diagnosis prefLabel; got: " + diag);
+    assertFalse(diag.containsKey("prefLabel"),
+        "values carry @id + rdfs:label only, the shape the CEDAR editor writes; got: " + diag);
   }
 
   @Test void rejects_controlled_term_value_without_label()

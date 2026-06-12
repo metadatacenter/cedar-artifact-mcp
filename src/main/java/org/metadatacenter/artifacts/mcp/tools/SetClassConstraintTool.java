@@ -13,8 +13,13 @@ import java.util.Map;
 /**
  * MCP tool {@code set_class_constraint} — pins a controlled-term field to a single
  * ontology class. The canonical input tuple ({@code class_iri}, {@code ontology_acronym},
- * {@code label}, {@code pref_label}) matches what a terminology MCP like
- * {@code bioportal-term-mcp}'s {@code get_class} returns.
+ * {@code pref_label}) matches what a terminology MCP like {@code bioportal-term-mcp}'s
+ * {@code get_class} returns.
+ *
+ * <p>The constraint entry carries two labels with distinct roles: {@code prefLabel} is
+ * the term's canonical name in its source ontology, and {@code label} is the display
+ * override the CEDAR editor lets a curator set for this template. They are almost always
+ * identical, so {@code label} is optional here and defaults to {@code pref_label}.
  */
 public final class SetClassConstraintTool
 {
@@ -37,12 +42,17 @@ public final class SetClassConstraintTool
     properties.put("ontology_acronym", Map.of(
         "type", "string",
         "description", "Acronym of the containing ontology (e.g. 'DOID', 'LOINC')."));
-    properties.put("label", Map.of(
-        "type", "string",
-        "description", "rdfs:label for the class, as displayed by the source ontology."));
     properties.put("pref_label", Map.of(
         "type", "string",
-        "description", "skos:prefLabel for the class. May equal the rdfs:label."));
+        "description",
+        "The class's canonical name in its source ontology (its preferred label) — what a "
+            + "terminology lookup such as bioportal-term-mcp's get_class returns."));
+    properties.put("label", Map.of(
+        "type", "string",
+        "description",
+        "Optional display override: how the value is shown in templates and forms built "
+            + "from this field. Defaults to pref_label — supply it only to deliberately "
+            + "rename how the class appears."));
     properties.put("value_type", Map.of(
         "type", "string",
         "enum", List.of(VALUE_TYPE_CLASS, VALUE_TYPE_VALUE),
@@ -54,7 +64,7 @@ public final class SetClassConstraintTool
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
-        List.of("field", "class_iri", "ontology_acronym", "label", "pref_label"),
+        List.of("field", "class_iri", "ontology_acronym", "pref_label"),
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
@@ -81,8 +91,8 @@ public final class SetClassConstraintTool
 
     if (isBlank(classIri)) return error("class_iri is required and must not be blank");
     if (isBlank(ontologyAcronym)) return error("ontology_acronym is required and must not be blank");
-    if (isBlank(label)) return error("label is required and must not be blank");
     if (isBlank(prefLabel)) return error("pref_label is required and must not be blank");
+    if (isBlank(label)) label = prefLabel;  // display override; canonical name when absent
 
     String valueTypeArg = stringArgOrDefault(args, "value_type", VALUE_TYPE_CLASS);
     ValueType valueType;
@@ -102,8 +112,9 @@ public final class SetClassConstraintTool
       return error("class_iri is not a valid URI: " + e.getMessage());
     }
 
+    String displayLabel = label;
     return ControlledTermConstraints.apply(fieldJson, builder ->
-        builder.withClassValueConstraint(iri, ontologyAcronym, label, prefLabel, valueType));
+        builder.withClassValueConstraint(iri, ontologyAcronym, displayLabel, prefLabel, valueType));
   }
 
   private static String stringArg(Map<String, Object> args, String key)
