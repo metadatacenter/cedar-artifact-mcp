@@ -17,9 +17,9 @@ import java.util.Map;
 /**
  * MCP tool {@code validate_element_instance} — validates an element-instance sub-record
  * against its element. A CEDAR element artifact <em>is</em> the JSON Schema that
- * validates its instances in situ, so this is the same
- * {@link CedarValidator#validateTemplateInstance} call the template-level tool makes,
- * with the element schema as the schema document.
+ * validates its instances in situ, so {@link CedarValidator#validateElementInstance}
+ * is the same schema-against-document check the template-level tool makes, with the
+ * element schema as the schema document.
  *
  * <p>The sub-record is validated in its <em>nested</em> shape — as it would sit inside a
  * parent instance: the standalone document's identity keys ({@code schema:name},
@@ -110,7 +110,7 @@ public final class ValidateElementInstanceTool
 
     ValidationReport report;
     try {
-      report = VALIDATOR.validateTemplateInstance(entryNode, elementSchemaNode);
+      report = VALIDATOR.validateElementInstance(entryNode, elementSchemaNode);
     } catch (Exception e) {
       return error("CedarValidator threw while validating element instance: " + e.getMessage());
     }
