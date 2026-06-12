@@ -259,7 +259,7 @@ final class TemplateToYamlToolTest
   private static String compileToJson(String yaml)
   {
     McpSchema.CallToolResult result = TemplateToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("template_to_json", Map.of("yaml", yaml)));
+        new McpSchema.CallToolRequest("template_to_json", Map.of("artifact", yaml)));
     assertFalse(result.isError(), "test fixture YAML must compile cleanly; got: " + errorText(result));
     return textOf(result);
   }

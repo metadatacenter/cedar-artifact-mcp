@@ -245,7 +245,7 @@ final class EndToEndStdioIT
           "    description: Free-text patient name");
 
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":"
-          + "{\"name\":\"template_to_json\",\"arguments\":{\"yaml\":\""
+          + "{\"name\":\"template_to_json\",\"arguments\":{\"artifact\":\""
           + yamlBody + "\"}}}");
       JsonNode response = readResponse(stdout, stderr);
       assertEquals(2, response.path("id").asInt());
@@ -321,7 +321,7 @@ final class EndToEndStdioIT
           "status: draft",
           "modelVersion: 1.6.0");
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":12,\"method\":\"tools/call\",\"params\":"
-          + "{\"name\":\"template_to_json\",\"arguments\":{\"yaml\":\""
+          + "{\"name\":\"template_to_json\",\"arguments\":{\"artifact\":\""
           + yamlBody + "\"}}}");
       JsonNode r3 = readResponse(stdout, stderr);
       assertEquals(12, r3.path("id").asInt());
@@ -393,7 +393,7 @@ final class EndToEndStdioIT
           "        iri: http://purl.obolibrary.org/obo/DOID_4");
 
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":"
-          + "{\"name\":\"template_to_json\",\"arguments\":{\"yaml\":\""
+          + "{\"name\":\"template_to_json\",\"arguments\":{\"artifact\":\""
           + yaml + "\"}}}");
       JsonNode response = readResponse(stdout, stderr);
       assertEquals(2, response.path("id").asInt());
@@ -452,7 +452,7 @@ final class EndToEndStdioIT
           "    type: text-field",
           "    name: Street");
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":"
-          + "{\"name\":\"element_to_json\",\"arguments\":{\"yaml\":\""
+          + "{\"name\":\"element_to_json\",\"arguments\":{\"artifact\":\""
           + elementYaml + "\"}}}");
       JsonNode elementResponse = readResponse(stdout, stderr);
       assertEquals(2, elementResponse.path("id").asInt());
@@ -471,7 +471,7 @@ final class EndToEndStdioIT
           "description: Free-text patient name",
           "modelVersion: 1.6.0");
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":"
-          + "{\"name\":\"field_to_json\",\"arguments\":{\"yaml\":\""
+          + "{\"name\":\"field_to_json\",\"arguments\":{\"artifact\":\""
           + fieldYaml + "\"}}}");
       JsonNode fieldResponse = readResponse(stdout, stderr);
       assertEquals(3, fieldResponse.path("id").asInt());
@@ -495,7 +495,7 @@ final class EndToEndStdioIT
           "status: draft",
           "modelVersion: 1.6.0");
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\",\"params\":"
-          + "{\"name\":\"template_to_json\",\"arguments\":{\"yaml\":\""
+          + "{\"name\":\"template_to_json\",\"arguments\":{\"artifact\":\""
           + templateYaml + "\"}}}");
       JsonNode fromYamlResponse = readResponse(stdout, stderr);
       assertFalse(fromYamlResponse.path("result").path("isError").asBoolean(true),
@@ -584,7 +584,7 @@ final class EndToEndStdioIT
           "  - key: patient_name", "    type: text-field", "    name: Patient name",
           "  - key: age", "    type: numeric-field", "    name: Age", "    datatype: xsd:int");
       ObjectNode templateArgs = jackson.createObjectNode();
-      templateArgs.put("yaml", templateYaml);
+      templateArgs.put("artifact", templateYaml);
       send(stdin, frame(2, "template_to_json", templateArgs));
       JsonNode r2 = readResponse(stdout, stderr);
       assertFalse(r2.path("result").path("isError").asBoolean(true), "template_to_json failed: " + r2);
@@ -594,7 +594,7 @@ final class EndToEndStdioIT
       String sparseInstance =
           "type: instance\nname: P1\nisBasedOn: https://repo.metadatacenter.org/templates/x\n";
       ObjectNode instanceArgs = jackson.createObjectNode();
-      instanceArgs.put("yaml", sparseInstance);
+      instanceArgs.put("artifact", sparseInstance);
       instanceArgs.put("template", templateJson);
       send(stdin, frame(3, "instance_to_json", instanceArgs));
       JsonNode r3 = readResponse(stdout, stderr);

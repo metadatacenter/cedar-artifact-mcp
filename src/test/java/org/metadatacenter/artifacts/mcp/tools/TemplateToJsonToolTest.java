@@ -47,7 +47,7 @@ final class TemplateToJsonToolTest
             + "status: draft\n"
             + "modelVersion: 1.6.0\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
@@ -82,7 +82,7 @@ final class TemplateToJsonToolTest
             + "    name: Patient name\n"
             + "    description: Free-text patient name\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
@@ -125,7 +125,7 @@ final class TemplateToJsonToolTest
             + "        termLabel: disease\n"
             + "        iri: http://purl.obolibrary.org/obo/DOID_4\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
@@ -166,7 +166,7 @@ final class TemplateToJsonToolTest
             + "    type: email-field\n"
             + "    name: Contact email\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
@@ -206,7 +206,7 @@ final class TemplateToJsonToolTest
             + "        type: text-field\n"
             + "        name: Street\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
@@ -240,8 +240,8 @@ final class TemplateToJsonToolTest
             + "modelVersion: 1.6.0\n"
             + "id: https://repo.metadatacenter.org/templates/deterministic-fixed-id\n";
 
-    String first = textOf(invoke(Map.of("yaml", yaml)));
-    String second = textOf(invoke(Map.of("yaml", yaml)));
+    String first = textOf(invoke(Map.of("artifact", yaml)));
+    String second = textOf(invoke(Map.of("artifact", yaml)));
 
     assertEquals(first, second,
         "two invocations on identical fully-specified input must produce byte-identical output");
@@ -255,7 +255,7 @@ final class TemplateToJsonToolTest
         "type: template\n"
             + "name: No id supplied\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
@@ -268,8 +268,8 @@ final class TemplateToJsonToolTest
         "type: template\n"
             + "name: No id supplied\n";
 
-    String firstId = parseJson(invoke(Map.of("yaml", yaml))).get("@id").asText();
-    String secondId = parseJson(invoke(Map.of("yaml", yaml))).get("@id").asText();
+    String firstId = parseJson(invoke(Map.of("artifact", yaml))).get("@id").asText();
+    String secondId = parseJson(invoke(Map.of("artifact", yaml))).get("@id").asText();
 
     assertFalse(firstId.equals(secondId),
         "each id-less invocation must mint a distinct @id; got " + firstId + " twice");
@@ -283,7 +283,7 @@ final class TemplateToJsonToolTest
             + "name: Has an id\n"
             + "id: " + id + "\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     assertEquals(id, parseJson(result).get("@id").asText(),
@@ -306,7 +306,7 @@ final class TemplateToJsonToolTest
             + "        type: text-field\n"
             + "        name: Street\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
@@ -338,7 +338,7 @@ final class TemplateToJsonToolTest
             + "    name: Patient name\n"
             + "    description: Free-text patient name\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
 
@@ -368,7 +368,7 @@ final class TemplateToJsonToolTest
             + "status: draft\n"
             + "modelVersion: 1.6.0\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
 
@@ -386,7 +386,7 @@ final class TemplateToJsonToolTest
         "type: template\n"
             + "name: Missing-model-version\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
@@ -403,7 +403,7 @@ final class TemplateToJsonToolTest
             + "name: Wrong-model-version\n"
             + "modelVersion: 0.0.1\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertTrue(result.isError(),
         "wrong modelVersion must surface as isError=true; got: " + result);
@@ -413,9 +413,9 @@ final class TemplateToJsonToolTest
 
   @Test void rejects_blank_yaml()
   {
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", "   \n  \n"));
-    assertTrue(result.isError(), "blank yaml input must produce isError=true");
-    assertTrue(errorText(result).toLowerCase().contains("yaml"),
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", "   \n  \n"));
+    assertTrue(result.isError(), "blank artifact input must produce isError=true");
+    assertTrue(errorText(result).contains("artifact"),
         "error should mention the offending argument; got: " + errorText(result));
   }
 
@@ -430,7 +430,7 @@ final class TemplateToJsonToolTest
             + "status: draft\n"
             + "modelVersion: 1.6.0\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertTrue(result.isError(),
         "type: element must not compile via template_to_json; got: " + result);
@@ -444,7 +444,7 @@ final class TemplateToJsonToolTest
     // mistake an LLM will reliably make.
     String yaml = "type: template\n\tname: malformed\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertTrue(result.isError(), "malformed yaml must produce isError=true");
     assertTrue(errorText(result).toLowerCase().contains("yaml"),
@@ -453,17 +453,17 @@ final class TemplateToJsonToolTest
 
   @Test void rejects_yaml_that_is_a_bare_string()
   {
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", "just a string\n"));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", "just a string\n"));
     assertTrue(result.isError(), "non-mapping yaml must produce isError=true");
     assertTrue(errorText(result).toLowerCase().contains("mapping"),
         "error should mention the missing top-level mapping; got: " + errorText(result));
   }
 
-  @Test void rejects_missing_yaml_argument()
+  @Test void rejects_missing_artifact_argument()
   {
     McpSchema.CallToolResult result = invoke(Map.of());
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("yaml"));
+    assertTrue(errorText(result).contains("artifact"));
   }
 
   // -----------------------------------------------------------------

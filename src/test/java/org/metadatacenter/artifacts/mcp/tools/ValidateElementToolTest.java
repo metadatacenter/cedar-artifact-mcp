@@ -20,7 +20,7 @@ final class ValidateElementToolTest
   @Test void valid_element_json_reports_valid() throws Exception
   {
     String elementJson = textOf(ElementToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("element_to_json", Map.of("yaml", createElement("Address")))));
+        new McpSchema.CallToolRequest("element_to_json", Map.of("artifact", createElement("Address")))));
 
     McpSchema.CallToolResult result = invoke(Map.of("artifact", elementJson));
 
@@ -47,7 +47,7 @@ final class ValidateElementToolTest
   @Test void rejects_kind_mismatch_with_redirect()
   {
     String templateJson = textOf(TemplateToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("template_to_json", Map.of("yaml", createTemplate("Demo")))));
+        new McpSchema.CallToolRequest("template_to_json", Map.of("artifact", createTemplate("Demo")))));
     McpSchema.CallToolResult result = invoke(Map.of("artifact", templateJson));
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("validate_template"),

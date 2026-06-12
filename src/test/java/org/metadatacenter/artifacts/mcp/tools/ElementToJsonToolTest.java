@@ -47,7 +47,7 @@ final class ElementToJsonToolTest
             + "    type: text-field\n"
             + "    name: Street\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
@@ -76,7 +76,7 @@ final class ElementToJsonToolTest
             + "    type: text-field\n"
             + "    name: Street\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
@@ -93,7 +93,7 @@ final class ElementToJsonToolTest
             + "name: Address\n"
             + "id: " + id + "\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     assertEquals(id, parseJson(result).get("@id").asText(),
@@ -109,22 +109,22 @@ final class ElementToJsonToolTest
             + "status: draft\n"
             + "modelVersion: 1.6.0\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertTrue(result.isError(),
         "type: template must not compile via element_to_json; got: " + result);
   }
 
-  @Test void rejects_missing_yaml_argument()
+  @Test void rejects_missing_artifact_argument()
   {
     McpSchema.CallToolResult result = invoke(Map.of());
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("yaml"));
+    assertTrue(errorText(result).contains("artifact"));
   }
 
   @Test void rejects_blank_yaml()
   {
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", "   \n  \n"));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", "   \n  \n"));
     assertTrue(result.isError(), "blank yaml input must produce isError=true");
   }
 
@@ -132,7 +132,7 @@ final class ElementToJsonToolTest
   {
     String yaml = "type: element\n\tname: malformed\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertTrue(result.isError(), "malformed yaml must produce isError=true");
     assertTrue(errorText(result).toLowerCase().contains("yaml"),

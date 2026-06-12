@@ -514,8 +514,8 @@ which also needs the template it's based on.)
 Artifacts thread between tools as YAML. Two families bridge to and from the
 canonical JSON Schema:
 
-- **`template_to_json` / `element_to_json` / `field_to_json` / `instance_to_json`** —
-  **export.** Take an artifact (YAML) and return the canonical CEDAR JSON Schema for
+- **`template_to_json` / `element_to_json` / `field_to_json` / `instance_to_json`
+  `(artifact)`** — **export.** Take an artifact (YAML) and return the canonical CEDAR JSON Schema for
   cedar-server and other downstream consumers. The result is round-tripped through the
   library reader/renderer and validated (`CedarValidator`), so a non-error result is a
   guaranteed-valid artifact. If a top-level `id` is omitted, a fresh IRI is minted onto

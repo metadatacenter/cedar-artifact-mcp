@@ -51,7 +51,7 @@ public final class TemplateToJsonTool
   public static McpSchema.Tool tool()
   {
     Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("yaml", Map.of(
+    properties.put("artifact", Map.of(
         "type", "string",
         "description",
         "CEDAR template described in the artifact library's YAML format. The top-level "
@@ -60,7 +60,7 @@ public final class TemplateToJsonTool
             + YamlVocabulary.fullSchemaVocabulary()));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("yaml"), Boolean.FALSE, null, null);
+        "object", properties, List.of("artifact"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
         .name("template_to_json")
@@ -81,12 +81,12 @@ public final class TemplateToJsonTool
   {
     Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
 
-    Object rawYaml = args.get("yaml");
+    Object rawYaml = args.get("artifact");
     if (rawYaml == null)
-      return error("yaml argument is required");
+      return error("artifact argument is required");
     String yamlText = rawYaml.toString();
     if (yamlText.isBlank())
-      return error("yaml argument must not be blank");
+      return error("artifact argument must not be blank");
 
     // Stage 1: parse YAML text -> LinkedHashMap via the shared no-timestamp parser, so
     // date-like temporal values stay strings rather than being coerced to java.util.Date.

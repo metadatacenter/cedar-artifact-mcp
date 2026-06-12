@@ -35,7 +35,7 @@ public final class InstanceToJsonTool
   public static McpSchema.Tool tool()
   {
     Map<String, Object> properties = new LinkedHashMap<>();
-    properties.put("yaml", Map.of(
+    properties.put("artifact", Map.of(
         "type", "string",
         "description",
         "CEDAR template instance described in the artifact library's YAML format. Full "
@@ -52,7 +52,7 @@ public final class InstanceToJsonTool
             + "carries are exported."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("yaml"), Boolean.FALSE, null, null);
+        "object", properties, List.of("artifact"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
         .name("instance_to_json")
@@ -70,12 +70,12 @@ public final class InstanceToJsonTool
   {
     Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
 
-    Object rawYaml = args.get("yaml");
+    Object rawYaml = args.get("artifact");
     if (rawYaml == null)
-      return error("yaml argument is required");
+      return error("artifact argument is required");
     String yamlText = rawYaml.toString();
     if (yamlText.isBlank())
-      return error("yaml argument must not be blank");
+      return error("artifact argument must not be blank");
 
     LinkedHashMap<String, Object> yamlMap;
     try {

@@ -368,7 +368,7 @@ final class CreateInstanceToolTest
   private static String compileTemplate(String yaml)
   {
     McpSchema.CallToolResult result = TemplateToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("template_to_json", Map.of("yaml", yaml)));
+        new McpSchema.CallToolRequest("template_to_json", Map.of("artifact", yaml)));
     assertFalse(result.isError(),
         "fixture template YAML must compile cleanly; got: " + errorText(result));
     return textOf(result);
@@ -401,7 +401,7 @@ final class CreateInstanceToolTest
   {
     McpSchema.CallToolResult json = InstanceToJsonTool.handler(null,
         new McpSchema.CallToolRequest("instance_to_json", Map.of(
-            "yaml", textOf(result), "template", templateJson)));
+            "artifact", textOf(result), "template", templateJson)));
     assertFalse(json.isError(), errorText(json));
     return (ObjectNode) jackson.readTree(textOf(json));
   }

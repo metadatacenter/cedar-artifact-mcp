@@ -27,7 +27,7 @@ final class InstanceToJsonToolTest
             + "name: Patient 42\n"
             + "isBasedOn: https://repo.metadatacenter.org/templates/abc-123\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
@@ -43,7 +43,7 @@ final class InstanceToJsonToolTest
     // only the fields the instance holds. With the template, the instance is inflated so the
     // exported JSON carries every template field (the form CedarValidator / cedar-server expect).
     String templateJson = textOf(TemplateToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("template_to_json", Map.of("yaml",
+        new McpSchema.CallToolRequest("template_to_json", Map.of("artifact",
             "type: template\nname: PatientStudy\nmodelVersion: 1.6.0\nversion: 0.0.1\nstatus: draft\n"
                 + "children:\n"
                 + "  - key: Patient Name\n    type: text-field\n    name: Patient Name\n"
@@ -57,12 +57,12 @@ final class InstanceToJsonToolTest
             + "  Patient Name:\n    value: Alice\n";
 
     // Without the template: only the set field is present.
-    ObjectNode bare = parseJson(invoke(Map.of("yaml", sparseInstance)));
+    ObjectNode bare = parseJson(invoke(Map.of("artifact", sparseInstance)));
     assertTrue(bare.has("Patient Name"), "the set field must be present; got: " + bare);
     assertFalse(bare.has("Age"), "without the template, the omitted field stays omitted; got: " + bare);
 
     // With the template: the omitted field is reconstructed (empty) so the JSON is complete.
-    ObjectNode full = parseJson(invoke(Map.of("yaml", sparseInstance, "template", templateJson)));
+    ObjectNode full = parseJson(invoke(Map.of("artifact", sparseInstance, "template", templateJson)));
     assertEquals("Alice", full.path("Patient Name").path("@value").asText());
     assertTrue(full.has("Age"), "with the template, the omitted field is reconstructed; got: " + full);
     assertTrue(full.path("Age").has("@type"),
@@ -77,7 +77,7 @@ final class InstanceToJsonToolTest
     // library/CEDAR "JSON needs all-field placeholders" rule; the YAML itself stays sparse. Without
     // the template, no placeholders are generated (the library renders the sparse model as-is).
     String templateJson = textOf(TemplateToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("template_to_json", Map.of("yaml",
+        new McpSchema.CallToolRequest("template_to_json", Map.of("artifact",
             "type: template\nname: PatientStudy\nmodelVersion: 1.6.0\nversion: 0.0.1\nstatus: draft\n"
                 + "children:\n"
                 + "  - key: Patient Name\n    type: text-field\n    name: Patient Name\n"
@@ -87,7 +87,7 @@ final class InstanceToJsonToolTest
     String sparseInstance =
         "type: instance\nname: P1\nisBasedOn: https://repo.metadatacenter.org/templates/x\n";
 
-    ObjectNode full = parseJson(invoke(Map.of("yaml", sparseInstance, "template", templateJson)));
+    ObjectNode full = parseJson(invoke(Map.of("artifact", sparseInstance, "template", templateJson)));
     assertTrue(full.has("Patient Name") && full.has("Age"),
         "inflated JSON must carry every template field; got: " + full);
     assertTrue(full.path("Patient Name").has("@value") && full.path("Patient Name").path("@value").isNull(),
@@ -97,7 +97,7 @@ final class InstanceToJsonToolTest
     assertEquals("xsd:int", full.path("Age").path("@type").asText(),
         "the numeric placeholder carries its declared @type");
 
-    ObjectNode bare = parseJson(invoke(Map.of("yaml", sparseInstance)));
+    ObjectNode bare = parseJson(invoke(Map.of("artifact", sparseInstance)));
     assertFalse(bare.has("Patient Name") || bare.has("Age"),
         "without the template, no placeholders are generated (sparse model rendered as-is); got: " + bare);
   }
@@ -111,7 +111,7 @@ final class InstanceToJsonToolTest
             + "name: Patient 42\n"
             + "isBasedOn: https://repo.metadatacenter.org/templates/abc-123\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
@@ -130,7 +130,7 @@ final class InstanceToJsonToolTest
             + "isBasedOn: https://repo.metadatacenter.org/templates/abc-123\n"
             + "id: " + id + "\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     assertEquals(id, parseJson(result).get("@id").asText(),
@@ -144,7 +144,7 @@ final class InstanceToJsonToolTest
             + "name: NotAnInstance\n"
             + "modelVersion: 1.6.0\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertTrue(result.isError(),
         "type: template must not compile via instance_to_json; got: " + result);
@@ -156,22 +156,22 @@ final class InstanceToJsonToolTest
         "type: instance\n"
             + "name: Missing-isBasedOn\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertTrue(result.isError(),
         "instance without isBasedOn must produce isError=true; got: " + result);
   }
 
-  @Test void rejects_missing_yaml_argument()
+  @Test void rejects_missing_artifact_argument()
   {
     McpSchema.CallToolResult result = invoke(Map.of());
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("yaml"));
+    assertTrue(errorText(result).contains("artifact"));
   }
 
   @Test void rejects_blank_yaml()
   {
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", "   \n  \n"));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", "   \n  \n"));
     assertTrue(result.isError(), "blank yaml input must produce isError=true");
   }
 

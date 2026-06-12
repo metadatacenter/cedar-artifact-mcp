@@ -113,13 +113,13 @@ final class ValidateTemplateToolTest
   private static String templateToJson(String yaml)
   {
     return textOf(TemplateToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("template_to_json", Map.of("yaml", yaml))));
+        new McpSchema.CallToolRequest("template_to_json", Map.of("artifact", yaml))));
   }
 
   private static String fieldToJson(String yaml)
   {
     return textOf(FieldToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("field_to_json", Map.of("yaml", yaml))));
+        new McpSchema.CallToolRequest("field_to_json", Map.of("artifact", yaml))));
   }
 
   private JsonNode report(McpSchema.CallToolResult result) throws Exception

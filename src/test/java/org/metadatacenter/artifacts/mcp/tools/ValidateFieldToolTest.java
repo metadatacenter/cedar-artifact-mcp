@@ -20,7 +20,7 @@ final class ValidateFieldToolTest
   @Test void valid_field_reports_valid() throws Exception
   {
     String fieldJson = textOf(FieldToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("field_to_json", Map.of("yaml", createField("Patient name", "text-field")))));
+        new McpSchema.CallToolRequest("field_to_json", Map.of("artifact", createField("Patient name", "text-field")))));
 
     McpSchema.CallToolResult result = invoke(Map.of("artifact", fieldJson));
 
@@ -47,7 +47,7 @@ final class ValidateFieldToolTest
   @Test void rejects_kind_mismatch_with_redirect()
   {
     String templateJson = textOf(TemplateToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("template_to_json", Map.of("yaml", createTemplate("Demo")))));
+        new McpSchema.CallToolRequest("template_to_json", Map.of("artifact", createTemplate("Demo")))));
     McpSchema.CallToolResult result = invoke(Map.of("artifact", templateJson));
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("validate_template"),

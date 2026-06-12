@@ -43,7 +43,7 @@ final class FieldToJsonToolTest
             + "description: Free-text patient name\n"
             + "modelVersion: 1.6.0\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
@@ -77,7 +77,7 @@ final class FieldToJsonToolTest
             + "    termLabel: disease\n"
             + "    iri: http://purl.obolibrary.org/obo/DOID_4\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
@@ -95,7 +95,7 @@ final class FieldToJsonToolTest
         "type: text-field\n"
             + "name: No id supplied\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     MintedIds.assertMintedId(parseJson(result).get("@id"), "template-fields");
@@ -109,7 +109,7 @@ final class FieldToJsonToolTest
             + "name: Has an id\n"
             + "id: " + id + "\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertFalse(result.isError(), errorText(result));
     assertEquals(id, parseJson(result).get("@id").asText(),
@@ -125,22 +125,22 @@ final class FieldToJsonToolTest
             + "status: draft\n"
             + "modelVersion: 1.6.0\n";
 
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", yaml));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", yaml));
 
     assertTrue(result.isError(),
         "type: template must not compile via field_to_json; got: " + result);
   }
 
-  @Test void rejects_missing_yaml_argument()
+  @Test void rejects_missing_artifact_argument()
   {
     McpSchema.CallToolResult result = invoke(Map.of());
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("yaml"));
+    assertTrue(errorText(result).contains("artifact"));
   }
 
   @Test void rejects_blank_yaml()
   {
-    McpSchema.CallToolResult result = invoke(Map.of("yaml", "   \n  \n"));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", "   \n  \n"));
     assertTrue(result.isError(), "blank yaml input must produce isError=true");
   }
 

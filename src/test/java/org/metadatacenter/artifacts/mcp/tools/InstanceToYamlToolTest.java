@@ -85,7 +85,7 @@ final class InstanceToYamlToolTest
   private static String compileToJson(String yaml)
   {
     McpSchema.CallToolResult result = InstanceToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("instance_to_json", Map.of("yaml", yaml)));
+        new McpSchema.CallToolRequest("instance_to_json", Map.of("artifact", yaml)));
     assertFalse(result.isError(),
         "fixture instance YAML must compile cleanly; got: " + errorText(result));
     return textOf(result);

@@ -111,7 +111,7 @@ final class FieldToYamlToolTest
   private static String compileToJson(String yaml)
   {
     McpSchema.CallToolResult result = FieldToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("field_to_json", Map.of("yaml", yaml)));
+        new McpSchema.CallToolRequest("field_to_json", Map.of("artifact", yaml)));
     assertFalse(result.isError(),
         "test fixture YAML must compile cleanly; got: " + errorText(result));
     return textOf(result);
