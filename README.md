@@ -486,7 +486,8 @@ is the instance's own identity — optional, and auto-minted as a fresh
 
 ### `validate_instance(template, instance)`
 
-Validates a template instance (YAML) against its template (YAML). Returns
+Validates a template instance against its template — both accepted as YAML or JSON
+(auto-detected), like every other artifact parameter. Returns
 `{"valid": true}` on success, or `{"valid": false, "errors": [...]}` with
 diagnostics on failure.
 
