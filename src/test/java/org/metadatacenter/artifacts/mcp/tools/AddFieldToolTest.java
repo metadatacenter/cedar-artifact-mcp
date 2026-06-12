@@ -295,6 +295,30 @@ final class AddFieldToolTest
     assertTrue(errorText(result).contains("parent"));
   }
 
+  @Test void property_iri_maps_the_child_to_an_ontology_property()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent", createTemplate("Demographics"),
+        "child", createField("Patient name", "text-field"),
+        "key", "name",
+        "property_iri", "https://schema.org/name"));
+
+    assertFalse(result.isError(), errorText(result));
+    assertTrue(textOf(result).contains("propertyIri: https://schema.org/name"),
+        "the property IRI must appear on the embedded child; got: " + textOf(result));
+  }
+
+  @Test void rejects_malformed_property_iri()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent", createTemplate("Demographics"),
+        "child", createField("Patient name", "text-field"),
+        "property_iri", "not a uri with spaces"));
+
+    assertTrue(result.isError());
+    assertTrue(errorText(result).contains("property_iri"), errorText(result));
+  }
+
   // -----------------------------------------------------------------
   // helpers
   // -----------------------------------------------------------------

@@ -397,7 +397,7 @@ tools. `id` is optional; omit it and a fresh `template-fields` IRI is
 auto-minted (a field is a first-class, reusable CEDAR artifact, so a standalone
 one gets an id like any other top-level artifact).
 
-### `add_field(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?, isRequired?, isHidden?)`
+### `add_field(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?, isRequired?, isHidden?, property_iri?)`
 
 Adds an existing field as a child of a template or element parent. The
 per-add-site overrides set how the field appears in *this* parent — the key it
@@ -406,15 +406,18 @@ single-instance or multi-instance (with optional `minItems` / `maxItems`).
 They're per-add-site because the same reusable field may be used differently in
 different parents. `isRequired` / `isHidden` optionally set the embedded copy's
 required-value constraint and hidden flag; when omitted, whatever the child already
-carries is preserved.
+carries is preserved. `property_iri` maps the child to an ontology property — the
+JSON-LD `@context` mapping for this key, which is what makes instance values real
+linked data rather than plain JSON; also per-add-site, since the same reusable
+field may map to different properties in different parents.
 
-### `add_element(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
+### `add_element(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?, property_iri?)`
 
 Element variant of `add_field`: adds an existing element as a child of a
 template or element parent. The same per-add-site overrides apply except
 `isRequired` / `isHidden`, which are field-only.
 
-### `replace_field(parent, child, key, name?, description?, isMultiInstance?, minItems?, maxItems?, isRequired?, isHidden?)`
+### `replace_field(parent, child, key, name?, description?, isMultiInstance?, minItems?, maxItems?, isRequired?, isHidden?, property_iri?)`
 
 Replaces the child at `key` with the supplied field, keeping the key and its
 position in the parent's display order (`remove_child` + `add_field` would move
@@ -423,7 +426,7 @@ apply to the incoming field. The outgoing child may be a field or an element —
 the slot keeps its key either way. The typical workflow: pull a field out of
 the parent's YAML, refine it with the `set_*` tools, then swap it back in.
 
-### `replace_element(parent, child, key, name?, description?, isMultiInstance?, minItems?, maxItems?)`
+### `replace_element(parent, child, key, name?, description?, isMultiInstance?, minItems?, maxItems?, property_iri?)`
 
 Element variant of `replace_field`, with the same per-add-site overrides as
 `add_element` (no `isRequired` / `isHidden`, which are field-only).

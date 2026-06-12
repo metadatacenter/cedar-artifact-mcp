@@ -13,6 +13,8 @@ import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ErrorItem;
 import org.metadatacenter.model.validation.report.ValidationReport;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,6 +84,14 @@ public final class AddElementTool
         "description",
         "Maximum number of instances when isMultiInstance is true. Optional; left unset "
             + "if omitted. Only meaningful for multi-instance elements."));
+    properties.put("property_iri", Map.of(
+        "type", "string",
+        "description",
+        "IRI of the ontology property this element maps to in instances (the JSON-LD "
+            + "@context mapping for this key) — what makes instance values real linked "
+            + "data rather than plain JSON. Optional; when omitted, whatever the child "
+            + "already carries is preserved. Per-add-site, since the same reusable element "
+            + "may map to different properties in different parents."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
@@ -140,6 +150,12 @@ public final class AddElementTool
     } catch (IllegalArgumentException e) {
       return error(e.getMessage());
     }
+    URI propertyIri;
+    try {
+      propertyIri = optionalUriArg(args, "property_iri");
+    } catch (IllegalArgumentException e) {
+      return error(e.getMessage());
+    }
 
     ObjectNode parentObject;
     try {
@@ -173,6 +189,7 @@ public final class AddElementTool
           .withIsMultiple(isMultiInstance);
       if (minItems != null) rebuild.withMinItems(minItems);
       if (maxItems != null) rebuild.withMaxItems(maxItems);
+      if (propertyIri != null) rebuild.withPropertyUri(propertyIri);
       child = rebuild.build();
     } catch (ArtifactParseException e) {
       return error("child rejected by reader (must be a CEDAR element): " + e.getMessage());
@@ -272,6 +289,18 @@ public final class AddElementTool
     if (raw instanceof Number n) return n.intValue();
     throw new IllegalArgumentException(key + " must be an integer (got "
         + raw.getClass().getSimpleName() + ")");
+  }
+
+  /** Read an optional URI argument; absent returns {@code null}, malformed fails cleanly. */
+  private static URI optionalUriArg(Map<String, Object> args, String key)
+  {
+    Object raw = args.get(key);
+    if (raw == null || raw.toString().isBlank()) return null;
+    try {
+      return new URI(raw.toString());
+    } catch (URISyntaxException e) {
+      throw new IllegalArgumentException(key + " is not a valid URI: " + e.getMessage());
+    }
   }
 
   private static McpSchema.CallToolResult error(String message)

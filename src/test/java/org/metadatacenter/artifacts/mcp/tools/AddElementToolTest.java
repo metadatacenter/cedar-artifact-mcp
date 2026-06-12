@@ -261,6 +261,19 @@ final class AddElementToolTest
     assertTrue(errorText(result).contains("parent"));
   }
 
+  @Test void property_iri_maps_the_child_to_an_ontology_property()
+  {
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "parent", createTemplate("Study"),
+        "child", createElement("Address"),
+        "key", "address",
+        "property_iri", "https://schema.org/address"));
+
+    assertFalse(result.isError(), errorText(result));
+    assertTrue(textOf(result).contains("propertyIri: https://schema.org/address"),
+        "the property IRI must appear on the embedded child; got: " + textOf(result));
+  }
+
   // -----------------------------------------------------------------
   // helpers
   // -----------------------------------------------------------------

@@ -45,11 +45,12 @@ centralizes read (YAML or JSON, auto-detected) and render.
 
 ### Incremental builders
 
-- `add_field(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?, isRequired?, isHidden?)` /
-  `add_element(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
+- `add_field(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?, isRequired?, isHidden?, property_iri?)` /
+  `add_element(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?, property_iri?)`
   — graft an existing child artifact onto a template or element parent; parent kind inferred
   from the artifact. Per-add-site overrides for key, label, description, multi-instance flag,
-  and cardinality bounds.
+  cardinality bounds, and the ontology property the child maps to in instances (`property_iri`,
+  the JSON-LD `@context` mapping for the key).
 - `replace_field(parent, child, key, …)` / `replace_element(parent, child, key, …)` — replace
   the child at a key in place, keeping its position in the parent's display order (where
   `remove_child` + `add_*` would append). Same per-add-site overrides as the `add_*` pair.

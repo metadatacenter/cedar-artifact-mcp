@@ -15,6 +15,8 @@ import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ErrorItem;
 import org.metadatacenter.model.validation.report.ValidationReport;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -98,6 +100,14 @@ public final class ReplaceFieldTool
         "Whether the field is hidden in forms rendered from the parent (the field's _ui "
             + "hidden flag). Optional; when omitted, whatever the replacement child already "
             + "carries is preserved. Applies to the copy embedded in THIS parent."));
+    properties.put("property_iri", Map.of(
+        "type", "string",
+        "description",
+        "IRI of the ontology property this field maps to in instances (the JSON-LD "
+            + "@context mapping for this key) — what makes instance values real linked "
+            + "data rather than plain JSON. Optional; when omitted, whatever the child "
+            + "already carries is preserved. Per-add-site, since the same reusable field "
+            + "may map to different properties in different parents."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
@@ -182,6 +192,12 @@ public final class ReplaceFieldTool
     } catch (IllegalArgumentException e) {
       return error(e.getMessage());
     }
+    URI propertyIri;
+    try {
+      propertyIri = optionalUriArg(args, "property_iri");
+    } catch (IllegalArgumentException e) {
+      return error(e.getMessage());
+    }
 
     ObjectNode parentObject;
     try {
@@ -219,6 +235,7 @@ public final class ReplaceFieldTool
       // a required/hidden setting the replacement child already carries.
       if (isRequired != null) rebuild.withRequiredValue(isRequired);
       if (isHidden != null) rebuild.withHidden(isHidden);
+      if (propertyIri != null) rebuild.withPropertyUri(propertyIri);
       child = rebuild.build();
     } catch (ArtifactParseException e) {
       return error("child rejected by reader (must be a CEDAR field): " + e.getMessage());
@@ -341,6 +358,18 @@ public final class ReplaceFieldTool
     if (raw instanceof Number n) return n.intValue();
     throw new IllegalArgumentException(key + " must be an integer (got "
         + raw.getClass().getSimpleName() + ")");
+  }
+
+  /** Read an optional URI argument; absent returns {@code null}, malformed fails cleanly. */
+  private static URI optionalUriArg(Map<String, Object> args, String key)
+  {
+    Object raw = args.get(key);
+    if (raw == null || raw.toString().isBlank()) return null;
+    try {
+      return new URI(raw.toString());
+    } catch (URISyntaxException e) {
+      throw new IllegalArgumentException(key + " is not a valid URI: " + e.getMessage());
+    }
   }
 
   private static McpSchema.CallToolResult error(String message)
