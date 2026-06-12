@@ -331,6 +331,17 @@ JSON Schema artifact back into the YAML loop; `validate_instance` calls the cano
 CedarValidator. A non-error result from any tool is guaranteed to have round-tripped
 through the library and passed its structural validation.
 
+| Group | Tools |
+|---|---|
+| Create | `create_template` · `create_element` · `create_field` · `create_instance` |
+| Compose | `add_field` · `add_element` · `remove_child` |
+| Constrain (controlled terms) | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` |
+| Schema defaults | `set_default_value` · `set_iri_default_value` · `set_controlled_term_default_value` |
+| Instance values | `set_field_value` · `set_iri_field_value` · `set_controlled_term_field_value` |
+| Validate | `validate_template` · `validate_element` · `validate_field` · `validate_artifact` · `validate_instance` |
+| Render | `template_to_json` · `element_to_json` · `field_to_json` · `instance_to_json` · `template_to_yaml` · `element_to_yaml` · `field_to_yaml` · `instance_to_yaml` |
+| Diagnostics | `ping` |
+
 **The exchange form.** Every tool that builds or modifies an artifact (`create_*`,
 `add_*`, `set_*`, `remove_child`) returns the **expanded, lossless YAML**: version, status,
 modelVersion, and any other provenance are always carried, so nothing set on an artifact can
