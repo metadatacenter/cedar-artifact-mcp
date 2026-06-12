@@ -29,7 +29,7 @@ import java.util.Map;
  * {@code {}}), so a freshly created instance is essentially just its identity (@id, name,
  * isBasedOn). The required empty slots are reconstructed from the template at the JSON boundary
  * (see {@link InstanceInflater}) by {@code validate_instance} and {@code instance_to_json}. The
- * LLM fills values via {@code set_field_value} and friends.
+ * LLM fills values via {@code set_literal_field_value} and friends.
  *
  * <p>The {@code isBasedOn} URI is always derived from the template's {@code @id} — the
  * instance points at exactly the template it was built from, by construction. A template
@@ -84,8 +84,7 @@ public final class CreateInstanceTool
                 + "It is still structurally complete against the template: the empty fields the "
                 + "canonical JSON form requires are reconstructed at the JSON boundary — "
                 + "'validate_instance' and 'instance_to_json' (given the template) inflate them. "
-                + "Fill values with set_field_value / set_iri_field_value / "
-                + "set_controlled_term_field_value."
+                + "Fill values with set_literal_field_value / set_iri_field_value."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();

@@ -65,9 +65,11 @@ final class SetIriFieldValueToolTest
         "field_path", "note",
         "iri", "https://x.example"));
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("set_field_value")
-            || errorText(result).contains("set_controlled_term_field_value"),
+    assertTrue(errorText(result).contains("set_literal_field_value"),
         "error should redirect; got: " + errorText(result));
+    assertTrue(errorText(result).contains("set_class_constraint"),
+        "error should mention the constraint route for controlled-term intent; got: "
+            + errorText(result));
   }
 
   @Test void rejects_invalid_iri()
@@ -82,6 +84,75 @@ final class SetIriFieldValueToolTest
         "iri", "not a uri with spaces"));
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("iri"));
+  }
+
+  @Test void sets_controlled_term_value()
+  {
+    String templateJson = controlledTermTemplate("diagnosis");
+    String instanceJson = createInstance(templateJson, "Patient 42");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "template", templateJson,
+        "instance", instanceJson,
+        "field_path", "diagnosis",
+        "iri", "http://purl.obolibrary.org/obo/DOID_1612",
+        "label", "breast cancer",
+        "pref_label", "breast cancer"));
+
+    assertFalse(result.isError(), errorText(result));
+    Map<String, Object> diag = child(parseYaml(result), "diagnosis");
+    assertEquals("http://purl.obolibrary.org/obo/DOID_1612", diag.get("id"), "diagnosis id; got: " + diag);
+    assertEquals("breast cancer", diag.get("label"), "diagnosis label; got: " + diag);
+    assertEquals("breast cancer", diag.get("prefLabel"), "diagnosis prefLabel; got: " + diag);
+  }
+
+  @Test void pref_label_defaults_to_label_for_controlled_term()
+  {
+    String templateJson = controlledTermTemplate("diagnosis");
+    String instanceJson = createInstance(templateJson, "P");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "template", templateJson,
+        "instance", instanceJson,
+        "field_path", "diagnosis",
+        "iri", "http://purl.obolibrary.org/obo/DOID_1612",
+        "label", "breast cancer"));
+
+    assertFalse(result.isError(), errorText(result));
+    Map<String, Object> diag = child(parseYaml(result), "diagnosis");
+    assertEquals("breast cancer", diag.get("prefLabel"),
+        "prefLabel must default to label; got: " + diag);
+  }
+
+  @Test void rejects_controlled_term_value_without_label()
+  {
+    String templateJson = controlledTermTemplate("diagnosis");
+    String instanceJson = createInstance(templateJson, "P");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "template", templateJson,
+        "instance", instanceJson,
+        "field_path", "diagnosis",
+        "iri", "http://purl.obolibrary.org/obo/DOID_1612"));
+    assertTrue(result.isError());
+    assertTrue(errorText(result).contains("label"),
+        "error should demand the label; got: " + errorText(result));
+  }
+
+  @Test void rejects_pref_label_on_a_plain_iri_field()
+  {
+    String templateJson = templateWithField(createField("ROR", "ext-ror-field"), "ror");
+    String instanceJson = createInstance(templateJson, "I");
+
+    McpSchema.CallToolResult result = invoke(Map.of(
+        "template", templateJson,
+        "instance", instanceJson,
+        "field_path", "ror",
+        "iri", "https://ror.org/00f54p054",
+        "pref_label", "Stanford"));
+    assertTrue(result.isError());
+    assertTrue(errorText(result).contains("pref_label"),
+        "error should explain pref_label is controlled-term only; got: " + errorText(result));
   }
 
   // -----------------------------------------------------------------
@@ -125,6 +196,26 @@ final class SetIriFieldValueToolTest
     return textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
         "parent", createTemplate("Fixture"),
         "child", fieldYaml,
+        "key", key)));
+  }
+
+  /**
+   * Build a template carrying a controlled-term field at {@code key}: create the field,
+   * layer a class constraint onto it (so the library classifies it as ControlledTermField),
+   * then graft it onto a fresh template.
+   */
+  private static String controlledTermTemplate(String key)
+  {
+    String field = createField("Diagnosis", "controlled-term-field");
+    String constrained = textOf(invokeTool(SetClassConstraintTool::handler, "set_class_constraint", Map.of(
+        "field", field,
+        "class_iri", "http://purl.obolibrary.org/obo/DOID_4",
+        "ontology_acronym", "DOID",
+        "label", "disease",
+        "pref_label", "disease")));
+    return textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
+        "parent", createTemplate("Diagnosis template"),
+        "child", constrained,
         "key", key)));
   }
 

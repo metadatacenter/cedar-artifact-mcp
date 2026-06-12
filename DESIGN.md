@@ -139,7 +139,7 @@ threads **YAML**. The tool surface:
 - **Expanded is the exchange form; compaction is display-only.** Every mutating tool
   returns the expanded, lossless YAML (`ArtifactExchange.exchangeYaml`): version, status,
   `modelVersion`, and value-less instance slots are always carried, so nothing set on an
-  artifact — and nothing structural that `set_field_value` needs — can be silently dropped
+  artifact — and nothing structural that `set_literal_field_value` needs — can be silently dropped
   as it threads from tool to tool. `isCompact` is a rendering choice, not a creation
   choice, so it lives only on the `*_to_yaml` rendering tools: `isCompact: true` drops the
   provenance keys for a lean display of a finished artifact.
@@ -232,7 +232,7 @@ by reconstructing the empty slots from the template:
   non-static field/element (recursing into elements), preserving values already set. It is the
   shared bridge: `validate_instance` inflates before running `CedarValidator`, and
   `instance_to_json` inflates (when given the template) before rendering the canonical JSON.
-- `set_field_value` and friends inflate first, so the target slot exists, then re-render sparse.
+- `set_literal_field_value` and friends inflate first, so the target slot exists, then re-render sparse.
 - `instance_to_json` takes the template as an **optional** parameter: with it, the export is a
   complete CEDAR instance; without it, only the fields the instance actually carries are emitted.
 

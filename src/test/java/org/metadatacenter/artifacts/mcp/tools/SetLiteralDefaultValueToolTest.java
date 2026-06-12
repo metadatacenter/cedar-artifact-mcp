@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-final class SetDefaultValueToolTest
+final class SetLiteralDefaultValueToolTest
 {
   private ModelValidator cedarValidator;
 
@@ -104,8 +104,8 @@ final class SetDefaultValueToolTest
 
   @Test void rejects_controlled_term_field()
   {
-    // Direct set_default_value on a controlled-term field must redirect to the
-    // controlled-term default tool. Build the controlled-term field by creating an
+    // Direct set_literal_default_value on a controlled-term field must redirect to
+    // set_iri_default_value, which owns the IRI + label case. Build the controlled-term field by creating an
     // empty one and attaching a class constraint (both return YAML).
     String fieldYaml = constrainedControlledTermField();
 
@@ -113,7 +113,7 @@ final class SetDefaultValueToolTest
         "field", fieldYaml,
         "value", "x"));
     assertTrue(result.isError());
-    assertTrue(errorText(result).contains("set_controlled_term_default_value"),
+    assertTrue(errorText(result).contains("set_iri_default_value"),
         "error should redirect; got: " + errorText(result));
   }
 
@@ -141,8 +141,8 @@ final class SetDefaultValueToolTest
   // helpers
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
-    return SetDefaultValueTool.handler(null,
-        new McpSchema.CallToolRequest("set_default_value", args));
+    return SetLiteralDefaultValueTool.handler(null,
+        new McpSchema.CallToolRequest("set_literal_default_value", args));
   }
 
   private static String createField(String name, String type)

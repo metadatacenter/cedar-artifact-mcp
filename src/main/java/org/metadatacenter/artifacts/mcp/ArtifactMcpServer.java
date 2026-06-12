@@ -7,8 +7,7 @@ import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.mcp.tools.SetBranchConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.SetClassConstraintTool;
-import org.metadatacenter.artifacts.mcp.tools.SetControlledTermDefaultValueTool;
-import org.metadatacenter.artifacts.mcp.tools.SetDefaultValueTool;
+import org.metadatacenter.artifacts.mcp.tools.SetLiteralDefaultValueTool;
 import org.metadatacenter.artifacts.mcp.tools.AddElementTool;
 import org.metadatacenter.artifacts.mcp.tools.AddFieldTool;
 import org.metadatacenter.artifacts.mcp.tools.SetIriDefaultValueTool;
@@ -26,8 +25,7 @@ import org.metadatacenter.artifacts.mcp.tools.FieldToYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.InstanceToJsonTool;
 import org.metadatacenter.artifacts.mcp.tools.InstanceToYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.RemoveChildTool;
-import org.metadatacenter.artifacts.mcp.tools.SetControlledTermFieldValueTool;
-import org.metadatacenter.artifacts.mcp.tools.SetFieldValueTool;
+import org.metadatacenter.artifacts.mcp.tools.SetLiteralFieldValueTool;
 import org.metadatacenter.artifacts.mcp.tools.SetIriFieldValueTool;
 import org.metadatacenter.artifacts.mcp.tools.TemplateToJsonTool;
 import org.metadatacenter.artifacts.mcp.tools.TemplateToYamlTool;
@@ -79,9 +77,8 @@ public final class ArtifactMcpServer
         .toolCall(SetOptionsTool.tool(), SetOptionsTool::handler)
         .toolCall(SetBranchConstraintTool.tool(), SetBranchConstraintTool::handler)
         .toolCall(SetValueSetConstraintTool.tool(), SetValueSetConstraintTool::handler)
-        .toolCall(SetDefaultValueTool.tool(), SetDefaultValueTool::handler)
+        .toolCall(SetLiteralDefaultValueTool.tool(), SetLiteralDefaultValueTool::handler)
         .toolCall(SetIriDefaultValueTool.tool(), SetIriDefaultValueTool::handler)
-        .toolCall(SetControlledTermDefaultValueTool.tool(), SetControlledTermDefaultValueTool::handler)
         .toolCall(CreateInstanceTool.tool(), CreateInstanceTool::handler)
         .toolCall(InstanceToJsonTool.tool(), InstanceToJsonTool::handler)
         .toolCall(InstanceToYamlTool.tool(), InstanceToYamlTool::handler)
@@ -90,9 +87,8 @@ public final class ArtifactMcpServer
         .toolCall(ValidateElementTool.tool(), ValidateElementTool::handler)
         .toolCall(ValidateFieldTool.tool(), ValidateFieldTool::handler)
         .toolCall(ValidateArtifactTool.tool(), ValidateArtifactTool::handler)
-        .toolCall(SetFieldValueTool.tool(), SetFieldValueTool::handler)
+        .toolCall(SetLiteralFieldValueTool.tool(), SetLiteralFieldValueTool::handler)
         .toolCall(SetIriFieldValueTool.tool(), SetIriFieldValueTool::handler)
-        .toolCall(SetControlledTermFieldValueTool.tool(), SetControlledTermFieldValueTool::handler)
         .build();
 
     // Stdio transport reads from System.in in a background thread. Keep the main thread

@@ -237,7 +237,7 @@ exposes BioPortal search and lookup as tools an LLM can call —
 discover the IRIs and tuples it needs without leaving the conversation. The
 two MCPs are designed to pair: the bioportal one returns exactly the
 `iri` / `acronym` / `ontologyName` / `termLabel` shape the artifact MCP's
-`set_*_constraint` and `set_controlled_term_field_value` tools take as
+`set_*_constraint` and `set_iri_field_value` tools take as
 input.
 
 A typical pairing — both MCPs available at once:
@@ -311,7 +311,7 @@ children:
 
 The LLM looks up `sickle cell anemia` in DOID via `bioportal-term-mcp`'s
 `find_class` (returning `DOID_10923`), confirms it sits under the branch the
-field constrains to, and calls `set_controlled_term_field_value` with the
+field constrains to, and calls `set_iri_field_value` with the
 IRI + label tuple. The instance gets its own minted `@id`; `isBasedOn` is taken
 straight from the template's `@id`. Note the `Disease` child's `id:` is the
 DOID class IRI of the chosen value, not a minted instance id — it's the value the
@@ -343,8 +343,8 @@ through the library and passed its structural validation.
 | Compose | `add_field` · `add_element` · `remove_child` |
 | Controlled term constraints | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` |
 | Literal options | `set_options` |
-| Default values | `set_default_value` · `set_iri_default_value` · `set_controlled_term_default_value` |
-| Instance values | `set_field_value` · `set_iri_field_value` · `set_controlled_term_field_value` |
+| Default values | `set_literal_default_value` · `set_iri_default_value` |
+| Instance values | `set_literal_field_value` · `set_iri_field_value` |
 | Validate | `validate_template` · `validate_element` · `validate_field` · `validate_artifact` · `validate_instance` |
 | Render | `template_to_json` · `element_to_json` · `field_to_json` · `instance_to_json` · `template_to_yaml` · `element_to_yaml` · `field_to_yaml` · `instance_to_yaml` |
 | Diagnostics | `ping` |
@@ -456,44 +456,38 @@ optionally names the one option that is pre-selected; it must be a member of
 `options`. Other field kinds are rejected with a redirect. Inline options can also
 be supplied at creation time via `create_field`'s `options`.
 
-### `set_default_value(field, value)`
+### `set_literal_default_value(field, value)`
 
 Attaches a default value to a literal-valued field (text, text-area, numeric,
 temporal, phone, email, radio, checkbox, list). The value type must match the
 field's input type.
 
-### `set_iri_default_value(field, iri)`
+### `set_iri_default_value(field, iri, label?)`
 
-Attaches a default URI to an IRI-valued field (link, ROR, ORCID, PFAS, RRID,
-PubMed, NIH-grant-ID, DOI). The schema-level default is a bare URI; if you want
-a default that carries a human label too, set it on the instance side via
-`set_iri_field_value`.
-
-### `set_controlled_term_default_value(field, iri, label)`
-
-Attaches a default class IRI + human label to a controlled-term field. The
-field must already carry at least one `set_*_constraint` constraint; a plain
+Attaches a default URI to any IRI-valued field. For link, ROR, ORCID, PFAS,
+RRID, PubMed, NIH-grant-ID, and DOI fields the schema-level default is a bare
+URI — `label` is not accepted (a labelled IRI value belongs on the instance
+side, via `set_iri_field_value`). For controlled-term fields the default is
+the class IRI plus a human label, so `label` is required; the field must
+already carry at least one `set_*_constraint` constraint, and a plain
 text-field is refused with a redirect to the constraint tools.
 
-### `set_field_value(template, instance, field_path, value)`
+### `set_literal_field_value(template, instance, field_path, value)`
 
 Sets the value of a literal-valued field on an instance — text, numeric,
 temporal, phone, email, radio, checkbox, list, or text-area. The value type
 must match the schema's input type.
 
-### `set_iri_field_value(template, instance, field_path, iri, label?)`
+### `set_iri_field_value(template, instance, field_path, iri, label?, pref_label?)`
 
-Sets the URI (and optional human label) of an IRI-valued field on an instance
-— link, ROR, ORCID, PFAS, RRID, PubMed, NIH-grant-ID, or DOI. The label
-populates `rdfs:label` alongside the URI and is typically supplied.
+Sets the URI of any IRI-valued field on an instance — link, ROR, ORCID, PFAS,
+RRID, PubMed, NIH-grant-ID, DOI, or controlled-term. For the plain IRI kinds
+`label` (`rdfs:label`) is optional and typically supplied. For controlled-term
+fields `label` is required and `pref_label` (`skos:prefLabel`) is optional,
+defaulting to the label; the schema must declare the field as controlled-term
+(with at least one `set_*_constraint` already attached).
 
-### `set_controlled_term_field_value(template, instance, field_path, iri, label, pref_label?)`
-
-Sets the URI, human label, and preferred label of a controlled-term field on
-an instance. The schema must declare the field as controlled-term (with at
-least one `set_*_constraint` already attached).
-
-#### Notes shared by the three instance-side `set_*_field_value` tools
+#### Notes shared by the two instance-side value tools
 
 `field_path` uses slash-separated nesting and bracketed indices for
 multi-instance children: `address/street`, `addresses[2]/street`, `emails[0]`.

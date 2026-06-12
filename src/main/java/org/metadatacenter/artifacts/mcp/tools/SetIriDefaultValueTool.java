@@ -29,12 +29,17 @@ import java.util.Map;
 
 /**
  * MCP tool {@code set_iri_default_value} — sets the schema-level default value on
- * an IRI-valued field (link, ROR, ORCID, PFAS, RRID, PubMed, NIH-grant-ID, DOI).
+ * an IRI-valued field (link, ROR, ORCID, PFAS, RRID, PubMed, NIH-grant-ID, DOI) or
+ * a controlled-term field. Controlled-term defaults always carry a label alongside
+ * the class IRI; plain IRI-field schema defaults are bare URIs (no label) — distinct
+ * from instance-level IRI values, which take an optional rdfs:label via
+ * {@code set_iri_field_value}.
  *
- * <p>The library's IRI-field schema defaults are bare URIs (no label) — distinct
- * from instance-level IRI values which carry an optional rdfs:label. If a default
- * with a label is needed, the LLM should set it on the instance side via
- * {@code set_iri_field_value} after instantiation.
+ * <p>The controlled-term branch requires the schema to already declare the field as
+ * controlled-term — at least one class/ontology/branch/value-set constraint must be
+ * attached. Same wire collision as the rest of the controlled-term tooling: a
+ * TEXTFIELD without a constraint isn't classified as ControlledTermField on JSON
+ * round-trip.
  */
 public final class SetIriDefaultValueTool
 {
@@ -51,8 +56,15 @@ public final class SetIriDefaultValueTool
         "type", "string",
         "description",
         "CEDAR IRI field as YAML — link, ROR, ORCID, PFAS, RRID, PubMed, "
-            + "NIH-grant-ID, or DOI. The kind 'create_field' with one of those types "
-            + "returns. JSON Schema is also accepted."));
+            + "NIH-grant-ID, or DOI (the kind 'create_field' with one of those types "
+            + "returns) — or a controlled-term field already carrying at least one "
+            + "constraint. JSON Schema is also accepted."));
+    properties.put("label", Map.of(
+        "type", "string",
+        "description",
+        "Human-readable label for the default. Required for controlled-term fields "
+            + "(their defaults carry IRI + label); not accepted for plain IRI fields, "
+            + "whose schema defaults are bare URIs."));
     properties.put("iri", Map.of(
         "type", "string",
         "description", "Default URI value."));
@@ -64,7 +76,9 @@ public final class SetIriDefaultValueTool
         .name("set_iri_default_value")
         .title("Set an IRI default value on a field")
         .description(
-            "Attaches a default URI value to an IRI-valued CEDAR field schema. "
+            "Attaches a default URI value to an IRI-valued CEDAR field schema — "
+                + "link/ROR/ORCID/etc. (bare URI) or controlled-term (URI + label, "
+                + "requires the field to already carry a constraint). "
                 + "Returns the updated field as expanded YAML, re-validated with "
                 + "CedarValidator." + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
@@ -107,8 +121,19 @@ public final class SetIriDefaultValueTool
       return error("field reader threw " + e.getClass().getSimpleName() + ": " + e.getMessage());
     }
 
-    if (field instanceof ControlledTermField)
-      return error("field is a controlled-term field — use set_controlled_term_default_value");
+    String label = stringArg(args, "label");  // controlled-term only
+    if (field instanceof ControlledTermField) {
+      if (label == null || label.isBlank())
+        return error("label is required for a controlled-term field — its default "
+            + "carries the class IRI and a human-readable label");
+      return ControlledTermConstraints.apply(fieldJsonText, builder ->
+          builder.withDefaultValue(iri, label));
+    }
+    if (label != null && !label.isBlank())
+      return error("label applies only to controlled-term fields — plain IRI-field "
+          + "schema defaults are bare URIs. If this field is meant to be "
+          + "controlled-term, attach a constraint first via set_class_constraint / "
+          + "set_ontology_constraint / set_branch_constraint / set_valueset_constraint.");
 
     FieldSchemaArtifact updated;
     try {
@@ -153,8 +178,8 @@ public final class SetIriDefaultValueTool
     if (field instanceof NihGrantIdField nf) return NihGrantIdField.builder(nf).withDefaultValue(iri).build();
     if (field instanceof DoiField df) return DoiField.builder(df).withDefaultValue(iri).build();
     throw new IllegalArgumentException("set_iri_default_value works only on IRI fields "
-        + "(link, ROR, ORCID, PFAS, RRID, PubMed, NIH-grant-ID, DOI); got "
-        + field.getClass().getSimpleName());
+        + "(link, ROR, ORCID, PFAS, RRID, PubMed, NIH-grant-ID, DOI) and "
+        + "controlled-term fields; got " + field.getClass().getSimpleName());
   }
 
   private static String formatErrors(ValidationReport report)

@@ -158,11 +158,11 @@ final class ArtifactInputRobustnessTest
     assertCleanErrors("create_instance", CreateInstanceTool::handler, "template");
   }
 
-  @Test void set_default_value_survives_garbage_fields()
+  @Test void set_literal_default_value_survives_garbage_fields()
   {
-    assertCleanErrors("set_default_value",
-        (exchange, request) -> SetDefaultValueTool.handler(null,
-            new McpSchema.CallToolRequest("set_default_value",
+    assertCleanErrors("set_literal_default_value",
+        (exchange, request) -> SetLiteralDefaultValueTool.handler(null,
+            new McpSchema.CallToolRequest("set_literal_default_value",
                 Map.of("field", request.arguments().get("field").toString(), "value", "x"))),
         "field");
   }

@@ -133,12 +133,10 @@ final class EndToEndStdioIT
           "set_branch_constraint tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("set_valueset_constraint"),
           "set_valueset_constraint tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("set_default_value"),
-          "set_default_value tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("set_literal_default_value"),
+          "set_literal_default_value tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("set_iri_default_value"),
           "set_iri_default_value tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("set_controlled_term_default_value"),
-          "set_controlled_term_default_value tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("create_instance"),
           "create_instance tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("instance_to_json"),
@@ -155,12 +153,10 @@ final class EndToEndStdioIT
           "validate_field tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("validate_artifact"),
           "validate_artifact tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("set_field_value"),
-          "set_field_value tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("set_literal_field_value"),
+          "set_literal_field_value tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("set_iri_field_value"),
           "set_iri_field_value tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("set_controlled_term_field_value"),
-          "set_controlled_term_field_value tool should be listed; got " + toolNames);
 
       // 4. tools/call create_template -----------------------------------------------
       // The exchange form is expanded, so the supplied version survives into the returned YAML.

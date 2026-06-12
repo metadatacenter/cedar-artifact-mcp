@@ -28,19 +28,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code set_default_value} — sets the schema-level default value on a
+ * MCP tool {@code set_literal_default_value} — sets the schema-level default value on a
  * literal-valued field (text, text-area, numeric, temporal, phone, email, radio,
- * checkbox, list). For IRI fields use {@link SetIriDefaultValueTool}; for
- * controlled-term fields use {@link SetControlledTermDefaultValueTool}.
+ * checkbox, list). For IRI-valued and controlled-term fields use
+ * {@link SetIriDefaultValueTool}.
  *
  */
-public final class SetDefaultValueTool
+public final class SetLiteralDefaultValueTool
 {
   private static final JsonArtifactReader READER = new JsonArtifactReader();
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
   private static final ModelValidator VALIDATOR = new CedarValidator();
 
-  private SetDefaultValueTool() {}
+  private SetLiteralDefaultValueTool() {}
 
   public static McpSchema.Tool tool()
   {
@@ -61,13 +61,13 @@ public final class SetDefaultValueTool
         "object", properties, List.of("field", "value"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
-        .name("set_default_value")
+        .name("set_literal_default_value")
         .title("Set a literal default value on a field")
         .description(
             "Attaches a default value to a literal-valued CEDAR field schema. "
                 + "Returns the updated field as expanded YAML, re-validated with "
                 + "CedarValidator. Use set_iri_default_value for link/ROR/ORCID/etc. "
-                + "fields, or set_controlled_term_default_value for controlled-term fields."
+                + "and controlled-term fields."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
@@ -103,7 +103,7 @@ public final class SetDefaultValueTool
     }
 
     if (field instanceof ControlledTermField)
-      return error("field is a controlled-term field — use set_controlled_term_default_value");
+      return error("field is a controlled-term field — use set_iri_default_value (iri + label)");
 
     FieldSchemaArtifact updated;
     try {
@@ -111,7 +111,7 @@ public final class SetDefaultValueTool
     } catch (IllegalArgumentException e) {
       return error(e.getMessage());
     } catch (RuntimeException e) {
-      return error("set_default_value failed: " + e.getClass().getSimpleName()
+      return error("set_literal_default_value failed: " + e.getClass().getSimpleName()
           + ": " + e.getMessage());
     }
 
@@ -157,10 +157,10 @@ public final class SetDefaultValueTool
       return CheckboxField.builder(cf).withDefaultValue(stringValue(value)).build();
     if (field instanceof ListField lf)
       return ListField.builder(lf).withDefaultValue(stringValue(value)).build();
-    throw new IllegalArgumentException("set_default_value does not support field class "
-        + field.getClass().getSimpleName() + " — use set_iri_default_value, "
-        + "set_controlled_term_default_value, or check whether the field type supports "
-        + "a default at all (text-area and static fields do not).");
+    throw new IllegalArgumentException("set_literal_default_value does not support field class "
+        + field.getClass().getSimpleName() + " — use set_iri_default_value (it covers IRI "
+        + "and controlled-term fields), or check whether the field type supports "
+        + "a default at all (static fields do not).");
   }
 
   private static String stringValue(Object value)

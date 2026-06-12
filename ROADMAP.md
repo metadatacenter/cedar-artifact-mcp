@@ -71,12 +71,12 @@ centralizes read (YAML or JSON, auto-detected) and render.
 
 ### Default values (schema-side)
 
-- `set_default_value` — literal-valued fields (text, text-area, numeric, temporal, phone,
-  email, radio, checkbox, list).
+- `set_literal_default_value` — literal-valued fields (text, text-area, numeric, temporal,
+  phone, email, radio, checkbox, list).
 - `set_iri_default_value` — IRI fields (link, ROR, ORCID, PFAS, RRID, PubMed, NIH-grant-ID,
-  DOI); a bare URI, since the schema-side default carries no label.
-- `set_controlled_term_default_value` — controlled-term fields only; refuses an unconstrained
-  text-field with a redirect to the constraint tools.
+  DOI), where the schema-side default is a bare URI, and controlled-term fields, where it is
+  the class IRI plus a required `label`; an unconstrained text-field is refused with a
+  redirect to the constraint tools.
 
 ### Instances
 
@@ -84,7 +84,8 @@ centralizes read (YAML or JSON, auto-detected) and render.
   template and produces an empty instance skeleton that validates against it. Attribute-value
   fields are seeded as empty groups; static fields are skipped; the instance `@id` is
   auto-minted when omitted.
-- `set_field_value` / `set_iri_field_value` / `set_controlled_term_field_value` — set a value
+- `set_literal_field_value` / `set_iri_field_value` — set a value (the latter covers plain
+  IRI fields and controlled-term fields, which add a required `label` and optional `pref_label`)
   at a slash-separated `field_path` (bracketed indices for multi-instance leaves, e.g.
   `address/street`, `addresses[2]/street`, `emails[0]`; an index equal to the current list
   size appends).
@@ -149,7 +150,8 @@ asymmetry the idea above depends on.
 
 The CEDAR model treats an empty controlled-term-field as JSON-indistinguishable from a plain
 text-field (a TEXTFIELD becomes ControlledTermField only once it carries a constraint). The
-constraint tools and `set_controlled_term_field_value` work around this; the proper fix is
+constraint tools and `set_iri_field_value`'s controlled-term branch work around this; the
+proper fix is
 scheduled for the next model version.
 
 ## Out of scope

@@ -32,22 +32,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code set_field_value} — sets the {@code @value} of a literal-valued
+ * MCP tool {@code set_literal_field_value} — sets the {@code @value} of a literal-valued
  * field instance at a slash-separated {@code field_path}.
  *
  * <p>Takes the template so the schema's input type determines which per-type
  * {@code FieldInstance} builder to use (the instance JSON loses that distinction on
  * round-trip — every field-instance read back is the generic
- * {@code FieldInstanceArtifactRecord}). For IRI fields use
- * {@link SetIriFieldValueTool}; for controlled-term fields use
- * {@link SetControlledTermFieldValueTool}.
+ * {@code FieldInstanceArtifactRecord}). For IRI-valued and controlled-term fields
+ * use {@link SetIriFieldValueTool}.
  */
-public final class SetFieldValueTool
+public final class SetLiteralFieldValueTool
 {
   private static final JsonArtifactReader READER = new JsonArtifactReader();
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
 
-  private SetFieldValueTool() {}
+  private SetLiteralFieldValueTool() {}
 
   public static McpSchema.Tool tool()
   {
@@ -81,14 +80,14 @@ public final class SetFieldValueTool
         Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
-        .name("set_field_value")
+        .name("set_literal_field_value")
         .title("Set a literal-valued field on an instance")
         .description(
             "Sets the @value of a literal-valued field instance (text, numeric, "
                 + "temporal, phone, email, radio, checkbox, list, text-area) at a "
                 + "slash-separated field_path. Returns the updated instance as expanded "
-                + "YAML. Use set_iri_field_value for link/ROR/ORCID/etc. fields, or "
-                + "set_controlled_term_field_value for controlled-term fields."
+                + "YAML. Use set_iri_field_value for link/ROR/ORCID/etc. and "
+                + "controlled-term fields."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
@@ -164,7 +163,7 @@ public final class SetFieldValueTool
 
     if (schemaField instanceof ControlledTermField)
       return error("field at '" + fieldPath + "' is a controlled-term field — use "
-          + "set_controlled_term_field_value instead");
+          + "set_iri_field_value (iri + label) instead");
 
     FieldInputType inputType = schemaField.fieldUi().inputType();
     if (inputType.isIri())
@@ -184,7 +183,7 @@ public final class SetFieldValueTool
     } catch (IllegalArgumentException e) {
       return error(e.getMessage());
     } catch (RuntimeException e) {
-      return error("set_field_value failed: " + e.getClass().getSimpleName()
+      return error("set_literal_field_value failed: " + e.getClass().getSimpleName()
           + ": " + e.getMessage());
     }
 
@@ -240,8 +239,8 @@ public final class SetFieldValueTool
       case CHECKBOX -> CheckboxFieldInstance.builder().withValue(stringValue(value)).build();
       case LIST -> ListFieldInstance.builder().withValue(stringValue(value)).build();
       default -> throw new IllegalArgumentException(
-          "set_field_value does not support input type " + inputType
-              + " — use set_iri_field_value or set_controlled_term_field_value");
+          "set_literal_field_value does not support input type " + inputType
+              + " — use set_iri_field_value");
     };
   }
 

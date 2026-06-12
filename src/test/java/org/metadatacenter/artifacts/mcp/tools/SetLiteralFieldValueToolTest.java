@@ -21,13 +21,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests for {@code set_field_value}. The tool now exchanges artifacts as expanded YAML:
+ * Tests for {@code set_literal_field_value}. The tool now exchanges artifacts as expanded YAML:
  * fixtures are built via {@code create_template} / {@code create_field} / {@code add_field}
  * / {@code create_instance} (all YAML), and the tool's output is the updated instance as
  * expanded YAML — parsed here with SnakeYAML and, where structural correctness matters,
  * re-read and revalidated against the template with {@link CedarValidator}.
  */
-final class SetFieldValueToolTest
+final class SetLiteralFieldValueToolTest
 {
   @Test void sets_text_field_value_at_top_level()
   {
@@ -66,7 +66,7 @@ final class SetFieldValueToolTest
   @Test void numeric_set_preserves_xsd_type_so_instance_still_validates()
   {
     // The template's per-field sub-schema for numeric fields requires both @value and
-    // @type. set_field_value rebuilds the FieldInstance — if it forgets to thread the
+    // @type. set_literal_field_value rebuilds the FieldInstance — if it forgets to thread the
     // declared XsdNumericDatatype, @type vanishes and the instance fails CedarValidator
     // with "object has missing required properties (['@type'])".
     String fieldJson = createField("Age", "numeric-field", Map.of("datatype", "xsd:int"));
@@ -84,7 +84,7 @@ final class SetFieldValueToolTest
     Map<String, Object> child = child(parseYaml(instanceYaml), "age");
     assertEquals("30", String.valueOf(child.get("value")));
     assertEquals("xsd:int", child.get("datatype"),
-        "datatype must survive set_field_value; rendered child: " + child);
+        "datatype must survive set_literal_field_value; rendered child: " + child);
 
     assertValidatesAgainst(instanceYaml, templateJson);
   }
@@ -251,8 +251,8 @@ final class SetFieldValueToolTest
 
   private static McpSchema.CallToolResult invoke(Map<String, Object> arguments)
   {
-    return SetFieldValueTool.handler(null,
-        new McpSchema.CallToolRequest("set_field_value", arguments));
+    return SetLiteralFieldValueTool.handler(null,
+        new McpSchema.CallToolRequest("set_literal_field_value", arguments));
   }
 
   private interface Handler

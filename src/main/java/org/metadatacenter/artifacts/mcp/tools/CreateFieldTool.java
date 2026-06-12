@@ -163,8 +163,8 @@ public final class CreateFieldTool
                 + "'field_to_json' instead. Constraints and default values can also be "
                 + "layered onto a created field via 'set_class_constraint', "
                 + "'set_branch_constraint', 'set_ontology_constraint', "
-                + "'set_valueset_constraint', 'set_default_value', 'set_iri_default_value', "
-                + "and 'set_controlled_term_default_value'.")
+                + "'set_valueset_constraint', 'set_literal_default_value', and "
+                + "'set_iri_default_value'.")
         .inputSchema(schema)
         .build();
   }

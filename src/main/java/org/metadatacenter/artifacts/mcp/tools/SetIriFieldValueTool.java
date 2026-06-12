@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.model.core.ControlledTermField;
+import org.metadatacenter.artifacts.model.core.ControlledTermFieldInstance;
 import org.metadatacenter.artifacts.model.core.DoiFieldInstance;
 import org.metadatacenter.artifacts.model.core.FieldInstanceArtifact;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
@@ -32,11 +33,13 @@ import java.util.Map;
  * instance at a slash-separated {@code field_path}, with an optional human-readable
  * label.
  *
- * <p>IRI fields cover link, ROR, ORCID, PFAS, RRID, PubMed, NIH-grant-ID, and DOI —
- * anything whose instance carries an {@code @id} URI rather than a literal {@code @value}.
- * Controlled-term fields also carry an {@code @id}, but they have their own setter
- * ({@link SetControlledTermFieldValueTool}) because they additionally need a
- * {@code skos:prefLabel}.
+ * <p>IRI fields cover link, ROR, ORCID, PFAS, RRID, PubMed, NIH-grant-ID, DOI, and
+ * controlled-term — anything whose instance carries an {@code @id} URI rather than a
+ * literal {@code @value}. The controlled-term case additionally requires the label
+ * (an {@code rdfs:label}) and takes an optional {@code skos:prefLabel}; the schema
+ * must already declare the field controlled-term (it carries a class/ontology/branch/
+ * value-set constraint), because a TEXTFIELD without a constraint isn't classified as
+ * ControlledTermField on JSON round-trip.
  */
 public final class SetIriFieldValueTool
 {
@@ -60,15 +63,21 @@ public final class SetIriFieldValueTool
     properties.put("field_path", Map.of(
         "type", "string",
         "description",
-        "Slash-separated path to the target field. Same syntax as 'set_field_value'."));
+        "Slash-separated path to the target field. Same syntax as 'set_literal_field_value'."));
     properties.put("iri", Map.of(
         "type", "string",
         "description", "URI to set as the field's @id."));
     properties.put("label", Map.of(
         "type", "string",
         "description",
-        "Optional human-readable label for the IRI (rdfs:label). Commonly supplied "
-            + "alongside the URI when the LLM has resolved both."));
+        "Human-readable label for the IRI (rdfs:label). Optional for plain IRI fields "
+            + "(commonly supplied alongside the URI when the LLM has resolved both); "
+            + "required for controlled-term fields."));
+    properties.put("pref_label", Map.of(
+        "type", "string",
+        "description",
+        "Preferred label (skos:prefLabel); controlled-term fields only. Optional; "
+            + "defaults to the label when omitted."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties,
@@ -80,8 +89,10 @@ public final class SetIriFieldValueTool
         .title("Set an IRI-valued field on an instance")
         .description(
             "Sets the @id of an IRI-valued field instance (link, ROR, ORCID, PFAS, "
-                + "RRID, PubMed, NIH-grant-ID, DOI) at a slash-separated field_path, "
-                + "with an optional rdfs:label. Returns the updated instance as expanded YAML."
+                + "RRID, PubMed, NIH-grant-ID, DOI, controlled-term) at a slash-separated "
+                + "field_path. label (rdfs:label) is optional for plain IRI fields and "
+                + "required for controlled-term fields, which also take an optional "
+                + "pref_label (skos:prefLabel). Returns the updated instance as expanded YAML."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
@@ -115,7 +126,8 @@ public final class SetIriFieldValueTool
       return error("iri is not a valid URI: " + e.getMessage());
     }
 
-    String label = stringArg(args, "label");  // optional
+    String label = stringArg(args, "label");  // optional for plain IRI fields
+    String prefLabel = stringArg(args, "pref_label");  // controlled-term only
 
     ObjectNode templateObject;
     try {
@@ -164,20 +176,37 @@ public final class SetIriFieldValueTool
       return error(e.getMessage());
     }
 
-    if (schemaField instanceof ControlledTermField)
-      return error("field at '" + fieldPath + "' is a controlled-term field — use "
-          + "set_controlled_term_field_value instead");
-
-    FieldInputType inputType = schemaField.fieldUi().inputType();
-    if (!inputType.isIri())
-      return error("field at '" + fieldPath + "' has input type " + inputType
-          + ", not an IRI type — use set_field_value or set_controlled_term_field_value");
-
     FieldInstanceArtifact newFieldInstance;
-    try {
-      newFieldInstance = buildIriFieldInstance(inputType, iri, label);
-    } catch (IllegalArgumentException e) {
-      return error(e.getMessage());
+    if (schemaField instanceof ControlledTermField) {
+      if (label == null || label.isBlank())
+        return error("field at '" + fieldPath + "' is a controlled-term field — label "
+            + "is required alongside the class IRI");
+      FieldInputType inputType = schemaField.fieldUi().inputType();
+      if (inputType != FieldInputType.TEXTFIELD)
+        return error("controlled-term fields must have input type TEXTFIELD; got "
+            + inputType);
+      String finalPrefLabel = (prefLabel == null || prefLabel.isBlank()) ? label : prefLabel;
+      newFieldInstance = ControlledTermFieldInstance.builder()
+          .withValue(iri)
+          .withLabel(label)
+          .withPreferredLabel(finalPrefLabel)
+          .build();
+    } else {
+      if (prefLabel != null && !prefLabel.isBlank())
+        return error("pref_label applies only to controlled-term fields; a plain IRI "
+            + "value carries just an @id and an optional rdfs:label");
+      FieldInputType inputType = schemaField.fieldUi().inputType();
+      if (!inputType.isIri())
+        return error("field at '" + fieldPath + "' has input type " + inputType
+            + ", not an IRI type — use set_literal_field_value. If this field is meant "
+            + "to be controlled-term, attach a constraint to the schema field first via "
+            + "set_class_constraint / set_ontology_constraint / set_branch_constraint / "
+            + "set_valueset_constraint.");
+      try {
+        newFieldInstance = buildIriFieldInstance(inputType, iri, label);
+      } catch (IllegalArgumentException e) {
+        return error(e.getMessage());
+      }
     }
 
     TemplateInstanceArtifact updated;
