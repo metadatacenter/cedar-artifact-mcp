@@ -58,7 +58,7 @@ public final class ElementToJsonTool
                 + "through the artifact library's reader/renderer and accepted by "
                 + "CedarValidator.validateTemplateElement, so a non-error result is a "
                 + "guaranteed-valid CEDAR element. Use this to export the canonical JSON Schema "
-                + "for cedar-server and other downstream consumers.")
+                + "for downstream CEDAR tooling.")
         .inputSchema(schema)
         .build();
   }

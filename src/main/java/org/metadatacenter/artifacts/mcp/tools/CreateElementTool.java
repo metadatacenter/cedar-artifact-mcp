@@ -52,7 +52,7 @@ public final class CreateElementTool
         .title("Create CEDAR element")
         .description(
             "Builds an empty CEDAR element schema artifact with the supplied name, description, "
-                + "and version. Returns the artifact as expanded YAML — the exchange form. Reusable "
+                + "version, and status. Returns the artifact as expanded YAML — the exchange form. Reusable "
                 + "elements are first-class CEDAR artifacts; the returned YAML can be added to "
                 + "templates (add_element) or composed via other tools. Use 'element_to_json' to "
                 + "export the canonical JSON Schema." + ArtifactExchange.STANDALONE_NOTICE

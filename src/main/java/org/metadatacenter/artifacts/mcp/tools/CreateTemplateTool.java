@@ -14,7 +14,7 @@ import java.util.Map;
 
 /**
  * MCP tool {@code create_template} — builds an empty CEDAR template schema artifact
- * with the supplied name, description, and version, and returns it as expanded YAML.
+ * with the supplied name, description, version, and status, and returns it as expanded YAML.
  *
  * <p>Expanded YAML is the exchange form threaded between tool calls (DESIGN.md Principle 8):
  * the caller pipes the returned YAML into follow-up tools (e.g. {@code add_field}) to compose
@@ -53,10 +53,10 @@ public final class CreateTemplateTool
         .title("Create CEDAR template")
         .description(
             "Builds an empty CEDAR template schema artifact with the supplied name, description, "
-                + "and version. Returns the artifact as expanded YAML — the exchange form threaded "
+                + "version, and status. Returns the artifact as expanded YAML — the exchange form threaded "
                 + "into follow-up tools (add_field, add_element, ...) to compose larger templates. "
-                + "Use 'template_to_json' to export the canonical JSON Schema for cedar-server and "
-                + "other downstream consumers." + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
+                + "Use 'template_to_json' to export the canonical JSON Schema for downstream CEDAR "
+                + "tooling." + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
   }

@@ -33,7 +33,7 @@ import static org.metadatacenter.artifacts.model.yaml.YamlConstants.TEXT_FIELD;
  *
  * <p>Builds an empty CEDAR field schema artifact of the requested kebab-case type
  * (e.g. {@code text-field}, {@code controlled-term-field}, {@code numeric-field}) with
- * the supplied name, description, and version. Returns JSON Schema validated with
+ * the supplied name, description, version, and status. Returns JSON Schema validated with
  * {@link CedarValidator#validateTemplateField}.
  *
  * <p>The full list of {@code type} values comes from the library's

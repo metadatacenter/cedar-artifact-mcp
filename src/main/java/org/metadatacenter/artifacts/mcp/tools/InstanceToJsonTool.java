@@ -59,7 +59,7 @@ public final class InstanceToJsonTool
         .title("CEDAR template instance: YAML → JSON")
         .description(
             "Exports a CEDAR template instance (YAML, the exchange form) to the canonical "
-                + "CEDAR JSON instance for cedar-server and other downstream consumers. Use "
+                + "CEDAR JSON instance for downstream CEDAR tooling. Use "
                 + "'validate_instance' to verify the result against a specific template.")
         .inputSchema(schema)
         .build();

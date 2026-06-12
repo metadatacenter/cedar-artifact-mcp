@@ -71,7 +71,7 @@ public final class TemplateToJsonTool
                 + "consumes). The returned JSON has been round-tripped through the "
                 + "artifact library's reader/renderer and accepted by CedarValidator, so "
                 + "a non-error result is a guaranteed-valid CEDAR template. Use this to export "
-                + "the canonical JSON Schema for cedar-server and other downstream consumers.")
+                + "the canonical JSON Schema for downstream CEDAR tooling.")
         .inputSchema(schema)
         .build();
   }

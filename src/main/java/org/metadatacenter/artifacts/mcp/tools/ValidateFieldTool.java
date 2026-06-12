@@ -29,7 +29,7 @@ public final class ValidateFieldTool
     properties.put("artifact", Map.of(
         "type", "string",
         "description",
-        "A CEDAR field as JSON Schema (the canonical form cedar-server and exports produce) or as "
+        "A CEDAR field as JSON Schema (the canonical form CEDAR servers and the *_to_json exports produce) or as "
             + "YAML; the format is auto-detected. JSON is validated exactly as received — use this "
             + "to check a field obtained from the wild. YAML is read through the library first."));
 

@@ -33,7 +33,7 @@ public final class ValidateTemplateTool
     properties.put("artifact", Map.of(
         "type", "string",
         "description",
-        "A CEDAR template as JSON Schema (the canonical form cedar-server and exports produce) "
+        "A CEDAR template as JSON Schema (the canonical form CEDAR servers and the *_to_json exports produce) "
             + "or as YAML; the format is auto-detected. JSON is validated exactly as received — "
             + "use this to check a template obtained from the wild. YAML is read through the "
             + "library first."));

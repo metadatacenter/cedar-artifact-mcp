@@ -71,9 +71,10 @@ final class ArtifactExchange
    * artifact's identity and are the most common casualty of "summarize for brevity".
    */
   static final String VERBATIM_NOTICE =
-      " When relaying this result to the user, reproduce the returned YAML verbatim: never drop "
-          + "or summarize the 'id:' (@id) lines or any other field, and do not replace the YAML "
-          + "with a table that omits content.";
+      " Whatever YAML you show the user — this result or a *_to_yaml rendering of it — show it "
+          + "verbatim: never hand-edit, summarize, or reformat it, never drop the 'id:' (@id) "
+          + "lines or any other field, and do not replace the YAML with a table that omits "
+          + "content.";
 
   /**
    * Display directive appended to every mutating tool description (after
@@ -118,7 +119,7 @@ final class ArtifactExchange
   // serialized artifact -> model (incoming artifacts)
   //
   // The exchange form is expanded YAML, but a JSON Schema artifact (e.g. one produced by a
-  // *_to_json export tool, or fetched from cedar-server) is also accepted: the format is
+  // *_to_json export tool, or fetched from a CEDAR server) is also accepted: the format is
   // auto-detected so callers never have to convert before threading. Both serializations
   // resolve to the same in-memory model — the canonical representation.
   // ---------------------------------------------------------------------
