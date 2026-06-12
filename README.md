@@ -511,8 +511,8 @@ which also needs the template it's based on.)
 
 ### `template_to_json` / `element_to_json` / `field_to_json` / `instance_to_json` `(artifact)`
 
-**Export.** Take an artifact (YAML) and return the canonical CEDAR JSON Schema that
-downstream CEDAR tooling consumes. The result is round-tripped through the
+**Render as JSON.** Take an artifact (YAML) and return the canonical CEDAR JSON Schema
+that downstream CEDAR tooling consumes. The result is round-tripped through the
 library reader/renderer and validated (`CedarValidator`), so a non-error result is a
 guaranteed-valid artifact. If a top-level `id` is omitted, a fresh IRI is minted onto
 the result (nested children untouched). `instance_to_json` takes the instance's
