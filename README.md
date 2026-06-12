@@ -509,26 +509,24 @@ dispatches — use it when you don't know whether you've got a template, element
 field. (A template *instance* is detected but must go through `validate_instance`,
 which also needs the template it's based on.)
 
-### Export and import: `*_to_json` / `*_to_yaml`
+### `template_to_json` / `element_to_json` / `field_to_json` / `instance_to_json` `(artifact)`
 
-Artifacts thread between tools as YAML. Two families bridge to and from the
-canonical JSON Schema:
+**Export.** Take an artifact (YAML) and return the canonical CEDAR JSON Schema for
+cedar-server and other downstream consumers. The result is round-tripped through the
+library reader/renderer and validated (`CedarValidator`), so a non-error result is a
+guaranteed-valid artifact. If a top-level `id` is omitted, a fresh IRI is minted onto
+the result (nested children untouched). `instance_to_json` takes the instance's
+`template` as an optional argument: pass it to inflate the sparse instance back to a
+complete CEDAR JSON instance (every template field present); omit it to export only the
+fields the instance carries.
 
-- **`template_to_json` / `element_to_json` / `field_to_json` / `instance_to_json`
-  `(artifact)`** — **export.** Take an artifact (YAML) and return the canonical CEDAR JSON Schema for
-  cedar-server and other downstream consumers. The result is round-tripped through the
-  library reader/renderer and validated (`CedarValidator`), so a non-error result is a
-  guaranteed-valid artifact. If a top-level `id` is omitted, a fresh IRI is minted onto
-  the result (nested children untouched). `instance_to_json` takes the instance's
-  `template` as an optional argument: pass it to inflate the sparse instance back to a
-  complete CEDAR JSON instance (every template field present); omit it to export only the
-  fields the instance carries.
-- **`template_to_yaml` / `element_to_yaml` / `field_to_yaml` / `instance_to_yaml`
-  `(artifact, isCompact?)`** — **render as YAML.** Takes an artifact as YAML or JSON Schema
-  (auto-detected) and emits YAML. `isCompact` is the only compaction control, so this is both
-  how you **recompact** an expanded-YAML artifact for a lean display (`isCompact: true`, no JSON
-  detour) and how you **import** an external JSON Schema artifact into the YAML loop. `isCompact`
-  defaults to `true`; pass `false` for the expanded, provenance-preserving exchange form.
+### `template_to_yaml` / `element_to_yaml` / `field_to_yaml` / `instance_to_yaml` `(artifact, isCompact?)`
+
+**Render as YAML.** Takes an artifact as YAML or JSON Schema (auto-detected) and emits
+YAML. `isCompact` is the only compaction control, so this is both how you **recompact** an
+expanded-YAML artifact for a lean display (`isCompact: true`, no JSON detour) and how you
+**import** an external JSON Schema artifact into the YAML loop. `isCompact` defaults to
+`true`; pass `false` for the expanded, provenance-preserving exchange form.
 
 Example YAML an export tool accepts (and the create/add/set tools emit):
 
