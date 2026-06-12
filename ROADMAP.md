@@ -140,6 +140,12 @@ centralizes read (YAML or JSON, auto-detected) and render.
   tool sets it. Annotations on input artifacts are preserved on round-trip — they just
   can't be authored here.
 
+- **Field question metadata is not exposed.** The library carries several per-field
+  presentation properties with no tool path: `skos:prefLabel` (the preferred question text —
+  an alternative phrasing of the field's name shown in forms, distinct from the value-level
+  labels), `skos:altLabel` (further alternative phrasings), `language`, and
+  `valueRecommendationEnabled`. All preserved on round-trip, none settable.
+
 - **Template header / footer are not exposed.** `TemplateUi` carries display header and
   footer text (`withHeader` / `withFooter`); preserved on round-trip, not settable.
 
