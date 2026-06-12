@@ -31,7 +31,7 @@ import org.metadatacenter.artifacts.model.core.fields.XsdTemporalDatatype;
 
 /**
  * Dispatch from kebab-case CEDAR field-type wire names to the matching per-type
- * builder. Shared between {@code create_field} and {@code add_child}: both need the
+ * builder. Shared between {@code create_field} and {@code add_field}: both need the
  * same name → builder mapping (with the same defaults for invariant-required
  * configuration like numeric and temporal types).
  */

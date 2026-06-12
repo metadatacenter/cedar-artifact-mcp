@@ -119,8 +119,10 @@ final class EndToEndStdioIT
           "element_to_yaml tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("field_to_yaml"),
           "field_to_yaml tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("add_child"),
-          "add_child tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("add_field"),
+          "add_field tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("add_element"),
+          "add_element tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("remove_child"),
           "remove_child tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("set_class_constraint"),

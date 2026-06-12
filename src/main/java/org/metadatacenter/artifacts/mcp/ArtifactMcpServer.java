@@ -9,7 +9,8 @@ import org.metadatacenter.artifacts.mcp.tools.SetBranchConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.SetClassConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.SetControlledTermDefaultValueTool;
 import org.metadatacenter.artifacts.mcp.tools.SetDefaultValueTool;
-import org.metadatacenter.artifacts.mcp.tools.AddChildTool;
+import org.metadatacenter.artifacts.mcp.tools.AddElementTool;
+import org.metadatacenter.artifacts.mcp.tools.AddFieldTool;
 import org.metadatacenter.artifacts.mcp.tools.SetIriDefaultValueTool;
 import org.metadatacenter.artifacts.mcp.tools.SetOntologyConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.SetValueSetConstraintTool;
@@ -69,7 +70,8 @@ public final class ArtifactMcpServer
         .toolCall(TemplateToYamlTool.tool(), TemplateToYamlTool::handler)
         .toolCall(ElementToYamlTool.tool(), ElementToYamlTool::handler)
         .toolCall(FieldToYamlTool.tool(), FieldToYamlTool::handler)
-        .toolCall(AddChildTool.tool(), AddChildTool::handler)
+        .toolCall(AddFieldTool.tool(), AddFieldTool::handler)
+        .toolCall(AddElementTool.tool(), AddElementTool::handler)
         .toolCall(RemoveChildTool.tool(), RemoveChildTool::handler)
         .toolCall(SetClassConstraintTool.tool(), SetClassConstraintTool::handler)
         .toolCall(SetOntologyConstraintTool.tool(), SetOntologyConstraintTool::handler)

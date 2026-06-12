@@ -201,7 +201,7 @@ Two boundaries make this safe:
   children under `children:` are never walked, so a template's fields and elements stay
   id-less unless the author set one explicitly. Fields are first-class, reusable CEDAR
   artifacts, so a *standalone* field minted via `create_field` / `field_to_json` gets an
-  id like any other root — a field that subsequently becomes a child via `add_child` simply
+  id like any other root — a field that subsequently becomes a child via `add_field` simply
   carries the id it was born with, which the renderer round-trips correctly.
 - **Absence only.** Like the compact-mode `modelVersion` defaulting in Principle 7, minting
   fills an *absent optional*; it never overrides or coerces a value the caller provided.
@@ -252,7 +252,7 @@ When the library owns placeholder generation, this inflater folds into it.
 1. Decide which library operation the tool wraps. If the operation isn't already
    covered by `cedar-artifact-library`, stop — fix the library first, then expose it.
 2. Pick a tool name. Convention: `<verb>_<noun>` in snake_case, where the verb names
-   the library operation (`create_template`, `add_child`, `read_template`, `render_json`).
+   the library operation (`create_template`, `add_field`, `read_template`, `render_json`).
 3. Write a static factory `<name>Tool()` that returns a `McpSchema.Tool` with a typed
    JSON input schema.
 4. Write a static handler `<name>Handler(exchange, request)` that pulls arguments out

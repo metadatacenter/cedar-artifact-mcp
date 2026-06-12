@@ -52,54 +52,30 @@ final class ArtifactInputRobustnessTest
 
   // ---------------------------------------------------------------- auto-detection
 
-  @Test void add_child_accepts_yaml_parent_with_json_child()
+  @Test void add_field_accepts_yaml_parent_with_json_child()
   {
     String template = templateYaml();
     String field = fieldJson(fieldYaml());
 
-    McpSchema.CallToolResult result = AddChildTool.handler(null,
-        new McpSchema.CallToolRequest("add_child", Map.of("parent", template, "child", field)));
+    McpSchema.CallToolResult result = AddFieldTool.handler(null,
+        new McpSchema.CallToolRequest("add_field", Map.of("parent", template, "child", field)));
 
     assertFalse(result.isError(), textOf(result));
     assertTrue(textOf(result).contains("key: Probe"),
         "JSON child must graft like its YAML twin; got:\n" + textOf(result));
   }
 
-  @Test void add_child_accepts_json_parent_with_yaml_child()
+  @Test void add_field_accepts_json_parent_with_yaml_child()
   {
     String template = templateJson(templateYaml());
     String field = fieldYaml();
 
-    McpSchema.CallToolResult result = AddChildTool.handler(null,
-        new McpSchema.CallToolRequest("add_child", Map.of("parent", template, "child", field)));
+    McpSchema.CallToolResult result = AddFieldTool.handler(null,
+        new McpSchema.CallToolRequest("add_field", Map.of("parent", template, "child", field)));
 
     assertFalse(result.isError(), textOf(result));
     assertTrue(textOf(result).contains("key: Probe"),
         "YAML child must graft onto a JSON parent; got:\n" + textOf(result));
-  }
-
-  @Test void add_child_dispatches_an_element_child()
-  {
-    String element = textOf(CreateElementTool.handler(null,
-        new McpSchema.CallToolRequest("create_element", Map.of("name", "Address"))));
-
-    McpSchema.CallToolResult result = AddChildTool.handler(null,
-        new McpSchema.CallToolRequest("add_child",
-            Map.of("parent", templateYaml(), "child", element)));
-
-    assertFalse(result.isError(), textOf(result));
-    assertTrue(textOf(result).contains("key: Address"),
-        "element child must graft via add_child; got:\n" + textOf(result));
-  }
-
-  @Test void add_child_rejects_a_template_as_child()
-  {
-    McpSchema.CallToolResult result = AddChildTool.handler(null,
-        new McpSchema.CallToolRequest("add_child",
-            Map.of("parent", templateYaml(), "child", templateYaml())));
-
-    assertTrue(result.isError(), "a template is not a graftable child");
-    assertTrue(textOf(result).contains("field or element"), textOf(result));
   }
 
   @Test void both_formats_of_the_same_template_create_equivalent_instances()
@@ -168,11 +144,11 @@ final class ArtifactInputRobustnessTest
     }
   }
 
-  @Test void add_child_survives_garbage_parents()
+  @Test void add_field_survives_garbage_parents()
   {
-    assertCleanErrors("add_child",
-        (exchange, request) -> AddChildTool.handler(null,
-            new McpSchema.CallToolRequest("add_child",
+    assertCleanErrors("add_field",
+        (exchange, request) -> AddFieldTool.handler(null,
+            new McpSchema.CallToolRequest("add_field",
                 Map.of("parent", request.arguments().get("parent").toString(), "child", fieldYaml()))),
         "parent");
   }

@@ -45,7 +45,7 @@ centralizes read (YAML or JSON, auto-detected) and render.
 
 ### Incremental builders
 
-- `add_child(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
+- `add_field` / `add_element(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?)`
   — graft an existing child artifact onto a template or element parent; parent kind inferred
   from the artifact. Per-add-site overrides for key, label, description, multi-instance flag,
   and cardinality bounds.
@@ -106,7 +106,7 @@ centralizes read (YAML or JSON, auto-detected) and render.
   target state.
 
 - **Replacing children in place** — replacing a child still requires `remove_child` + an
-  `add_child`. A dedicated `replace_child` would be ergonomic if a workflow needs it.
+  `add_*`. A dedicated `replace_child` would be ergonomic if a workflow needs it.
 
 - **Child ordering is not exposed.** CEDAR templates and elements carry an explicit child
   order for display purposes (the `_ui.order` list; the order forms render fields in), and
