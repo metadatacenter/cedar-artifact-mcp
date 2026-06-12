@@ -317,6 +317,8 @@ DOID class IRI of the chosen value, not a minted instance id — it's the value 
 field points at. The instance now carries the full identifier + label pair, not
 just a free-text string — which is what makes the data downstream-queryable.
 
+### Working with Elements
+
 A last follow-on shows **repeated groups** — a multi-instance element, whose
 instances grow entry by entry.
 
