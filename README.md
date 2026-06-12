@@ -326,7 +326,7 @@ validating, and so on, without the calling LLM ever needing to know any
 Java. Artifacts move between tools as **YAML** — the expanded exchange form (DESIGN.md
 Principle 8). The `create_*` / `add_*` / `set_*` / `remove_*` tools wrap the library's
 typed builders and return YAML; the `*_to_json` tools export the canonical JSON Schema
-(for cedar-server and other downstream consumers) and `*_to_yaml` imports an external
+(for downstream CEDAR tooling) and `*_to_yaml` imports an external
 JSON Schema artifact back into the YAML loop; `validate_instance` calls the canonical
 CedarValidator. A non-error result from any tool is guaranteed to have round-tripped
 through the library and passed its structural validation.
@@ -495,8 +495,8 @@ diagnostics on failure.
 ### `validate_template` / `validate_element` / `validate_field` / `validate_artifact` `(artifact)`
 
 Validate a **standalone** artifact against the CEDAR model schema — built for
-checking artifacts obtained **from the wild** (e.g. pulled from cedar-server or a
-colleague). Each takes a single `artifact` as JSON Schema or YAML (auto-detected);
+checking artifacts obtained **from the wild** (e.g. fetched from a CEDAR server or sent
+by a colleague). Each takes a single `artifact` as JSON Schema or YAML (auto-detected);
 JSON is validated **exactly as received** (no round-trip through the library, so the
 verdict reflects the artifact itself), while YAML is read through the library first.
 The report shape matches `validate_instance` — `{"valid": true}` or
@@ -511,8 +511,8 @@ which also needs the template it's based on.)
 
 ### `template_to_json` / `element_to_json` / `field_to_json` / `instance_to_json` `(artifact)`
 
-**Export.** Take an artifact (YAML) and return the canonical CEDAR JSON Schema for
-cedar-server and other downstream consumers. The result is round-tripped through the
+**Export.** Take an artifact (YAML) and return the canonical CEDAR JSON Schema that
+downstream CEDAR tooling consumes. The result is round-tripped through the
 library reader/renderer and validated (`CedarValidator`), so a non-error result is a
 guaranteed-valid artifact. If a top-level `id` is omitted, a fresh IRI is minted onto
 the result (nested children untouched). `instance_to_json` takes the instance's
