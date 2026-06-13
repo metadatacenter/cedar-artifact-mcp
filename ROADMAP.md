@@ -168,6 +168,14 @@ centralizes read (YAML or JSON, auto-detected) and render.
 - **Template header / footer are not exposed.** `TemplateUi` carries display header and
   footer text (`withHeader` / `withFooter`); preserved on round-trip, not settable.
 
+- **Constraint actions are not exposed.** Controlled-term constraints carry an optional
+  list of `ControlledTermValueConstraintsAction` entries — the per-term keep/delete/move
+  tweaks the CEDAR editor applies on top of a class/ontology/branch/value-set binding (e.g.
+  pull one class out of an otherwise-included branch). The library models and round-trips
+  them; `set_*_constraint` and `remove_constraint` operate at the whole-constraint level and
+  don't touch actions. A finer-grained feature, deliberately kept separate from the
+  constraint tools.
+
 - **Render-if-present as the one YAML form** — idea, not yet decided. Mutating tools now
   always return the expanded exchange form and `isCompact` survives only on the `*_to_yaml`
   rendering tools; the remaining question is whether the compact/expanded distinction could
