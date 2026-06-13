@@ -12,11 +12,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests for {@code validate_artifact} — the auto-detecting validator. It detects template /
+ * Tests for {@code validate_schema_artifact} — the auto-detecting validator. It detects template /
  * element / field from {@code @type} and dispatches; instances are detected but redirected to
  * {@code validate_instance}.
  */
-final class ValidateArtifactToolTest
+final class ValidateSchemaArtifactToolTest
 {
   private ObjectMapper jackson;
 
@@ -95,7 +95,7 @@ final class ValidateArtifactToolTest
 
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
-    return ValidateArtifactTool.handler(null, new McpSchema.CallToolRequest("validate_artifact", args));
+    return ValidateSchemaArtifactTool.handler(null, new McpSchema.CallToolRequest("validate_schema_artifact", args));
   }
 
   private static String createTemplate(String name)

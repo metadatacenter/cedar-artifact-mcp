@@ -12,9 +12,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code validate_artifact} — validates a CEDAR artifact of <em>unknown</em> kind by
- * detecting whether it's a template, element, or field (from its {@code @type}) and dispatching to
- * the matching {@link CedarValidator} method. The "from the wild, don't-know-the-kind" entry point.
+ * MCP tool {@code validate_schema_artifact} — validates a CEDAR <em>schema</em> artifact
+ * (template, element, or field) of unknown kind by detecting which it is from its {@code @type}
+ * and dispatching to the matching {@link CedarValidator} method. The "from the wild,
+ * don't-know-the-kind" entry point. (Instances are not schema artifacts — hence the name; they go
+ * through {@code validate_instance}.)
  *
  * <p>Instances are detected (by {@code schema:isBasedOn}) but not validated here: an instance can
  * only be validated against the template it is based on, so the caller is redirected to
@@ -24,11 +26,11 @@ import java.util.Map;
  * JSON. The verdict is returned as a report ({@code {"valid": ...}}), not a tool error
  * (DESIGN.md Principle 5).
  */
-public final class ValidateArtifactTool
+public final class ValidateSchemaArtifactTool
 {
   private static final ModelValidator VALIDATOR = new CedarValidator();
 
-  private ValidateArtifactTool() {}
+  private ValidateSchemaArtifactTool() {}
 
   public static McpSchema.Tool tool()
   {
@@ -36,16 +38,16 @@ public final class ValidateArtifactTool
     properties.put("artifact", Map.of(
         "type", "string",
         "description",
-        "A CEDAR artifact of unknown kind, as JSON Schema or YAML (auto-detected). The kind "
-            + "(template / element / field) is detected from its @type and validated with the "
-            + "matching validator. JSON is validated exactly as received."));
+        "A CEDAR schema artifact of unknown kind, as JSON Schema or YAML (auto-detected). The "
+            + "kind (template / element / field) is detected from its @type and validated with "
+            + "the matching validator. JSON is validated exactly as received."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("artifact"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
-        .name("validate_artifact")
-        .title("Validate a CEDAR artifact (auto-detect kind)")
+        .name("validate_schema_artifact")
+        .title("Validate a CEDAR schema artifact (auto-detect kind)")
         .description(
             "Validates a standalone CEDAR template, element, or field against the CEDAR model "
                 + "schema — built for checking artifacts from the wild (fetched from a server or "

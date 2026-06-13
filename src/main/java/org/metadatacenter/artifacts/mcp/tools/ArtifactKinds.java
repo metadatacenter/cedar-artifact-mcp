@@ -6,7 +6,7 @@ import org.metadatacenter.model.ModelNodeNames;
 
 /**
  * Detects which kind of CEDAR artifact an incoming JSON object is, so the auto-detecting
- * {@code validate_artifact} tool can dispatch to the matching {@link
+ * {@code validate_schema_artifact} tool can dispatch to the matching {@link
  * org.metadatacenter.model.validation.CedarValidator} method (or redirect an instance to
  * {@code validate_instance}).
  *

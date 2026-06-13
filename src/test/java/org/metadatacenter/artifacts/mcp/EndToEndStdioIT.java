@@ -153,8 +153,8 @@ final class EndToEndStdioIT
           "instance_to_yaml tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("validate_instance"),
           "validate_instance tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("validate_artifact"),
-          "validate_artifact tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("validate_schema_artifact"),
+          "validate_schema_artifact tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("set_literal_field_value"),
           "set_literal_field_value tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("set_iri_field_value"),

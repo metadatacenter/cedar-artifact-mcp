@@ -432,7 +432,7 @@ through the library and passed its structural validation.
 | Compose | `add_field` · `add_element` · `replace_field` · `replace_element` · `reorder_children` · `remove_child` |
 | Configure | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` · `remove_constraint` · `set_options` · `set_literal_default_value` · `set_iri_default_value` |
 | Populate | `set_literal_field_value` · `set_iri_field_value` · `set_element_instance` · `unset_field_value` |
-| Validate | `validate_artifact` · `validate_instance` · `validate_element_instance` |
+| Validate | `validate_schema_artifact` · `validate_instance` · `validate_element_instance` |
 | Render | `template_to_json` · `element_to_json` · `field_to_json` · `instance_to_json` · `template_to_yaml` · `element_to_yaml` · `field_to_yaml` · `instance_to_yaml` |
 | Diagnostics | `ping` |
 
@@ -711,7 +711,7 @@ with the element as the schema document. The element instance is checked in its
 standalone document's `name`/`description` identity keys are not part of that
 shape and are dropped before validating).
 
-### `validate_artifact(artifact)`
+### `validate_schema_artifact(artifact)`
 
 Validate a **standalone** schema artifact — template, element, or field — against the
 CEDAR model schema, built for checking artifacts obtained **from the wild** (e.g. fetched
