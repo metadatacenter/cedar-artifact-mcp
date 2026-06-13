@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Tests for the {@code create_template_instance} tool. A created instance is <em>sparse</em>: unset
  * fields are omitted from the YAML (no `value: null`, no `{}`). The structural completeness the
- * template requires lives at the JSON boundary — {@code validate_instance} and
+ * template requires lives at the JSON boundary — {@code validate_instance_artifact} and
  * {@code instance_to_json} inflate the instance against the template. So the headline check is
  * that the instance validates, and structural assertions are made against the inflated JSON
  * (see {@link #inflatedJson}).
@@ -376,10 +376,10 @@ final class CreateTemplateInstanceToolTest
 
   private void assertValidatesAgainst(JsonNode instanceJson, String templateJson) throws Exception
   {
-    McpSchema.CallToolResult result = ValidateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("validate_instance", Map.of(
-            "template", templateJson,
-            "instance", jackson.writeValueAsString(instanceJson))));
+    McpSchema.CallToolResult result = ValidateInstanceArtifactTool.handler(null,
+        new McpSchema.CallToolRequest("validate_instance_artifact", Map.of(
+            "schema_artifact", templateJson,
+            "instance_artifact", jackson.writeValueAsString(instanceJson))));
     assertFalse(result.isError(), errorText(result));
     JsonNode report = jackson.readTree(textOf(result));
     assertTrue(report.path("valid").asBoolean(),

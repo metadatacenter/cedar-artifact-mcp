@@ -64,7 +64,7 @@ final class EmptyFieldInstances
         // Numeric instances carry both @value and @type per CEDAR's typed-literal
         // contract; the rendered template's per-field sub-schema lists both as
         // required. Thread the field's declared XsdNumericDatatype through to
-        // the instance so validate_instance accepts the skeleton on the first try.
+        // the instance so validate_instance_artifact accepts the skeleton on the first try.
         NumericFieldInstance.NumericFieldInstanceBuilder builder = NumericFieldInstance.builder();
         XsdNumericDatatype datatype = field.valueConstraints()
             .filter(NumericValueConstraints.class::isInstance)

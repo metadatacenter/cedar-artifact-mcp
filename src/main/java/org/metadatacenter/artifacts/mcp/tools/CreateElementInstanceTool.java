@@ -21,9 +21,9 @@ import java.util.Map;
  * is the one slot kind {@code create_template_instance} cannot pre-populate (it has no
  * way to know how many entries an instance will need).
  *
- * <p>No CedarValidator step at creation: validate the element instance standalone with
- * {@code validate_element_instance}, or in context once attached via
- * {@code validate_instance}.
+ * <p>No CedarValidator step at creation: validate the element instance against its element with
+ * {@code validate_instance_artifact} (which auto-detects the element schema), or in context once
+ * attached to a parent instance.
  */
 public final class CreateElementInstanceTool
 {
@@ -64,8 +64,8 @@ public final class CreateElementInstanceTool
                 + "instance with set_element_instance (e.g. to append an entry to a "
                 + "multi-instance element list), then fill its fields with the "
                 + "set_*_field_value tools. Returns the standalone element instance as expanded "
-                + "YAML; validate it with validate_element_instance, or in context via "
-                + "validate_instance once attached."
+                + "YAML; validate it against its element with validate_instance_artifact, or in "
+                + "context once attached to a parent instance."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();

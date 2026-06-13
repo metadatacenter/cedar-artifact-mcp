@@ -34,9 +34,9 @@ final class InstanceChildOrderTest
     String instance = setValue(template, createInstance(template), "a", "va");
     instance = setValue(template, instance, "c", "vc");
 
-    McpSchema.CallToolResult result = ValidateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("validate_instance", Map.of(
-            "template", template, "instance", reverseChildren(instance))));
+    McpSchema.CallToolResult result = ValidateInstanceArtifactTool.handler(null,
+        new McpSchema.CallToolRequest("validate_instance_artifact", Map.of(
+            "schema_artifact", template, "instance_artifact", reverseChildren(instance))));
 
     assertFalse(result.isError(), errorText(result));
     assertTrue(textOf(result).contains("\"valid\" : true"),

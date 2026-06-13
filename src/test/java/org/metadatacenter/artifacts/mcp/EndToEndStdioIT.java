@@ -151,8 +151,8 @@ final class EndToEndStdioIT
           "instance_to_json tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("instance_to_yaml"),
           "instance_to_yaml tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("validate_instance"),
-          "validate_instance tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("validate_instance_artifact"),
+          "validate_instance_artifact tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("validate_schema_artifact"),
           "validate_schema_artifact tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("set_literal_field_value"),
@@ -165,8 +165,6 @@ final class EndToEndStdioIT
           "create_element_instance tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("set_element_instance"),
           "set_element_instance tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("validate_element_instance"),
-          "validate_element_instance tool should be listed; got " + toolNames);
 
       // 4. tools/call create_template -----------------------------------------------
       // The exchange form is expanded, so the supplied version survives into the returned YAML.

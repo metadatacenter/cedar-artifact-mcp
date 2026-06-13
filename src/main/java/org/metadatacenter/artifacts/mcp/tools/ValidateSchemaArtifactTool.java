@@ -16,11 +16,11 @@ import java.util.Map;
  * (template, element, or field) of unknown kind by detecting which it is from its {@code @type}
  * and dispatching to the matching {@link CedarValidator} method. The "from the wild,
  * don't-know-the-kind" entry point. (Instances are not schema artifacts — hence the name; they go
- * through {@code validate_instance}.)
+ * through {@code validate_instance_artifact}.)
  *
  * <p>Instances are detected (by {@code schema:isBasedOn}) but not validated here: an instance can
  * only be validated against the template it is based on, so the caller is redirected to
- * {@code validate_instance}. JSON is validated exactly as received (no round-trip through the
+ * {@code validate_instance_artifact}. JSON is validated exactly as received (no round-trip through the
  * library reader/renderer, so the verdict reflects the artifact itself, not our library's
  * round-trip fidelity); YAML is read through the library first since the validator only speaks
  * JSON. The verdict is returned as a report ({@code {"valid": ...}}), not a tool error
@@ -56,8 +56,8 @@ public final class ValidateSchemaArtifactTool
                 + "JSON Schema (validated exactly as received) or YAML (read through the library "
                 + "first). Returns {\"valid\": true} or {\"valid\": false, \"errors\": [...]} — a "
                 + "non-error result either way, so read the verdict from the report. A template "
-                + "instance is detected but must be validated with validate_instance (which also "
-                + "needs its template)." + ArtifactExchange.VERBATIM_INPUT_NOTICE)
+                + "instance is detected but must be validated with validate_instance_artifact "
+                + "(which also needs its template)." + ArtifactExchange.VERBATIM_INPUT_NOTICE)
         .inputSchema(schema)
         .build();
   }
@@ -82,10 +82,10 @@ public final class ValidateSchemaArtifactTool
     if (kind == null)
       return error("could not determine the artifact kind from its @type — expected a template, "
           + "element, or field (a template instance, identified by schema:isBasedOn, goes through "
-          + "validate_instance)");
+          + "validate_instance_artifact)");
     if (kind == ArtifactKinds.Kind.INSTANCE)
-      return error("this is a template instance — use validate_instance, which validates it "
-          + "against the template it is based on");
+      return error("this is a template instance — use validate_instance_artifact, which validates "
+          + "it against the template it is based on");
 
     ValidationReport report;
     try {

@@ -8,7 +8,7 @@ import org.metadatacenter.model.ModelNodeNames;
  * Detects which kind of CEDAR artifact an incoming JSON object is, so the auto-detecting
  * {@code validate_schema_artifact} tool can dispatch to the matching {@link
  * org.metadatacenter.model.validation.CedarValidator} method (or redirect an instance to
- * {@code validate_instance}).
+ * {@code validate_instance_artifact}).
  *
  * <p>Templates, elements, and fields are identified by their JSON-LD {@code @type} IRI (a
  * static field is still a field for validation purposes). Instances are not {@code @type}-keyed

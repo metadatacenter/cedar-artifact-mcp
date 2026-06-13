@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Tests for {@code validate_schema_artifact} — the auto-detecting validator. It detects template /
  * element / field from {@code @type} and dispatches; instances are detected but redirected to
- * {@code validate_instance}.
+ * {@code validate_instance_artifact}.
  */
 final class ValidateSchemaArtifactToolTest
 {
@@ -71,7 +71,7 @@ final class ValidateSchemaArtifactToolTest
         "an invalid result must carry diagnostics; got:\n" + report);
   }
 
-  @Test void redirects_instance_to_validate_instance() throws Exception
+  @Test void redirects_instance_to_validate_instance_artifact() throws Exception
   {
     String instanceJson = textOf(InstanceToJsonTool.handler(null,
         new McpSchema.CallToolRequest("instance_to_json", Map.of("artifact",
@@ -80,8 +80,8 @@ final class ValidateSchemaArtifactToolTest
     McpSchema.CallToolResult result = invoke(Map.of("artifact", instanceJson));
 
     assertTrue(result.isError(), "an instance must be redirected, not validated here");
-    assertTrue(errorText(result).contains("validate_instance"),
-        "redirect should name validate_instance; got: " + errorText(result));
+    assertTrue(errorText(result).contains("validate_instance_artifact"),
+        "redirect should name validate_instance_artifact; got: " + errorText(result));
   }
 
   @Test void rejects_undetermined_kind()

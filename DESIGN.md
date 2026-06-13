@@ -230,7 +230,7 @@ by reconstructing the empty slots from the template:
 
 - `InstanceInflater.inflate(template, instance)` walks the template and re-adds every missing
   non-static field/element (recursing into elements), preserving values already set. It is the
-  shared bridge: `validate_instance` inflates before running `CedarValidator`, and
+  shared bridge: `validate_instance_artifact` inflates before running `CedarValidator`, and
   `instance_to_json` inflates (when given the template) before rendering the JSON.
 - `set_literal_field_value` and friends inflate first, so the target slot exists, then re-render sparse.
 - `instance_to_json` takes the template as an **optional** parameter: with it, the export is a

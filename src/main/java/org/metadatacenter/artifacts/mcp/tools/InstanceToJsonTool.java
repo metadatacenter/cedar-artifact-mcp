@@ -21,7 +21,7 @@ import java.util.Map;
  *
  * <p>Same compact-mode reader as the schema {@code *_to_json} tools; runs a YAML →
  * model → JSON pipeline. Instance validation against a specific template is done by
- * {@link ValidateInstanceTool} (which needs both the instance and its template), not
+ * {@link ValidateInstanceArtifactTool} (which needs both the instance and its template), not
  * here.
  */
 public final class InstanceToJsonTool
@@ -60,7 +60,7 @@ public final class InstanceToJsonTool
         .description(
             "Exports a CEDAR template instance (YAML, the exchange form) to the canonical "
                 + "CEDAR JSON instance for downstream CEDAR tooling. Use "
-                + "'validate_instance' to verify the result against a specific template.")
+                + "'validate_instance_artifact' to verify the result against a specific template.")
         .inputSchema(schema)
         .build();
   }

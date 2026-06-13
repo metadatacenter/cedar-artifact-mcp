@@ -29,7 +29,7 @@ final class UnsetFieldValueToolTest
   @Test void clears_a_single_instance_field_and_is_idempotent()
   {
     // The field is marked required at the add site: unsetting must still succeed —
-    // requiredValue is enforced by validate_instance, not mid-edit.
+    // requiredValue is enforced by validate_instance_artifact, not mid-edit.
     String template = textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
         "parent", createTemplate("Fixture"),
         "child", createField("Name", "text-field"),

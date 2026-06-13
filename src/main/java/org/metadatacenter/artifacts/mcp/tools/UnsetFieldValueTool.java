@@ -24,7 +24,7 @@ import java.util.Map;
  * path deletes that entry, an unindexed multi-instance path clears the whole list.
  * Clearing is idempotent. Required fields may be unset — an in-progress instance is
  * allowed to be incomplete, and {@code requiredValue} is enforced by
- * {@code validate_instance}, not mid-edit.
+ * {@code validate_instance_artifact}, not mid-edit.
  */
 public final class UnsetFieldValueTool
 {
@@ -69,7 +69,7 @@ public final class UnsetFieldValueTool
                 + "indexed multi-instance path deletes that entry (later entries shift "
                 + "down); an unindexed multi-instance path clears the whole list. "
                 + "Idempotent: unsetting an already-unset field succeeds. Required fields "
-                + "may be unset — requiredValue is enforced by validate_instance, not "
+                + "may be unset — requiredValue is enforced by validate_instance_artifact, not "
                 + "here. Returns the updated instance as expanded YAML."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)

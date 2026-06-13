@@ -422,7 +422,7 @@ Java. Artifacts move between tools as **YAML** — the expanded exchange form (D
 Principle 8). The `create_*` / `add_*` / `set_*` / `remove_*` tools wrap the library's
 typed builders and return YAML; the `*_to_json` tools export the JSON Schema form
 (for downstream CEDAR tooling) and `*_to_yaml` imports an external
-JSON Schema artifact back into the YAML loop; `validate_instance` calls the canonical
+JSON Schema artifact back into the YAML loop; `validate_instance_artifact` calls the canonical
 CedarValidator. A non-error result from any tool is guaranteed to have round-tripped
 through the library and passed its structural validation.
 
@@ -432,7 +432,7 @@ through the library and passed its structural validation.
 | Compose | `add_field` · `add_element` · `replace_field` · `replace_element` · `reorder_children` · `remove_child` |
 | Configure | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` · `remove_constraint` · `set_options` · `set_literal_default_value` · `set_iri_default_value` |
 | Populate | `set_literal_field_value` · `set_iri_field_value` · `set_element_instance` · `unset_field_value` |
-| Validate | `validate_schema_artifact` · `validate_instance` · `validate_element_instance` |
+| Validate | `validate_schema_artifact` · `validate_instance_artifact` |
 | Render | `template_to_json` · `element_to_json` · `field_to_json` · `instance_to_json` · `template_to_yaml` · `element_to_yaml` · `field_to_yaml` · `instance_to_yaml` |
 | Diagnostics | `ping` |
 
@@ -446,7 +446,7 @@ description directs the LLM to use exactly that for interactive display, while t
 the expanded form onward. Instances are **sparse** in
 either form — a field with no value is omitted entirely (no `null`, no `{}`, no empty `[]`);
 the empty slots the JSON form requires are reconstructed from the template at the
-JSON boundary (`validate_instance`, `instance_to_json`).
+JSON boundary (`validate_instance_artifact`, `instance_to_json`).
 
 ### `create_template(name, description?, version?, status?, id?)`
 
@@ -623,8 +623,8 @@ an entry to a multi-instance element list (the one slot kind
 `create_template_instance` cannot pre-populate, since it can't know how many
 entries an instance will need), then fill its fields with the value tools.
 The `@id` is auto-minted as a `template-element-instances` IRI when omitted.
-Validate the element instance standalone with `validate_element_instance`, or in
-context via `validate_instance` once attached.
+Validate the element instance against its element with `validate_instance_artifact`
+(which auto-detects the element schema), or in context once attached.
 
 ### `set_literal_field_value(template, instance, field_path, value)`
 
@@ -664,7 +664,7 @@ indexed multi-instance path (`emails[1]`, `addresses[2]`) deletes that entry
 and shifts later entries down; an unindexed multi-instance path (`emails`)
 clears the whole list. Idempotent — unsetting an already-unset field succeeds.
 Required fields may be unset: an in-progress instance is allowed to be
-incomplete, and `requiredValue` is enforced by `validate_instance`, not
+incomplete, and `requiredValue` is enforced by `validate_instance_artifact`, not
 mid-edit. Deleting at an out-of-range index is an error — unlike setting,
 where an index equal to the list size appends, there is nothing there to
 delete.
@@ -686,7 +686,7 @@ Creates an instance from a template, ready to be populated with field values.
 The returned instance is **sparse** — it carries its identity (`@id`, `name`,
 `isBasedOn`) and only fields that hold a value, so a fresh instance is
 essentially just its identity. Unset fields are reconstructed from the template
-when JSON is produced (`validate_instance`, `instance_to_json`), so the instance
+when JSON is produced (`validate_instance_artifact`, `instance_to_json`), so the instance
 is still structurally complete. `isBasedOn` is always derived from the
 template's `@id` — the instance points at exactly the template it was built
 from, by construction; a template without an `@id` is rejected with guidance
@@ -694,22 +694,25 @@ from, by construction; a template without an `@id` is rejected with guidance
 instance's own identity — optional, and auto-minted as a fresh
 `template-instances` IRI when omitted.
 
-### `validate_instance(template, instance)`
+### `validate_instance_artifact(schema_artifact, instance_artifact)`
 
-Validates a template instance against its template — both accepted as YAML or JSON
-(auto-detected), like every other artifact parameter. Returns
-`{"valid": true}` on success, or `{"valid": false, "errors": [...]}` with
-diagnostics on failure.
+Validates a CEDAR instance against the schema artifact it is based on. The schema kind is
+**auto-detected** from its `@type`, so one tool covers both cases — pass a template to
+validate a template instance, or an element to validate an element instance. Both arguments
+are accepted as YAML or JSON (auto-detected), like every other artifact parameter. Returns
+`{"valid": true}` on success, or `{"valid": false, "errors": [...]}` with diagnostics on
+failure, as a successful tool call either way.
 
-### `validate_element_instance(element, element_instance)`
+- **Template** → runs `CedarValidator.validateTemplateInstance`.
+- **Element** → runs `CedarValidator.validateElementInstance`. A CEDAR element artifact is
+  itself the JSON Schema its instances validate against, so this is the same canonical call
+  with the element as the schema document; the element instance is checked in its *nested*
+  shape, exactly as it would sit inside a parent instance (the standalone document's
+  `name`/`description` identity keys are not part of that shape and are dropped before
+  validating).
 
-Validates an element instance (the kind `create_element_instance`
-returns) against its element — an element artifact is itself the JSON Schema
-its instances validate against, so this is the same canonical validator call
-with the element as the schema document. The element instance is checked in its
-*nested* shape, exactly as it would sit inside a parent instance (the
-standalone document's `name`/`description` identity keys are not part of that
-shape and are dropped before validating).
+The `schema_artifact` must be a template or element — a field or instance is rejected with
+guidance.
 
 ### `validate_schema_artifact(artifact)`
 
@@ -718,13 +721,13 @@ CEDAR model schema, built for checking artifacts obtained **from the wild** (e.g
 from a CEDAR server or sent by a colleague). Takes a single `artifact` as JSON Schema or
 YAML (auto-detected); JSON is validated **exactly as received** (no round-trip through the
 library, so the verdict reflects the artifact itself), while YAML is read through the
-library first. The report shape matches `validate_instance` — `{"valid": true}` or
+library first. The report shape matches `validate_instance_artifact` — `{"valid": true}` or
 `{"valid": false, "errors": [...]}`, returned as a successful tool call either way.
 
 The kind is **auto-detected** from the artifact's `@type` and dispatched to the matching
 validator, so you need not say whether you've got a template, element, or field. (A
-template *instance* is detected but must go through `validate_instance`, which also needs
-the template it's based on.)
+template *instance* is detected but must go through `validate_instance_artifact`, which also
+needs the template it's based on.)
 
 ### `template_to_json` / `element_to_json` / `field_to_json` / `instance_to_json` `(artifact)`
 

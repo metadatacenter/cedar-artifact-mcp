@@ -103,9 +103,9 @@ final class ArtifactInputRobustnessTest
     String instanceYaml = textOf(CreateTemplateInstanceTool.handler(null,
         new McpSchema.CallToolRequest("create_template_instance", Map.of("template", templateYaml))));
 
-    McpSchema.CallToolResult result = ValidateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("validate_instance",
-            Map.of("template", templateJson, "instance", instanceYaml)));
+    McpSchema.CallToolResult result = ValidateInstanceArtifactTool.handler(null,
+        new McpSchema.CallToolRequest("validate_instance_artifact",
+            Map.of("schema_artifact", templateJson, "instance_artifact", instanceYaml)));
 
     assertFalse(result.isError(), textOf(result));
     assertTrue(textOf(result).contains("\"valid\" : true") || textOf(result).contains("\"valid\": true"),
@@ -178,9 +178,9 @@ final class ArtifactInputRobustnessTest
     assertCleanErrors("set_element_instance", SetElementInstanceTool::handler, "template");
   }
 
-  @Test void validate_element_instance_survives_garbage_elements()
+  @Test void validate_instance_artifact_survives_garbage_schemas()
   {
-    assertCleanErrors("validate_element_instance", ValidateElementInstanceTool::handler, "element");
+    assertCleanErrors("validate_instance_artifact", ValidateInstanceArtifactTool::handler, "schema_artifact");
   }
 
   @Test void set_literal_default_value_survives_garbage_fields()
