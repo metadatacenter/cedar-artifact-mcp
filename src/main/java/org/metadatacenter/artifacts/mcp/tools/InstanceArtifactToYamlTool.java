@@ -47,10 +47,11 @@ public final class InstanceArtifactToYamlTool
         .name("instance_artifact_to_yaml")
         .title("Render a CEDAR instance as YAML (auto-detect template/element instance)")
         .description(
-            "Renders a CEDAR instance (YAML or JSON) as YAML. Auto-detects a template instance vs "
-                + "an element instance. 'isCompact' selects compact (lean, default) or expanded "
-                + "full-fidelity output. Reverse direction of instance_artifact_to_json."
-                + ArtifactExchange.VERBATIM_NOTICE)
+            "Renders a CEDAR template instance or element instance (auto-detected; YAML or JSON) "
+                + "as YAML. 'isCompact' selects compact (lean, default) or expanded full-fidelity "
+                + "output. Reverse direction of instance_artifact_to_json. (For a standalone "
+                + "template, element, or field — a schema, not an instance — use "
+                + "schema_artifact_to_yaml.)" + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();
   }
@@ -92,8 +93,9 @@ public final class InstanceArtifactToYamlTool
           ? ArtifactExchange.toYaml(ArtifactExchange.readElementInstance(instanceText), isCompact)
           : ArtifactExchange.toYaml(ArtifactExchange.readInstance(instanceText), isCompact);
     } catch (RuntimeException e) {
-      return error("artifact rejected by reader (must be a CEDAR template or element instance): "
-          + e.getMessage());
+      return error("artifact rejected by reader (must be a CEDAR template or element instance) — "
+          + "for a standalone template, element, or field use schema_artifact_to_yaml. Reader "
+          + "said: " + e.getMessage());
     }
     if (yaml == null)
       return error("YAML rendering returned null");

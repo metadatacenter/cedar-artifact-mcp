@@ -66,14 +66,16 @@ public final class ValidateInstanceArtifactTool
         .name("validate_instance_artifact")
         .title("Validate a CEDAR instance against its schema (auto-detect template/element)")
         .description(
-            "Validates a CEDAR instance against the schema artifact it is based on, using the "
-                + "canonical CedarValidator. The schema kind is auto-detected from its @type — a "
-                + "template runs validateTemplateInstance, an element runs validateElementInstance "
-                + "(an element is itself the JSON Schema its instances validate against, so the "
-                + "element instance is checked in its nested shape). Accepts YAML or JSON for both "
-                + "arguments. Returns {\"valid\": true} on success, or {\"valid\": false, "
-                + "\"errors\": [...]} with the validator's diagnostics — a non-error result either "
-                + "way, so read the verdict from the report.")
+            "Validates a CEDAR template instance or element instance against the schema artifact "
+                + "it is based on, using the canonical CedarValidator. The schema kind is "
+                + "auto-detected from its @type — a template runs validateTemplateInstance, an "
+                + "element runs validateElementInstance (an element is itself the JSON Schema its "
+                + "instances validate against, so the element instance is checked in its nested "
+                + "shape). Accepts YAML or JSON for both arguments. Returns {\"valid\": true} on "
+                + "success, or {\"valid\": false, \"errors\": [...]} with the validator's "
+                + "diagnostics — a non-error result either way, so read the verdict from the "
+                + "report. (To validate a standalone template, element, or field — a schema, not "
+                + "an instance — use validate_schema_artifact.)")
         .inputSchema(schema)
         .build();
   }

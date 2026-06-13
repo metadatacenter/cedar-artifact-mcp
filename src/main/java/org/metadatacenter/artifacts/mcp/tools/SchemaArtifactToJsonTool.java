@@ -64,13 +64,14 @@ public final class SchemaArtifactToJsonTool
         .name("schema_artifact_to_json")
         .title("CEDAR schema artifact: YAML → JSON Schema (auto-detect template/element/field)")
         .description(
-            "Compiles a CEDAR schema artifact described in YAML (the compact authoring form) into "
-                + "the canonical CEDAR JSON Schema that downstream CEDAR tooling consumes. The "
-                + "kind — template, element, or field — is auto-detected from the YAML 'type:' and "
-                + "the matching reader/renderer/validator runs. The returned JSON has been "
-                + "round-tripped through the artifact library and accepted by CedarValidator, so a "
-                + "non-error result is a guaranteed-valid CEDAR artifact. (For a template or "
-                + "element instance use instance_artifact_to_json.)")
+            "Compiles a CEDAR template, element, or field (a schema artifact) described in YAML "
+                + "(the compact authoring form) into the canonical CEDAR JSON Schema that "
+                + "downstream CEDAR tooling consumes. The kind is auto-detected from the YAML "
+                + "'type:' and the matching reader/renderer/validator runs. The returned JSON has "
+                + "been round-tripped through the artifact library and accepted by CedarValidator, "
+                + "so a non-error result is a guaranteed-valid CEDAR artifact. (To render a "
+                + "template instance or element instance — an instance, not a schema — use "
+                + "instance_artifact_to_json.)")
         .inputSchema(schema)
         .build();
   }

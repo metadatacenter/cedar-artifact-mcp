@@ -65,12 +65,13 @@ public final class InstanceArtifactToJsonTool
         .name("instance_artifact_to_json")
         .title("CEDAR instance: YAML → JSON (auto-detect template/element instance)")
         .description(
-            "Exports a CEDAR instance (YAML, the exchange form) to the canonical CEDAR JSON "
-                + "instance for downstream CEDAR tooling. Auto-detects a template instance vs an "
-                + "element instance. Supply the optional schema_artifact (the template or element "
-                + "it is based on) to inflate the sparse instance to a complete JSON instance; "
-                + "omit it to export only the fields present. Use validate_instance_artifact to "
-                + "verify the result against its schema.")
+            "Exports a CEDAR template instance or element instance (auto-detected; YAML exchange "
+                + "form) to the canonical CEDAR JSON instance for downstream CEDAR tooling. Supply "
+                + "the optional schema_artifact (the template or element it is based on) to inflate "
+                + "the sparse instance to a complete JSON instance; omit it to export only the "
+                + "fields present. Use validate_instance_artifact to verify the result. (For a "
+                + "standalone template, element, or field — a schema, not an instance — use "
+                + "schema_artifact_to_json.)")
         .inputSchema(schema)
         .build();
   }
@@ -129,7 +130,9 @@ public final class InstanceArtifactToJsonTool
       if (schemaText != null)
         return error("schema_artifact supplied but the instance could not be inflated against it "
             + "(is it the right template/element?): " + e.getMessage());
-      return error("instance reader threw " + e.getClass().getSimpleName() + ": " + e.getMessage());
+      return error("could not read the input as a CEDAR instance — if this is a standalone "
+          + "template, element, or field (a schema artifact, not an instance), use "
+          + "schema_artifact_to_json instead. Reader said: " + e.getMessage());
     }
 
     String json;
