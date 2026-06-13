@@ -5,6 +5,11 @@ import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifactBuilder;
 import org.metadatacenter.artifacts.model.core.CheckboxField;
+import org.metadatacenter.artifacts.model.core.ImageField;
+import org.metadatacenter.artifacts.model.core.PageBreakField;
+import org.metadatacenter.artifacts.model.core.RichTextField;
+import org.metadatacenter.artifacts.model.core.SectionBreakField;
+import org.metadatacenter.artifacts.model.core.YouTubeField;
 import org.metadatacenter.artifacts.model.core.ListField;
 import org.metadatacenter.artifacts.model.core.NumericField;
 import org.metadatacenter.artifacts.model.core.RadioField;
@@ -89,6 +94,21 @@ public final class CreateFieldTool
         "Option list for choice fields (radio-field, checkbox-field, single-/multi-select-"
             + "list-field), in display order. Rejected for other field types. To change or "
             + "reorder options later, use set_options."));
+
+    properties.put("content", Map.of(
+        "type", "string",
+        "description",
+        "Content of a static field: the rich-text body (static-rich-text), the image URL "
+            + "(static-image), the video URL (static-youtube-video), or the section text "
+            + "(static-section-break). Rejected for non-static field types."));
+    properties.put("width", Map.of(
+        "type", "integer",
+        "description",
+        "Display width in pixels; static-image and static-youtube-video only."));
+    properties.put("height", Map.of(
+        "type", "integer",
+        "description",
+        "Display height in pixels; static-image and static-youtube-video only."));
 
     properties.put("datatype", Map.of(
         "type", "string",
@@ -225,6 +245,8 @@ public final class CreateFieldTool
       String configError = applyTypeSpecificConfig(builder, type, args);
       if (configError != null) return error(configError);
       String optionsError = applyOptions(builder, args);
+      if (optionsError == null)
+        optionsError = applyStaticConfig(builder, args);
       if (optionsError != null) return error(optionsError);
       field = builder.build();
     } catch (RuntimeException e) {
@@ -280,6 +302,71 @@ public final class CreateFieldTool
           + "single-/multi-select-list-field)";
     }
     return null;
+  }
+
+  /**
+   * Apply the optional static-field configuration ({@code content}, and for image/video the
+   * {@code width}/{@code height} dimensions) to a static-field builder. Returns an error
+   * message when a param is misapplied, {@code null} on success or when absent.
+   */
+  private static String applyStaticConfig(FieldSchemaArtifactBuilder<?> builder, Map<String, Object> args)
+  {
+    String content = args.get("content") == null ? null : args.get("content").toString();
+    Integer width;
+    Integer height;
+    try {
+      width = optionalIntArg(args, "width");
+      height = optionalIntArg(args, "height");
+    } catch (IllegalArgumentException e) {
+      return e.getMessage();
+    }
+    if (content == null && width == null && height == null)
+      return null;
+
+    if (builder instanceof ImageField.ImageFieldBuilder image) {
+      if (content != null) image.withContent(content);
+      if (width != null) image.withWidth(width);
+      if (height != null) image.withHeight(height);
+    } else if (builder instanceof YouTubeField.YouTubeFieldBuilder video) {
+      if (content != null) video.withContent(content);
+      if (width != null) video.withWidth(width);
+      if (height != null) video.withHeight(height);
+    } else if (builder instanceof RichTextField.RichTextFieldBuilder richText) {
+      if (width != null || height != null)
+        return "width/height apply to static-image and static-youtube-video only";
+      richText.withContent(content);
+    } else if (builder instanceof SectionBreakField.SectionBreakFieldBuilder sectionBreak) {
+      if (width != null || height != null)
+        return "width/height apply to static-image and static-youtube-video only";
+      sectionBreak.withContent(content);
+    } else if (builder instanceof PageBreakField.PageBreakFieldBuilder pageBreak) {
+      if (width != null || height != null)
+        return "width/height apply to static-image and static-youtube-video only";
+      pageBreak.withContent(content);
+    } else {
+      return "content/width/height apply to static fields only (static-rich-text, "
+          + "static-image, static-youtube-video, static-section-break, static-page-break)";
+    }
+    return null;
+  }
+
+  /**
+   * Read an optional integer argument. JSON-RPC numbers arrive boxed as Integer or Long;
+   * coerce or fail with a clean message. Returns {@code null} when absent.
+   */
+  private static Integer optionalIntArg(Map<String, Object> args, String key)
+  {
+    Object raw = args.get(key);
+    if (raw == null) return null;
+    if (raw instanceof Integer i) return i;
+    if (raw instanceof Long l) {
+      if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE)
+        throw new IllegalArgumentException(key + " is out of integer range: " + l);
+      return l.intValue();
+    }
+    if (raw instanceof Number n) return n.intValue();
+    throw new IllegalArgumentException(key + " must be an integer (got "
+        + raw.getClass().getSimpleName() + ")");
   }
 
   private static McpSchema.CallToolResult error(String message)

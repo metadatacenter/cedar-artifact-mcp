@@ -477,6 +477,8 @@ fields, common configuration is accepted inline:
 - text / text-area: `min_length`, `max_length`, `regex`
 - radio / checkbox / single- and multi-select list: `options` (the option list, in
   display order; change or reorder later with `set_options`)
+- static fields: `content` (the rich-text body, image URL, video URL, or section
+  text); `width` / `height` for `static-image` and `static-youtube-video`
 
 For fields whose shape needs structured sub-objects (controlled-term values,
 inline radio/checkbox/list options, multi-instance configuration, default

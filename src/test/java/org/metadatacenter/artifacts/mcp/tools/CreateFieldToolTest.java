@@ -306,6 +306,67 @@ final class CreateFieldToolTest
     assertTrue(errorText(result).contains("granularity"));
   }
 
+  @Test void static_rich_text_accepts_content()
+  {
+    McpSchema.CallToolResult result = CreateFieldTool.handler(null,
+        new McpSchema.CallToolRequest("create_field", Map.of(
+            "type", "static-rich-text", "name", "Intro",
+            "content", "<p>Welcome to the study</p>")));
+
+    assertFalse(result.isError(), errorText(result));
+    assertTrue(errorText(result).contains("Welcome to the study"),
+        "the rich-text body must reach the field; got: " + errorText(result));
+  }
+
+  @Test void static_image_accepts_content_and_dimensions()
+  {
+    McpSchema.CallToolResult result = CreateFieldTool.handler(null,
+        new McpSchema.CallToolRequest("create_field", Map.of(
+            "type", "static-image", "name", "Logo",
+            "content", "https://example.org/logo.png",
+            "width", 640, "height", 480)));
+
+    assertFalse(result.isError(), errorText(result));
+    String yaml = errorText(result);
+    assertTrue(yaml.contains("https://example.org/logo.png"), "image URL; got: " + yaml);
+    assertTrue(yaml.contains("640") && yaml.contains("480"), "dimensions; got: " + yaml);
+  }
+
+  @Test void static_youtube_accepts_content_and_dimensions()
+  {
+    McpSchema.CallToolResult result = CreateFieldTool.handler(null,
+        new McpSchema.CallToolRequest("create_field", Map.of(
+            "type", "static-youtube-video", "name", "Intro video",
+            "content", "https://youtube.com/watch?v=xyz",
+            "width", 1280, "height", 720)));
+
+    assertFalse(result.isError(), errorText(result));
+    String yaml = errorText(result);
+    assertTrue(yaml.contains("https://youtube.com/watch?v=xyz"), "video URL; got: " + yaml);
+    assertTrue(yaml.contains("1280") && yaml.contains("720"), "dimensions; got: " + yaml);
+  }
+
+  @Test void rejects_content_on_a_non_static_type()
+  {
+    McpSchema.CallToolResult result = CreateFieldTool.handler(null,
+        new McpSchema.CallToolRequest("create_field", Map.of(
+            "type", "text-field", "name", "Name", "content", "nope")));
+
+    assertTrue(result.isError());
+    assertTrue(errorText(result).contains("static fields only"), errorText(result));
+  }
+
+  @Test void rejects_dimensions_on_rich_text()
+  {
+    McpSchema.CallToolResult result = CreateFieldTool.handler(null,
+        new McpSchema.CallToolRequest("create_field", Map.of(
+            "type", "static-rich-text", "name", "Intro",
+            "content", "<p>x</p>", "width", 640)));
+
+    assertTrue(result.isError());
+    assertTrue(errorText(result).contains("static-image and static-youtube-video only"), errorText(result));
+  }
+
   // -----------------------------------------------------------------
   // helpers
   // -----------------------------------------------------------------

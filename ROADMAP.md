@@ -39,6 +39,9 @@ centralizes read (YAML or JSON, auto-detected) and render.
   checkbox / single- and multi-select list / controlled-term / link / email / phone, the
   `ext-*` identifier fields, and the `static-*` placeholders). Numeric and temporal fields
   receive sensible defaults for the otherwise-required numberType / temporalType / granularity.
+  Static fields take their `content` (rich-text body, image URL, video URL, section text) and,
+  for image/video, `width` / `height`; there is deliberately no set_static_content — static
+  fields carry no constraints or defaults, so edit-by-recreate plus `replace_field` covers it.
 - A top-level `@id` is auto-minted of the correct CEDAR form when omitted (DESIGN.md
   Principle 10: `templates` / `template-elements` / `template-fields` / `template-instances`);
   nested children are never minted.
