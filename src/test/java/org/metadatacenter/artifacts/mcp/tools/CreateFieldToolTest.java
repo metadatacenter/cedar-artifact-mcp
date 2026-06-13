@@ -346,6 +346,49 @@ final class CreateFieldToolTest
     assertTrue(yaml.contains("1280") && yaml.contains("720"), "dimensions; got: " + yaml);
   }
 
+  @Test void static_section_break_and_page_break_accept_content()
+  {
+    McpSchema.CallToolResult sectionBreak = CreateFieldTool.handler(null,
+        new McpSchema.CallToolRequest("create_field", Map.of(
+            "type", "static-section-break", "name", "Demographics section",
+            "content", "Questions about the patient")));
+    assertFalse(sectionBreak.isError(), errorText(sectionBreak));
+    assertTrue(errorText(sectionBreak).contains("Questions about the patient"),
+        "the section text must reach the field; got: " + errorText(sectionBreak));
+
+    McpSchema.CallToolResult pageBreak = CreateFieldTool.handler(null,
+        new McpSchema.CallToolRequest("create_field", Map.of(
+            "type", "static-page-break", "name", "Page two",
+            "content", "Continued")));
+    assertFalse(pageBreak.isError(), errorText(pageBreak));
+    assertTrue(errorText(pageBreak).contains("Continued"),
+        "the page-break content must reach the field; got: " + errorText(pageBreak));
+  }
+
+  @Test void static_content_and_dimensions_survive_add_field()
+  {
+    // The graft path rebuilds the child through the copy builders — the place where
+    // static configuration historically got scrubbed.
+    String video = errorText(CreateFieldTool.handler(null,
+        new McpSchema.CallToolRequest("create_field", Map.of(
+            "type", "static-youtube-video", "name", "Intro video",
+            "content", "https://youtube.com/watch?v=xyz",
+            "width", 1280, "height", 720))));
+    String template = errorText(CreateTemplateTool.handler(null,
+        new McpSchema.CallToolRequest("create_template", Map.of("name", "Fixture"))));
+
+    McpSchema.CallToolResult result = AddFieldTool.handler(null,
+        new McpSchema.CallToolRequest("add_field", Map.of(
+            "parent", template, "child", video, "key", "intro")));
+
+    assertFalse(result.isError(), errorText(result));
+    String yaml = errorText(result);
+    assertTrue(yaml.contains("https://youtube.com/watch?v=xyz"),
+        "the video URL must survive the graft; got: " + yaml);
+    assertTrue(yaml.contains("1280") && yaml.contains("720"),
+        "the dimensions must survive the graft; got: " + yaml);
+  }
+
   @Test void rejects_content_on_a_non_static_type()
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
