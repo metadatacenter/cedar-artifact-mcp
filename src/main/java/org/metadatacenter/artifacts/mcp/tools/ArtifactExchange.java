@@ -161,6 +161,26 @@ final class ArtifactExchange
   }
 
   /**
+   * Distinguishes the two instance kinds (YAML or JSON) for the auto-detecting
+   * {@code instance_artifact_to_json} / {@code instance_artifact_to_yaml} tools. A YAML document
+   * is keyed on its {@code type:} discriminator ({@code element-instance} vs {@code instance}); a
+   * JSON document has no such discriminator, so a template instance is recognized by its
+   * {@code schema:isBasedOn} (which an element instance lacks) and everything else is taken to be
+   * an element instance. Returns {@code true} for an element instance.
+   */
+  static boolean isElementInstance(String text)
+  {
+    if (looksLikeJson(text)) {
+      try {
+        return !asObjectNode(text).has("schema:isBasedOn");
+      } catch (RuntimeException malformed) {
+        return false;
+      }
+    }
+    return "element-instance".equals(String.valueOf(parseYamlMap(text).get("type")));
+  }
+
+  /**
    * A SnakeYAML parser that does NOT auto-resolve date-like scalars to {@code java.util.Date}.
    * CEDAR temporal values and defaults (e.g. {@code 2026-01-01}) are lexical strings; letting
    * YAML coerce them to Date breaks the round trip (the reader expects strings). Every other

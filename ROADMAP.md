@@ -119,20 +119,24 @@ centralizes read (YAML or JSON, auto-detected) and render.
   for all field kinds: a single-instance path clears the value, an indexed multi-instance path
   deletes the entry, an unindexed multi-instance path clears the list. Idempotent; required
   fields may be unset (`requiredValue` is enforced at validation time).
-- `validate_instance(template, instance)` — `CedarValidator.validateTemplateInstance`.
-- `validate_element_instance(element, element_instance)` — `CedarValidator.validateElementInstance`
-  with the element as the schema document (an element artifact is itself the JSON Schema its
-  instances validate against); the element instance is checked in its nested shape.
+- `validate_instance_artifact(schema_artifact, instance_artifact)` — validates a template or
+  element instance against the schema it is based on; the schema kind is auto-detected from its
+  `@type`. Template → `CedarValidator.validateTemplateInstance`; element →
+  `validateElementInstance` with the element as the schema document (an element artifact is
+  itself the JSON Schema its instances validate against), the element instance checked in its
+  nested shape.
 
 ### Export / import
 
-- `template_to_json` / `element_to_json` / `field_to_json` / `instance_to_json` — **export** a
-  (YAML) artifact to the canonical CEDAR JSON Schema that cedar-server and other downstream
-  tooling consume. Validated before returning.
-- `template_to_yaml` / `element_to_yaml` / `field_to_yaml` / `instance_to_yaml(artifact, isCompact?)`
-  — render any artifact (YAML or JSON, auto-detected) as YAML. Two jobs: **recompact** an
-  expanded artifact for a lean display (`isCompact: true`, no JSON detour), and **import** an
-  external JSON Schema artifact into the YAML loop.
+- `schema_artifact_to_json(artifact)` / `instance_artifact_to_json(instance_artifact, schema_artifact?)`
+  — **export** a (YAML) artifact to the canonical CEDAR JSON that cedar-server and other
+  downstream tooling consume. The schema renderer auto-detects template/element/field and
+  validates before returning; the instance renderer auto-detects template/element instance and,
+  given the optional `schema_artifact`, inflates the sparse instance to a complete JSON instance.
+- `schema_artifact_to_yaml(artifact, isCompact?)` / `instance_artifact_to_yaml(instance_artifact, isCompact?)`
+  — render any artifact (YAML or JSON, auto-detected; kind auto-detected) as YAML. Two jobs:
+  **recompact** an expanded artifact for a lean display (`isCompact: true`, no JSON detour), and
+  **import** an external JSON artifact into the YAML loop.
 
 ## Next
 

@@ -28,13 +28,13 @@ import java.util.Map;
  * is <em>sparse</em>: the renderer omits every unset field (no {@code value: null}, no
  * {@code {}}), so a freshly created instance is essentially just its identity (@id, name,
  * isBasedOn). The required empty slots are reconstructed from the template at the JSON boundary
- * (see {@link InstanceInflater}) by {@code validate_instance_artifact} and {@code instance_to_json}. The
+ * (see {@link InstanceInflater}) by {@code validate_instance_artifact} and {@code instance_artifact_to_json}. The
  * LLM fills values via {@code set_literal_field_value} and friends.
  *
  * <p>The {@code isBasedOn} URI is always derived from the template's {@code @id} — the
  * instance points at exactly the template it was built from, by construction. A template
  * without an {@code @id} is rejected with guidance ({@code create_template} and
- * {@code template_to_json} mint one automatically).
+ * {@code schema_artifact_to_json} mint one automatically).
  */
 public final class CreateTemplateInstanceTool
 {
@@ -83,7 +83,7 @@ public final class CreateTemplateInstanceTool
                 + "placeholders), so a freshly created instance is essentially just its identity. "
                 + "It is still structurally complete against the template: the empty fields the "
                 + "canonical JSON form requires are reconstructed at the JSON boundary — "
-                + "'validate_instance_artifact' and 'instance_to_json' (given the template) inflate them. "
+                + "'validate_instance_artifact' and 'instance_artifact_to_json' (given the template) inflate them. "
                 + "Fill values with set_literal_field_value / set_iri_field_value."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
@@ -138,7 +138,7 @@ public final class CreateTemplateInstanceTool
     if (template.jsonLdId().isEmpty())
       return error("the template carries no @id, so the instance's isBasedOn cannot be "
           + "derived. Add an id: to the template, or build it with create_template / export "
-          + "it with template_to_json - both mint one automatically.");
+          + "it with schema_artifact_to_json - both mint one automatically.");
     URI isBasedOn = template.jsonLdId().get();
 
     String name = nameOverride == null || nameOverride.isBlank() ? template.name() : nameOverride;

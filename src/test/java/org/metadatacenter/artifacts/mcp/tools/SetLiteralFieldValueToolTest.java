@@ -393,7 +393,7 @@ final class SetLiteralFieldValueToolTest
     TemplateInstanceArtifact instance = reader.readTemplateInstanceArtifact(yamlMap(instanceYaml));
     ObjectNode templateNode = renderer.renderTemplateSchemaArtifact(template);
     // The YAML instance is sparse; inflate against the template before validating, exactly as
-    // validate_instance_artifact / instance_to_json do at the JSON boundary.
+    // validate_instance_artifact / instance_artifact_to_json do at the JSON boundary.
     ObjectNode instanceNode = renderer.renderTemplateInstanceArtifact(
         InstanceInflater.inflate(template, instance));
     ValidationReport report;

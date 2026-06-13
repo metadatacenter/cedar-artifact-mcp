@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Tests for the {@code create_template_instance} tool. A created instance is <em>sparse</em>: unset
  * fields are omitted from the YAML (no `value: null`, no `{}`). The structural completeness the
  * template requires lives at the JSON boundary — {@code validate_instance_artifact} and
- * {@code instance_to_json} inflate the instance against the template. So the headline check is
+ * {@code instance_artifact_to_json} inflate the instance against the template. So the headline check is
  * that the instance validates, and structural assertions are made against the inflated JSON
  * (see {@link #inflatedJson}).
  */
@@ -367,8 +367,8 @@ final class CreateTemplateInstanceToolTest
 
   private static String compileTemplate(String yaml)
   {
-    McpSchema.CallToolResult result = TemplateToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("template_to_json", Map.of("artifact", yaml)));
+    McpSchema.CallToolResult result = SchemaArtifactToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("schema_artifact_to_json", Map.of("artifact", yaml)));
     assertFalse(result.isError(),
         "fixture template YAML must compile cleanly; got: " + errorText(result));
     return textOf(result);
@@ -399,9 +399,9 @@ final class CreateTemplateInstanceToolTest
    */
   private ObjectNode inflatedJson(McpSchema.CallToolResult result, String templateJson) throws Exception
   {
-    McpSchema.CallToolResult json = InstanceToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("instance_to_json", Map.of(
-            "artifact", textOf(result), "template", templateJson)));
+    McpSchema.CallToolResult json = InstanceArtifactToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("instance_artifact_to_json", Map.of(
+            "instance_artifact", textOf(result), "schema_artifact", templateJson)));
     assertFalse(json.isError(), errorText(json));
     return (ObjectNode) jackson.readTree(textOf(json));
   }

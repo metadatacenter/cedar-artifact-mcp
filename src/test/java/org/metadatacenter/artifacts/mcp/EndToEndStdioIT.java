@@ -107,18 +107,10 @@ final class EndToEndStdioIT
           "create_element tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("create_field"),
           "create_field tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("template_to_json"),
-          "template_to_json tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("element_to_json"),
-          "element_to_json tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("field_to_json"),
-          "field_to_json tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("template_to_yaml"),
-          "template_to_yaml tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("element_to_yaml"),
-          "element_to_yaml tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("field_to_yaml"),
-          "field_to_yaml tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("schema_artifact_to_json"),
+          "schema_artifact_to_json tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("schema_artifact_to_yaml"),
+          "schema_artifact_to_yaml tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("add_field"),
           "add_field tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("add_element"),
@@ -147,10 +139,10 @@ final class EndToEndStdioIT
           "set_iri_default_value tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("create_template_instance"),
           "create_template_instance tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("instance_to_json"),
-          "instance_to_json tool should be listed; got " + toolNames);
-      assertTrue(toolNames.contains("instance_to_yaml"),
-          "instance_to_yaml tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("instance_artifact_to_json"),
+          "instance_artifact_to_json tool should be listed; got " + toolNames);
+      assertTrue(toolNames.contains("instance_artifact_to_yaml"),
+          "instance_artifact_to_yaml tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("validate_instance_artifact"),
           "validate_instance_artifact tool should be listed; got " + toolNames);
       assertTrue(toolNames.contains("validate_schema_artifact"),
@@ -249,7 +241,7 @@ final class EndToEndStdioIT
           "    description: Free-text patient name");
 
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":"
-          + "{\"name\":\"template_to_json\",\"arguments\":{\"artifact\":\""
+          + "{\"name\":\"schema_artifact_to_json\",\"arguments\":{\"artifact\":\""
           + yamlBody + "\"}}}");
       JsonNode response = readResponse(stdout, stderr);
       assertEquals(2, response.path("id").asInt());
@@ -282,7 +274,7 @@ final class EndToEndStdioIT
   @Test void server_handles_sequential_tool_calls_on_one_session() throws Exception
   {
     // Three tool calls on the same server process: ping, then create_template, then
-    // template_to_json. Catches the kind of bug where the first call works but a
+    // schema_artifact_to_json. Catches the kind of bug where the first call works but a
     // subsequent call breaks because some state leaked between requests (the kind of
     // thing a fresh-server-per-call IT misses).
     Path jar = locateShadedJar();
@@ -315,7 +307,7 @@ final class EndToEndStdioIT
       assertFalse(r2.path("result").path("isError").asBoolean(true),
           "create_template on second call should succeed; got: " + r2);
 
-      // Call 3: template_to_json (the heavy one — exercises the full transcode
+      // Call 3: schema_artifact_to_json (the heavy one — exercises the full transcode
       // pipeline after two prior calls)
       String yamlBody = String.join("\\n",
           "type: template",
@@ -325,12 +317,12 @@ final class EndToEndStdioIT
           "status: draft",
           "modelVersion: 1.6.0");
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":12,\"method\":\"tools/call\",\"params\":"
-          + "{\"name\":\"template_to_json\",\"arguments\":{\"artifact\":\""
+          + "{\"name\":\"schema_artifact_to_json\",\"arguments\":{\"artifact\":\""
           + yamlBody + "\"}}}");
       JsonNode r3 = readResponse(stdout, stderr);
       assertEquals(12, r3.path("id").asInt());
       assertFalse(r3.path("result").path("isError").asBoolean(true),
-          "template_to_json on third call should succeed; got: " + r3);
+          "schema_artifact_to_json on third call should succeed; got: " + r3);
 
       JsonNode parsed = jackson.readTree(
           r3.path("result").path("content").get(0).path("text").asText());
@@ -397,7 +389,7 @@ final class EndToEndStdioIT
           "        iri: http://purl.obolibrary.org/obo/DOID_4");
 
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":"
-          + "{\"name\":\"template_to_json\",\"arguments\":{\"artifact\":\""
+          + "{\"name\":\"schema_artifact_to_json\",\"arguments\":{\"artifact\":\""
           + yaml + "\"}}}");
       JsonNode response = readResponse(stdout, stderr);
       assertEquals(2, response.path("id").asInt());
@@ -427,7 +419,7 @@ final class EndToEndStdioIT
 
   @Test void server_exercises_new_transcoders_over_stdio() throws Exception
   {
-    // One IT covering element_to_json, field_to_json, and template_to_yaml in a
+    // One IT covering schema_artifact_to_json, schema_artifact_to_json, and schema_artifact_to_yaml in a
     // single session — proves each routes cleanly through the shaded jar and the
     // tool-registration plumbing. Exhaustive per-tool cases live in the surefire
     // unit tests; this IT exists to catch shading/registration regressions.
@@ -445,7 +437,7 @@ final class EndToEndStdioIT
       readResponse(stdout, stderr);
       send(stdin, "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
 
-      // 1) element_to_json --------------------------------------------------------
+      // 1) schema_artifact_to_json --------------------------------------------------------
       String elementYaml = String.join("\\n",
           "type: element",
           "name: Address",
@@ -456,38 +448,38 @@ final class EndToEndStdioIT
           "    type: text-field",
           "    name: Street");
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":"
-          + "{\"name\":\"element_to_json\",\"arguments\":{\"artifact\":\""
+          + "{\"name\":\"schema_artifact_to_json\",\"arguments\":{\"artifact\":\""
           + elementYaml + "\"}}}");
       JsonNode elementResponse = readResponse(stdout, stderr);
       assertEquals(2, elementResponse.path("id").asInt());
       assertFalse(elementResponse.path("result").path("isError").asBoolean(true),
-          "element_to_json must compile cleanly over stdio; got: " + elementResponse);
+          "schema_artifact_to_json must compile cleanly over stdio; got: " + elementResponse);
       JsonNode element = jackson.readTree(
           elementResponse.path("result").path("content").get(0).path("text").asText());
       ValidationReport elemReport = cedarValidator.validateTemplateElement(element);
       assertEquals("true", elemReport.getValidationStatus(),
           "element JSON returned over stdio must pass validateTemplateElement");
 
-      // 2) field_to_json ----------------------------------------------------------
+      // 2) schema_artifact_to_json ----------------------------------------------------------
       String fieldYaml = String.join("\\n",
           "type: text-field",
           "name: Patient name",
           "description: Free-text patient name",
           "modelVersion: 1.6.0");
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":"
-          + "{\"name\":\"field_to_json\",\"arguments\":{\"artifact\":\""
+          + "{\"name\":\"schema_artifact_to_json\",\"arguments\":{\"artifact\":\""
           + fieldYaml + "\"}}}");
       JsonNode fieldResponse = readResponse(stdout, stderr);
       assertEquals(3, fieldResponse.path("id").asInt());
       assertFalse(fieldResponse.path("result").path("isError").asBoolean(true),
-          "field_to_json must compile cleanly over stdio; got: " + fieldResponse);
+          "schema_artifact_to_json must compile cleanly over stdio; got: " + fieldResponse);
       JsonNode field = jackson.readTree(
           fieldResponse.path("result").path("content").get(0).path("text").asText());
       ValidationReport fieldReport = cedarValidator.validateTemplateField(field);
       assertEquals("true", fieldReport.getValidationStatus(),
           "field JSON returned over stdio must pass validateTemplateField");
 
-      // 3) template_to_yaml ---------------------------------------------------------
+      // 3) schema_artifact_to_yaml ---------------------------------------------------------
       // First compile a template to JSON, then ask the server to render it back to
       // YAML. Compact form (default) is what an LLM would see; assert it contains
       // the type/name shape and elides status (which would appear in standard form).
@@ -499,23 +491,23 @@ final class EndToEndStdioIT
           "status: draft",
           "modelVersion: 1.6.0");
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\",\"params\":"
-          + "{\"name\":\"template_to_json\",\"arguments\":{\"artifact\":\""
+          + "{\"name\":\"schema_artifact_to_json\",\"arguments\":{\"artifact\":\""
           + templateYaml + "\"}}}");
       JsonNode fromYamlResponse = readResponse(stdout, stderr);
       assertFalse(fromYamlResponse.path("result").path("isError").asBoolean(true),
-          "template_to_json setup call must succeed; got: " + fromYamlResponse);
+          "schema_artifact_to_json setup call must succeed; got: " + fromYamlResponse);
       String templateJsonText =
           fromYamlResponse.path("result").path("content").get(0).path("text").asText();
 
       // Re-encode the JSON as a JSON string literal so it survives the JSON-RPC frame.
       String escapedJson = jackson.writeValueAsString(templateJsonText);
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"tools/call\",\"params\":"
-          + "{\"name\":\"template_to_yaml\",\"arguments\":{\"artifact\":"
+          + "{\"name\":\"schema_artifact_to_yaml\",\"arguments\":{\"artifact\":"
           + escapedJson + ",\"isCompact\":true}}}");
       JsonNode toYamlResponse = readResponse(stdout, stderr);
       assertEquals(5, toYamlResponse.path("id").asInt());
       assertFalse(toYamlResponse.path("result").path("isError").asBoolean(true),
-          "template_to_yaml must render cleanly over stdio; got: " + toYamlResponse);
+          "schema_artifact_to_yaml must render cleanly over stdio; got: " + toYamlResponse);
       String yamlOut =
           toYamlResponse.path("result").path("content").get(0).path("text").asText();
       assertTrue(yamlOut.contains("type: template"),
@@ -565,7 +557,7 @@ final class EndToEndStdioIT
   @Test void server_inflates_sparse_instance_to_placeholder_json_over_stdio() throws Exception
   {
     // End-to-end over real stdio: a sparse instance plus its template, run through
-    // instance_to_json, must come back as the full CEDAR JSON form with empty placeholders
+    // instance_artifact_to_json, must come back as the full CEDAR JSON form with empty placeholders
     // ({"@value": null}) for the unset fields. Exercises the inflation path through the shaded jar.
     Path jar = locateShadedJar();
     Process server = new ProcessBuilder("java", "-jar", jar.toString())
@@ -589,20 +581,20 @@ final class EndToEndStdioIT
           "  - key: age", "    type: numeric-field", "    name: Age", "    datatype: xsd:int");
       ObjectNode templateArgs = jackson.createObjectNode();
       templateArgs.put("artifact", templateYaml);
-      send(stdin, frame(2, "template_to_json", templateArgs));
+      send(stdin, frame(2, "schema_artifact_to_json", templateArgs));
       JsonNode r2 = readResponse(stdout, stderr);
-      assertFalse(r2.path("result").path("isError").asBoolean(true), "template_to_json failed: " + r2);
+      assertFalse(r2.path("result").path("isError").asBoolean(true), "schema_artifact_to_json failed: " + r2);
       String templateJson = r2.path("result").path("content").get(0).path("text").asText();
 
       // 2) inflate a wholly-empty (sparse) instance against that template
       String sparseInstance =
           "type: instance\nname: P1\nisBasedOn: https://repo.metadatacenter.org/templates/x\n";
       ObjectNode instanceArgs = jackson.createObjectNode();
-      instanceArgs.put("artifact", sparseInstance);
-      instanceArgs.put("template", templateJson);
-      send(stdin, frame(3, "instance_to_json", instanceArgs));
+      instanceArgs.put("instance_artifact", sparseInstance);
+      instanceArgs.put("schema_artifact", templateJson);
+      send(stdin, frame(3, "instance_artifact_to_json", instanceArgs));
       JsonNode r3 = readResponse(stdout, stderr);
-      assertFalse(r3.path("result").path("isError").asBoolean(true), "instance_to_json failed: " + r3);
+      assertFalse(r3.path("result").path("isError").asBoolean(true), "instance_artifact_to_json failed: " + r3);
 
       JsonNode instance = jackson.readTree(r3.path("result").path("content").get(0).path("text").asText());
       assertTrue(instance.path("patient_name").has("@value") && instance.path("patient_name").path("@value").isNull(),

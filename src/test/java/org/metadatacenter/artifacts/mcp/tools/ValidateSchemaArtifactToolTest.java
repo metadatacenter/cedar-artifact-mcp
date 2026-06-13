@@ -24,8 +24,8 @@ final class ValidateSchemaArtifactToolTest
 
   @Test void auto_detects_and_validates_template() throws Exception
   {
-    String templateJson = textOf(TemplateToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("template_to_json", Map.of("artifact", createTemplate("Demo")))));
+    String templateJson = textOf(SchemaArtifactToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("schema_artifact_to_json", Map.of("artifact", createTemplate("Demo")))));
     McpSchema.CallToolResult result = invoke(Map.of("artifact", templateJson));
     assertFalse(result.isError(), errorText(result));
     assertTrue(jackson.readTree(textOf(result)).path("valid").asBoolean());
@@ -33,8 +33,8 @@ final class ValidateSchemaArtifactToolTest
 
   @Test void auto_detects_and_validates_element() throws Exception
   {
-    String elementJson = textOf(ElementToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("element_to_json", Map.of("artifact", createElement("Address")))));
+    String elementJson = textOf(SchemaArtifactToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("schema_artifact_to_json", Map.of("artifact", createElement("Address")))));
     McpSchema.CallToolResult result = invoke(Map.of("artifact", elementJson));
     assertFalse(result.isError(), errorText(result));
     assertTrue(jackson.readTree(textOf(result)).path("valid").asBoolean());
@@ -42,8 +42,8 @@ final class ValidateSchemaArtifactToolTest
 
   @Test void auto_detects_and_validates_field() throws Exception
   {
-    String fieldJson = textOf(FieldToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("field_to_json", Map.of("artifact", createField("Name", "text-field")))));
+    String fieldJson = textOf(SchemaArtifactToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("schema_artifact_to_json", Map.of("artifact", createField("Name", "text-field")))));
     McpSchema.CallToolResult result = invoke(Map.of("artifact", fieldJson));
     assertFalse(result.isError(), errorText(result));
     assertTrue(jackson.readTree(textOf(result)).path("valid").asBoolean());
@@ -73,8 +73,8 @@ final class ValidateSchemaArtifactToolTest
 
   @Test void redirects_instance_to_validate_instance_artifact() throws Exception
   {
-    String instanceJson = textOf(InstanceToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("instance_to_json", Map.of("artifact",
+    String instanceJson = textOf(InstanceArtifactToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("instance_artifact_to_json", Map.of("instance_artifact",
             "type: instance\nname: P1\nisBasedOn: https://repo.metadatacenter.org/templates/x\n"))));
 
     McpSchema.CallToolResult result = invoke(Map.of("artifact", instanceJson));

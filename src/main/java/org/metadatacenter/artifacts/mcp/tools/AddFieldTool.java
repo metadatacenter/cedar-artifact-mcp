@@ -27,7 +27,7 @@ import java.util.Map;
  *
  * <p>Parallel to {@link AddElementTool}: both take a pre-built child JSON rather
  * than building it on the fly. The compose workflow is two-step — {@code create_field}
- * (or {@code field_to_json}) returns the child JSON, then {@code add_field} grafts
+ * (or {@code schema_artifact_to_json}) returns the child JSON, then {@code add_field} grafts
  * it onto the parent under the supplied key.
  */
 public final class AddFieldTool

@@ -33,8 +33,8 @@ final class ArtifactInputRobustnessTest
 
   private static String templateJson(String templateYaml)
   {
-    return textOf(TemplateToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("template_to_json", Map.of("artifact", templateYaml))));
+    return textOf(SchemaArtifactToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("schema_artifact_to_json", Map.of("artifact", templateYaml))));
   }
 
   private static String fieldYaml()
@@ -46,8 +46,8 @@ final class ArtifactInputRobustnessTest
 
   private static String fieldJson(String fieldYaml)
   {
-    return textOf(FieldToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("field_to_json", Map.of("artifact", fieldYaml))));
+    return textOf(SchemaArtifactToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("schema_artifact_to_json", Map.of("artifact", fieldYaml))));
   }
 
   // ---------------------------------------------------------------- auto-detection
@@ -194,7 +194,7 @@ final class ArtifactInputRobustnessTest
 
   @Test void template_to_yaml_survives_garbage()
   {
-    assertCleanErrors("template_to_yaml", TemplateToYamlTool::handler, "artifact");
+    assertCleanErrors("schema_artifact_to_yaml", SchemaArtifactToYamlTool::handler, "artifact");
   }
 
   @Test void wrong_artifact_kind_is_a_clean_error()

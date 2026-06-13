@@ -433,7 +433,7 @@ through the library and passed its structural validation.
 | Configure | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` · `remove_constraint` · `set_options` · `set_literal_default_value` · `set_iri_default_value` |
 | Populate | `set_literal_field_value` · `set_iri_field_value` · `set_element_instance` · `unset_field_value` |
 | Validate | `validate_schema_artifact` · `validate_instance_artifact` |
-| Render | `template_to_json` · `element_to_json` · `field_to_json` · `instance_to_json` · `template_to_yaml` · `element_to_yaml` · `field_to_yaml` · `instance_to_yaml` |
+| Render | `schema_artifact_to_json` · `instance_artifact_to_json` · `schema_artifact_to_yaml` · `instance_artifact_to_yaml` |
 | Diagnostics | `ping` |
 
 **The exchange form.** Every tool that builds or modifies an artifact (`create_*`,
@@ -446,7 +446,7 @@ description directs the LLM to use exactly that for interactive display, while t
 the expanded form onward. Instances are **sparse** in
 either form — a field with no value is omitted entirely (no `null`, no `{}`, no empty `[]`);
 the empty slots the JSON form requires are reconstructed from the template at the
-JSON boundary (`validate_instance_artifact`, `instance_to_json`).
+JSON boundary (`validate_instance_artifact`, `instance_artifact_to_json`).
 
 ### `create_template(name, description?, version?, status?, id?)`
 
@@ -686,11 +686,11 @@ Creates an instance from a template, ready to be populated with field values.
 The returned instance is **sparse** — it carries its identity (`@id`, `name`,
 `isBasedOn`) and only fields that hold a value, so a fresh instance is
 essentially just its identity. Unset fields are reconstructed from the template
-when JSON is produced (`validate_instance_artifact`, `instance_to_json`), so the instance
+when JSON is produced (`validate_instance_artifact`, `instance_artifact_to_json`), so the instance
 is still structurally complete. `isBasedOn` is always derived from the
 template's `@id` — the instance points at exactly the template it was built
 from, by construction; a template without an `@id` is rejected with guidance
-(`create_template` and `template_to_json` mint one automatically). `id` is the
+(`create_template` and `schema_artifact_to_json` mint one automatically). `id` is the
 instance's own identity — optional, and auto-minted as a fresh
 `template-instances` IRI when omitted.
 
@@ -729,24 +729,26 @@ validator, so you need not say whether you've got a template, element, or field.
 template *instance* is detected but must go through `validate_instance_artifact`, which also
 needs the template it's based on.)
 
-### `template_to_json` / `element_to_json` / `field_to_json` / `instance_to_json` `(artifact)`
+### `schema_artifact_to_json(artifact)` / `instance_artifact_to_json(instance_artifact, schema_artifact?)`
 
-**Render as JSON.** Take an artifact (YAML) and return the CEDAR JSON Schema
-that downstream CEDAR tooling consumes. The result is round-tripped through the
-library reader/renderer and validated (`CedarValidator`), so a non-error result is a
-guaranteed-valid artifact. If a top-level `id` is omitted, a fresh IRI is minted onto
-the result (nested children untouched). `instance_to_json` takes the instance's
-`template` as an optional argument: pass it to inflate the sparse instance back to a
-complete CEDAR JSON instance (every template field present); omit it to export only the
-fields the instance carries.
+**Render as JSON.** Take an artifact (YAML) and return the CEDAR JSON Schema that
+downstream CEDAR tooling consumes. `schema_artifact_to_json` handles a **template, element,
+or field** — the kind is auto-detected from the YAML `type:`; the result is round-tripped
+through the library reader/renderer and validated (`CedarValidator`), so a non-error result
+is a guaranteed-valid artifact, and a top-level `id` is minted if omitted (nested children
+untouched). `instance_artifact_to_json` handles a **template instance or element instance**
+(auto-detected); its optional `schema_artifact` (the template or element it is based on)
+inflates the sparse instance back to a complete CEDAR JSON instance (every declared field
+present) — omit it to export only the fields the instance carries.
 
-### `template_to_yaml` / `element_to_yaml` / `field_to_yaml` / `instance_to_yaml` `(artifact, isCompact?)`
+### `schema_artifact_to_yaml(artifact, isCompact?)` / `instance_artifact_to_yaml(instance_artifact, isCompact?)`
 
-**Render as YAML.** Takes an artifact as YAML or JSON Schema (auto-detected) and emits
-YAML. `isCompact` is the only compaction control, so this is both how you **recompact** an
-expanded-YAML artifact for a lean display (`isCompact: true`, no JSON detour) and how you
-**import** an external JSON Schema artifact into the YAML loop. `isCompact` defaults to
-`true`; pass `false` for the expanded, provenance-preserving exchange form.
+**Render as YAML.** Take an artifact as YAML or JSON (auto-detected, kind auto-detected) and
+emit YAML — `schema_artifact_to_yaml` for a template/element/field, `instance_artifact_to_yaml`
+for a template or element instance. `isCompact` is the only compaction control, so this is
+both how you **recompact** an expanded-YAML artifact for a lean display (`isCompact: true`, no
+JSON detour) and how you **import** an external JSON artifact into the YAML loop. `isCompact`
+defaults to `true`; pass `false` for the expanded, provenance-preserving exchange form.
 
 
 ### `ping(message)`

@@ -19,12 +19,8 @@ import org.metadatacenter.artifacts.mcp.tools.CreateFieldTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateElementInstanceTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateTemplateInstanceTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateTemplateTool;
-import org.metadatacenter.artifacts.mcp.tools.ElementToJsonTool;
-import org.metadatacenter.artifacts.mcp.tools.ElementToYamlTool;
-import org.metadatacenter.artifacts.mcp.tools.FieldToJsonTool;
-import org.metadatacenter.artifacts.mcp.tools.FieldToYamlTool;
-import org.metadatacenter.artifacts.mcp.tools.InstanceToJsonTool;
-import org.metadatacenter.artifacts.mcp.tools.InstanceToYamlTool;
+import org.metadatacenter.artifacts.mcp.tools.InstanceArtifactToJsonTool;
+import org.metadatacenter.artifacts.mcp.tools.InstanceArtifactToYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.RemoveChildTool;
 import org.metadatacenter.artifacts.mcp.tools.RemoveConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.ReorderChildrenTool;
@@ -34,8 +30,8 @@ import org.metadatacenter.artifacts.mcp.tools.SetLiteralFieldValueTool;
 import org.metadatacenter.artifacts.mcp.tools.SetElementInstanceTool;
 import org.metadatacenter.artifacts.mcp.tools.SetIriFieldValueTool;
 import org.metadatacenter.artifacts.mcp.tools.UnsetFieldValueTool;
-import org.metadatacenter.artifacts.mcp.tools.TemplateToJsonTool;
-import org.metadatacenter.artifacts.mcp.tools.TemplateToYamlTool;
+import org.metadatacenter.artifacts.mcp.tools.SchemaArtifactToJsonTool;
+import org.metadatacenter.artifacts.mcp.tools.SchemaArtifactToYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.ValidateInstanceArtifactTool;
 import org.metadatacenter.artifacts.mcp.tools.ValidateSchemaArtifactTool;
 
@@ -67,12 +63,8 @@ public final class ArtifactMcpServer
         .toolCall(CreateTemplateTool.tool(), CreateTemplateTool::handler)
         .toolCall(CreateElementTool.tool(), CreateElementTool::handler)
         .toolCall(CreateFieldTool.tool(), CreateFieldTool::handler)
-        .toolCall(TemplateToJsonTool.tool(), TemplateToJsonTool::handler)
-        .toolCall(ElementToJsonTool.tool(), ElementToJsonTool::handler)
-        .toolCall(FieldToJsonTool.tool(), FieldToJsonTool::handler)
-        .toolCall(TemplateToYamlTool.tool(), TemplateToYamlTool::handler)
-        .toolCall(ElementToYamlTool.tool(), ElementToYamlTool::handler)
-        .toolCall(FieldToYamlTool.tool(), FieldToYamlTool::handler)
+        .toolCall(SchemaArtifactToJsonTool.tool(), SchemaArtifactToJsonTool::handler)
+        .toolCall(SchemaArtifactToYamlTool.tool(), SchemaArtifactToYamlTool::handler)
         .toolCall(AddFieldTool.tool(), AddFieldTool::handler)
         .toolCall(AddElementTool.tool(), AddElementTool::handler)
         .toolCall(RemoveChildTool.tool(), RemoveChildTool::handler)
@@ -89,8 +81,8 @@ public final class ArtifactMcpServer
         .toolCall(SetIriDefaultValueTool.tool(), SetIriDefaultValueTool::handler)
         .toolCall(CreateTemplateInstanceTool.tool(), CreateTemplateInstanceTool::handler)
         .toolCall(CreateElementInstanceTool.tool(), CreateElementInstanceTool::handler)
-        .toolCall(InstanceToJsonTool.tool(), InstanceToJsonTool::handler)
-        .toolCall(InstanceToYamlTool.tool(), InstanceToYamlTool::handler)
+        .toolCall(InstanceArtifactToJsonTool.tool(), InstanceArtifactToJsonTool::handler)
+        .toolCall(InstanceArtifactToYamlTool.tool(), InstanceArtifactToYamlTool::handler)
         .toolCall(ValidateInstanceArtifactTool.tool(), ValidateInstanceArtifactTool::handler)
         .toolCall(ValidateSchemaArtifactTool.tool(), ValidateSchemaArtifactTool::handler)
         .toolCall(SetLiteralFieldValueTool.tool(), SetLiteralFieldValueTool::handler)

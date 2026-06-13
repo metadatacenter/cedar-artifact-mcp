@@ -99,7 +99,7 @@ The library's YAML reader is the source of truth for what counts as valid CEDAR
 YAML. The MCP does not add its own coercions or defaults *on top of* the reader.
 
 The MCP instantiates the reader in **compact mode** (`new YamlArtifactReader(true)`)
-so it accepts the same compact YAML form that `template_to_yaml` emits — modelVersion
+so it accepts the same compact YAML form that `schema_artifact_to_yaml` emits — modelVersion
 absent is treated as the canonical model version. A *present-but-wrong* modelVersion
 is still rejected by the reader: defaulting in compact mode covers absence only, not
 silent stale-version acceptance.
@@ -200,7 +200,7 @@ Two boundaries make this safe:
   tools mint only the top-level map's `id` key before handing it to the reader; nested
   children under `children:` are never walked, so a template's fields and elements stay
   id-less unless the author set one explicitly. Fields are first-class, reusable CEDAR
-  artifacts, so a *standalone* field minted via `create_field` / `field_to_json` gets an
+  artifacts, so a *standalone* field minted via `create_field` / `schema_artifact_to_json` gets an
   id like any other root — a field that subsequently becomes a child via `add_field` simply
   carries the id it was born with, which the renderer round-trips correctly.
 - **Absence only.** Like the compact-mode `modelVersion` defaulting in Principle 7, minting
@@ -228,13 +228,15 @@ course fine.)
 The "every field present" rule is honored only where it lives — at the **JSON boundary** —
 by reconstructing the empty slots from the template:
 
-- `InstanceInflater.inflate(template, instance)` walks the template and re-adds every missing
-  non-static field/element (recursing into elements), preserving values already set. It is the
-  shared bridge: `validate_instance_artifact` inflates before running `CedarValidator`, and
-  `instance_to_json` inflates (when given the template) before rendering the JSON.
+- `InstanceInflater.inflate(template, instance)` (and its sibling `inflateElement(element,
+  instance)`) walks the schema and re-adds every missing non-static field/element (recursing
+  into elements), preserving values already set. It is the shared bridge:
+  `validate_instance_artifact` inflates before running `CedarValidator`, and
+  `instance_artifact_to_json` inflates (when given the schema) before rendering the JSON.
 - `set_literal_field_value` and friends inflate first, so the target slot exists, then re-render sparse.
-- `instance_to_json` takes the template as an **optional** parameter: with it, the export is a
-  complete CEDAR instance; without it, only the fields the instance actually carries are emitted.
+- `instance_artifact_to_json` takes the `schema_artifact` (the template or element the instance
+  is based on) as an **optional** parameter: with it, the export is a complete CEDAR instance;
+  without it, only the fields the instance actually carries are emitted.
 
 Consequence: a YAML instance no longer self-validates without its template — the template is
 required wherever JSON is produced. That is the deliberate trade for instances that read as
