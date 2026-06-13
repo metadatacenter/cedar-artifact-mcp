@@ -158,6 +158,11 @@ final class ArtifactInputRobustnessTest
     assertCleanErrors("create_template_instance", CreateTemplateInstanceTool::handler, "template");
   }
 
+  @Test void remove_constraint_survives_garbage_fields()
+  {
+    assertCleanErrors("remove_constraint", RemoveConstraintTool::handler, "field");
+  }
+
   @Test void reorder_children_survives_garbage_parents()
   {
     assertCleanErrors("reorder_children", ReorderChildrenTool::handler, "parent");

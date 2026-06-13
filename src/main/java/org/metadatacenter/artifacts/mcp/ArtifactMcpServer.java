@@ -26,6 +26,7 @@ import org.metadatacenter.artifacts.mcp.tools.FieldToYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.InstanceToJsonTool;
 import org.metadatacenter.artifacts.mcp.tools.InstanceToYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.RemoveChildTool;
+import org.metadatacenter.artifacts.mcp.tools.RemoveConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.ReorderChildrenTool;
 import org.metadatacenter.artifacts.mcp.tools.ReplaceElementTool;
 import org.metadatacenter.artifacts.mcp.tools.ReplaceFieldTool;
@@ -87,6 +88,7 @@ public final class ArtifactMcpServer
         .toolCall(SetOptionsTool.tool(), SetOptionsTool::handler)
         .toolCall(SetBranchConstraintTool.tool(), SetBranchConstraintTool::handler)
         .toolCall(SetValueSetConstraintTool.tool(), SetValueSetConstraintTool::handler)
+        .toolCall(RemoveConstraintTool.tool(), RemoveConstraintTool::handler)
         .toolCall(SetLiteralDefaultValueTool.tool(), SetLiteralDefaultValueTool::handler)
         .toolCall(SetIriDefaultValueTool.tool(), SetIriDefaultValueTool::handler)
         .toolCall(CreateTemplateInstanceTool.tool(), CreateTemplateInstanceTool::handler)

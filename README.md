@@ -430,7 +430,7 @@ through the library and passed its structural validation.
 |---|---|
 | Create | `create_template` · `create_element` · `create_field` · `create_template_instance` · `create_element_instance` |
 | Compose | `add_field` · `add_element` · `replace_field` · `replace_element` · `reorder_children` · `remove_child` |
-| Controlled term constraints | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` |
+| Controlled term constraints | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` · `remove_constraint` |
 | Literal options | `set_options` |
 | Default values | `set_literal_default_value` · `set_iri_default_value` |
 | Instance values | `set_literal_field_value` · `set_iri_field_value` · `set_element_instance` · `unset_field_value` |
@@ -572,7 +572,22 @@ in `CEDARVS` or `HRAVS`).
 All four constraint tools accept either an empty controlled-term field or a
 plain text-field as input — the library only classifies a field as
 controlled-term once it carries at least one constraint, so the two are wire-
-indistinguishable until then.
+indistinguishable until then. Constraints accumulate: a field may carry
+several, mixing kinds.
+
+### `remove_constraint(field, iri)`
+
+Detaches a constraint, addressed by the IRI it points at — the class IRI,
+ontology IRI, branch root IRI, or value-set IRI it was attached with. One
+tool for all four kinds: setting is split because the input tuples differ,
+but removal needs only identity, and an unknown IRI errors with a
+kind-labelled listing of the field's current constraints. Removing the
+*last* constraint is allowed but consequential — an unconstrained
+controlled-term field is wire-identical to a plain text field, so that is
+what comes back — and is refused while a controlled-term default value would
+be orphaned (unset or change the default first). Literal options are not
+constraints in this sense: `set_options` has replace semantics, so removing
+an option is restating the list.
 
 ### `set_options(field, options, default_option?)`
 

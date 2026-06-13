@@ -73,7 +73,10 @@ centralizes read (YAML or JSON, auto-detected) and render.
   controlled-term field. The canonical input tuples match what `bioportal-term-mcp` returns.
   All accept any TEXTFIELD-shape field; the library classifies a TEXTFIELD as controlled-term
   only once it carries a constraint (an empty controlled-term-field and a text-field are
-  wire-indistinguishable until then).
+  wire-indistinguishable until then). Constraints accumulate across calls.
+- `remove_constraint(field, iri)` — the inverse, kind-blind: every constraint kind is
+  identified by the IRI it points at. Removing the last constraint yields a text-field-shaped
+  field, and is refused while a controlled-term default would be orphaned.
 
 ### Literal options
 
