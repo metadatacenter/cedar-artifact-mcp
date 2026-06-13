@@ -430,7 +430,7 @@ through the library and passed its structural validation.
 |---|---|
 | Create | `create_template` · `create_element` · `create_field` · `create_template_instance` · `create_element_instance` |
 | Compose | `add_field` · `add_element` · `replace_field` · `replace_element` · `reorder_children` · `remove_child` |
-| Configuration | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` · `remove_constraint` · `set_options` · `set_literal_default_value` · `set_iri_default_value` |
+| Configure | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` · `remove_constraint` · `set_options` · `set_literal_default_value` · `set_iri_default_value` |
 | Instance values | `set_literal_field_value` · `set_iri_field_value` · `set_element_instance` · `unset_field_value` |
 | Validate | `validate_template` · `validate_element` · `validate_field` · `validate_artifact` · `validate_instance` · `validate_element_instance` |
 | Render | `template_to_json` · `element_to_json` · `field_to_json` · `instance_to_json` · `template_to_yaml` · `element_to_yaml` · `field_to_yaml` · `instance_to_yaml` |
