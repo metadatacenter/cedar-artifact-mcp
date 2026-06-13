@@ -6,8 +6,9 @@ import org.metadatacenter.model.ModelNodeNames;
 
 /**
  * Detects which kind of CEDAR artifact an incoming JSON object is, so the auto-detecting
- * {@code validate_artifact} tool can dispatch and the per-type {@code validate_*} tools can
- * catch an obvious kind mismatch.
+ * {@code validate_artifact} tool can dispatch to the matching {@link
+ * org.metadatacenter.model.validation.CedarValidator} method (or redirect an instance to
+ * {@code validate_instance}).
  *
  * <p>Templates, elements, and fields are identified by their JSON-LD {@code @type} IRI (a
  * static field is still a field for validation purposes). Instances are not {@code @type}-keyed
@@ -20,14 +21,7 @@ final class ArtifactKinds
 
   enum Kind
   {
-    TEMPLATE("validate_template"),
-    ELEMENT("validate_element"),
-    FIELD("validate_field"),
-    INSTANCE("validate_instance");
-
-    final String tool;
-
-    Kind(String tool) {this.tool = tool;}
+    TEMPLATE, ELEMENT, FIELD, INSTANCE
   }
 
   /**

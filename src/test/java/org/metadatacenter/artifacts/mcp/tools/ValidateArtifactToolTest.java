@@ -1,5 +1,6 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,15 @@ final class ValidateArtifactToolTest
     assertTrue(jackson.readTree(textOf(result)).path("valid").asBoolean());
   }
 
+  @Test void auto_detects_and_validates_element() throws Exception
+  {
+    String elementJson = textOf(ElementToJsonTool.handler(null,
+        new McpSchema.CallToolRequest("element_to_json", Map.of("artifact", createElement("Address")))));
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", elementJson));
+    assertFalse(result.isError(), errorText(result));
+    assertTrue(jackson.readTree(textOf(result)).path("valid").asBoolean());
+  }
+
   @Test void auto_detects_and_validates_field() throws Exception
   {
     String fieldJson = textOf(FieldToJsonTool.handler(null,
@@ -37,6 +47,28 @@ final class ValidateArtifactToolTest
     McpSchema.CallToolResult result = invoke(Map.of("artifact", fieldJson));
     assertFalse(result.isError(), errorText(result));
     assertTrue(jackson.readTree(textOf(result)).path("valid").asBoolean());
+  }
+
+  @Test void validates_yaml_input() throws Exception
+  {
+    // YAML is read through the library, then validated — must reach the same verdict as JSON.
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", createTemplate("Demographics")));
+    assertFalse(result.isError(), errorText(result));
+    assertTrue(jackson.readTree(textOf(result)).path("valid").asBoolean(),
+        "a template authored as YAML must validate; got:\n" + textOf(result));
+  }
+
+  @Test void invalid_artifact_reports_errors_not_tool_error() throws Exception
+  {
+    // A wild artifact that claims to be a template but is missing every required property: the
+    // validator must say so as a {"valid": false} report, not a tool error.
+    String junk = "{ \"@type\": \"https://schema.metadatacenter.org/core/Template\" }";
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", junk));
+    assertFalse(result.isError(), "an invalid artifact is still a successful tool call: " + errorText(result));
+    JsonNode report = jackson.readTree(textOf(result));
+    assertFalse(report.path("valid").asBoolean(), "junk template must not validate; got:\n" + report);
+    assertTrue(report.path("errors").isArray() && report.path("errors").size() > 0,
+        "an invalid result must carry diagnostics; got:\n" + report);
   }
 
   @Test void redirects_instance_to_validate_instance() throws Exception
@@ -70,6 +102,12 @@ final class ValidateArtifactToolTest
   {
     return textOf(CreateTemplateTool.handler(null,
         new McpSchema.CallToolRequest("create_template", Map.of("name", name))));
+  }
+
+  private static String createElement(String name)
+  {
+    return textOf(CreateElementTool.handler(null,
+        new McpSchema.CallToolRequest("create_element", Map.of("name", name))));
   }
 
   private static String createField(String name, String type)

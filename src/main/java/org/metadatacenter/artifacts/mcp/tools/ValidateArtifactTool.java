@@ -18,8 +18,11 @@ import java.util.Map;
  *
  * <p>Instances are detected (by {@code schema:isBasedOn}) but not validated here: an instance can
  * only be validated against the template it is based on, so the caller is redirected to
- * {@code validate_instance}. Same JSON-as-is / YAML-via-library contract and report shape as the
- * per-type validators (see {@link ValidateTemplateTool}).
+ * {@code validate_instance}. JSON is validated exactly as received (no round-trip through the
+ * library reader/renderer, so the verdict reflects the artifact itself, not our library's
+ * round-trip fidelity); YAML is read through the library first since the validator only speaks
+ * JSON. The verdict is returned as a report ({@code {"valid": ...}}), not a tool error
+ * (DESIGN.md Principle 5).
  */
 public final class ValidateArtifactTool
 {
@@ -44,13 +47,15 @@ public final class ValidateArtifactTool
         .name("validate_artifact")
         .title("Validate a CEDAR artifact (auto-detect kind)")
         .description(
-            "Validates a CEDAR template, element, or field without being told which it is — the "
-                + "kind is detected from the artifact's @type and dispatched to the right "
-                + "validator. Use this for artifacts from the wild when you don't know the kind. "
-                + "Accepts JSON Schema (validated as-is) or YAML. Returns {\"valid\": true} or "
-                + "{\"valid\": false, \"errors\": [...]} (a non-error result either way). A "
-                + "template instance is detected but must be validated with validate_instance "
-                + "(which also needs its template)." + ArtifactExchange.VERBATIM_INPUT_NOTICE)
+            "Validates a standalone CEDAR template, element, or field against the CEDAR model "
+                + "schema — built for checking artifacts from the wild (fetched from a server or "
+                + "sent by a colleague). The kind is detected from the artifact's @type and "
+                + "dispatched to the right validator, so you need not say which it is. Accepts "
+                + "JSON Schema (validated exactly as received) or YAML (read through the library "
+                + "first). Returns {\"valid\": true} or {\"valid\": false, \"errors\": [...]} — a "
+                + "non-error result either way, so read the verdict from the report. A template "
+                + "instance is detected but must be validated with validate_instance (which also "
+                + "needs its template)." + ArtifactExchange.VERBATIM_INPUT_NOTICE)
         .inputSchema(schema)
         .build();
   }
@@ -73,9 +78,9 @@ public final class ValidateArtifactTool
 
     ArtifactKinds.Kind kind = ArtifactKinds.detect(node);
     if (kind == null)
-      return error("could not determine the artifact kind from its @type — pass it to the "
-          + "specific tool instead (validate_template / validate_element / validate_field, or "
-          + "validate_instance for an instance)");
+      return error("could not determine the artifact kind from its @type — expected a template, "
+          + "element, or field (a template instance, identified by schema:isBasedOn, goes through "
+          + "validate_instance)");
     if (kind == ArtifactKinds.Kind.INSTANCE)
       return error("this is a template instance — use validate_instance, which validates it "
           + "against the template it is based on");
