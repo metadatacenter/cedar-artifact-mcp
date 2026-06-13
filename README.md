@@ -413,14 +413,14 @@ Each tool below is a thin wrapper over a corresponding operation in the
 [cedar-artifact-library](https://github.com/metadatacenter/cedar-artifact-library)
 — the same Java library CEDAR's own server-side tooling builds on. The
 library is where the heavy lifting lives: typed builders for every artifact
-kind, readers and renderers for both the canonical JSON Schema and the
-compact YAML serialization, and full CEDAR validation. The MCP exposes that
+kind, readers and renderers for both the JSON Schema and the
+compact YAML serializations, and full CEDAR validation. The MCP exposes that
 machinery as MCP tools so an LLM can drive it directly: pulling a template
 in and out of YAML, attaching constraints, populating instance values,
 validating, and so on, without the calling LLM ever needing to know any
 Java. Artifacts move between tools as **YAML** — the expanded exchange form (DESIGN.md
 Principle 8). The `create_*` / `add_*` / `set_*` / `remove_*` tools wrap the library's
-typed builders and return YAML; the `*_to_json` tools export the canonical JSON Schema
+typed builders and return YAML; the `*_to_json` tools export the JSON Schema form
 (for downstream CEDAR tooling) and `*_to_yaml` imports an external
 JSON Schema artifact back into the YAML loop; `validate_instance` calls the canonical
 CedarValidator. A non-error result from any tool is guaranteed to have round-tripped
@@ -445,7 +445,7 @@ and the `isCompact` flag therefore lives only on the `*_to_yaml` rendering tools
 description directs the LLM to use exactly that for interactive display, while threading
 the expanded form onward. Instances are **sparse** in
 either form — a field with no value is omitted entirely (no `null`, no `{}`, no empty `[]`);
-the empty slots the canonical JSON form requires are reconstructed from the template at the
+the empty slots the JSON form requires are reconstructed from the template at the
 JSON boundary (`validate_instance`, `instance_to_json`).
 
 ### `create_template(name, description?, version?, status?, id?)`
@@ -730,7 +730,7 @@ which also needs the template it's based on.)
 
 ### `template_to_json` / `element_to_json` / `field_to_json` / `instance_to_json` `(artifact)`
 
-**Render as JSON.** Take an artifact (YAML) and return the canonical CEDAR JSON Schema
+**Render as JSON.** Take an artifact (YAML) and return the CEDAR JSON Schema
 that downstream CEDAR tooling consumes. The result is round-tripped through the
 library reader/renderer and validated (`CedarValidator`), so a non-error result is a
 guaranteed-valid artifact. If a top-level `id` is omitted, a fresh IRI is minted onto
@@ -853,7 +853,7 @@ The test suite has two tiers, plus an opt-in real-world battery:
 ### Real-world coverage
 
 The MCP's `EndToEndStdioIT` includes one case
-(`server_compiles_controlled_term_yaml_end_to_end`) that drives a canonical
+(`server_compiles_controlled_term_yaml_end_to_end`) that drives a representative
 CEDAR YAML template — including a controlled-term constraint — through the
 shaded jar over real stdio. That's enough at this layer to catch MCP-specific
 regressions (transport, shading, tool registration).

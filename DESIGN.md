@@ -107,7 +107,7 @@ silent stale-version acceptance.
 YAML authored against an older library version should be regenerated against the
 current library, not accommodated downstream. The library ships a regeneration
 utility (`GoldenYamlGenerator`) that round-trips paired JSON Schemas through its
-own reader and renderer to produce canonical YAML; see the library's
+own reader and renderer to produce current-format YAML; see the library's
 `HubmapTemplatesRoundTripTest` for the corresponding real-world coverage.
 
 The shape of the contract — strict on values, lenient on absence in compact mode —
@@ -117,7 +117,7 @@ freely through the authoring loop.
 ## Principle 8 — Expanded YAML is the exchange; JSON Schema is an export
 
 CEDAR has two on-the-wire serializations for templates, elements, fields, and
-instances: the canonical **JSON Schema** (what cedar-server and every downstream
+instances: the **JSON Schema** form (what cedar-server and every downstream
 CEDAR tool consumes) and the **YAML** the artifact library reader/renderer pair was
 built around. They carry the same information — both deserialize to the one canonical
 in-memory model — but they differ enormously in size:
@@ -144,7 +144,7 @@ threads **YAML**. The tool surface:
   choice, so it lives only on the `*_to_yaml` rendering tools: `isCompact: true` drops the
   provenance keys for a lean display of a finished artifact.
 - **JSON Schema is an export, produced only on demand.** The four `*_to_json` tools take
-  an artifact (YAML) and emit the canonical JSON Schema for cedar-server and other
+  an artifact (YAML) and emit the JSON Schema for cedar-server and other
   downstream consumers. JSON is not threaded between tools.
 - **`*_to_yaml` renders any artifact (YAML or JSON) as YAML**, with an `isCompact`
   flag — so it recompacts an expanded artifact for display and imports external JSON into
@@ -213,7 +213,7 @@ hand-mint, and the library model is left untouched so non-MCP callers keep full 
 
 ## Principle 11 — Instances are sparse; the template reconstructs the rest
 
-CEDAR's JSON Schema marks every template field `required` in its instances, so the canonical
+CEDAR's JSON Schema marks every template field `required` in its instances, so the
 **JSON** instance must carry every field — even unset ones, as `{"@value": null}`. That is a
 fact of the *JSON serialization*, not of the model or the YAML. The YAML serialization is free
 to omit what isn't known, and it does: an instance's **YAML is sparse** — it carries the
@@ -231,7 +231,7 @@ by reconstructing the empty slots from the template:
 - `InstanceInflater.inflate(template, instance)` walks the template and re-adds every missing
   non-static field/element (recursing into elements), preserving values already set. It is the
   shared bridge: `validate_instance` inflates before running `CedarValidator`, and
-  `instance_to_json` inflates (when given the template) before rendering the canonical JSON.
+  `instance_to_json` inflates (when given the template) before rendering the JSON.
 - `set_literal_field_value` and friends inflate first, so the target slot exists, then re-render sparse.
 - `instance_to_json` takes the template as an **optional** parameter: with it, the export is a
   complete CEDAR instance; without it, only the fields the instance actually carries are emitted.
