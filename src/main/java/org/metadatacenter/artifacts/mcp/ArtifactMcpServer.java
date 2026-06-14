@@ -22,6 +22,8 @@ import org.metadatacenter.artifacts.mcp.tools.CreateTemplateTool;
 import org.metadatacenter.artifacts.mcp.tools.InstanceArtifactToJsonTool;
 import org.metadatacenter.artifacts.mcp.tools.InstanceArtifactToYamlTool;
 import org.metadatacenter.artifacts.mcp.tools.RemoveAnnotationTool;
+import org.metadatacenter.artifacts.mcp.tools.SetAttributeValueTool;
+import org.metadatacenter.artifacts.mcp.tools.UnsetAttributeValueTool;
 import org.metadatacenter.artifacts.mcp.tools.RemoveChildTool;
 import org.metadatacenter.artifacts.mcp.tools.RemoveConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.ReorderChildrenTool;
@@ -95,6 +97,8 @@ public final class ArtifactMcpServer
         .toolCall(SetLiteralAnnotationTool.tool(), SetLiteralAnnotationTool::handler)
         .toolCall(SetIriAnnotationTool.tool(), SetIriAnnotationTool::handler)
         .toolCall(RemoveAnnotationTool.tool(), RemoveAnnotationTool::handler)
+        .toolCall(SetAttributeValueTool.tool(), SetAttributeValueTool::handler)
+        .toolCall(UnsetAttributeValueTool.tool(), UnsetAttributeValueTool::handler)
         .build();
 
     // Stdio transport reads from System.in in a background thread. Keep the main thread

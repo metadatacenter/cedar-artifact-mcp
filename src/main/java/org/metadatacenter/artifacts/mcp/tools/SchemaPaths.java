@@ -91,6 +91,38 @@ final class SchemaPaths
     return field;
   }
 
+  /**
+   * Resolve a path to the field at the leaf without enforcing the leaf's multi-instance/index
+   * rule. Attribute-value fields report {@code isMultiple()} but are addressed by attribute name,
+   * not by a positional index, so {@link #resolveField}'s cardinality check doesn't apply to
+   * them. Intermediate element segments are still cardinality-checked; the leaf must be a field
+   * and must not carry an index.
+   *
+   * @throws IllegalArgumentException on malformed segments, missing children, or a leaf index.
+   */
+  static FieldSchemaArtifact resolveFieldIgnoringLeafCardinality(ParentSchemaArtifact root, String path)
+  {
+    List<Segment> segments = parse(path);
+    ParentSchemaArtifact current = root;
+    for (int i = 0; i < segments.size() - 1; i++) {
+      Segment seg = segments.get(i);
+      if (!current.isElement(seg.key()))
+        throw new IllegalArgumentException(
+            "no element child '" + seg.key() + "' on schema (looking up field_path '" + path + "')");
+      ElementSchemaArtifact next = current.getElementSchemaArtifact(seg.key());
+      checkSegmentMatchesCardinality(seg, next.isMultiple(), "element");
+      current = next;
+    }
+    Segment leaf = segments.get(segments.size() - 1);
+    if (leaf.hasIndex())
+      throw new IllegalArgumentException(
+          "field '" + leaf.key() + "' is addressed by name, not index; drop the [" + leaf.index() + "]");
+    if (!current.isField(leaf.key()))
+      throw new IllegalArgumentException(
+          "no field child '" + leaf.key() + "' on schema (looking up field_path '" + path + "')");
+    return current.getFieldSchemaArtifact(leaf.key());
+  }
+
   private static void checkSegmentMatchesCardinality(Segment seg, boolean isMultiple, String kind)
   {
     if (isMultiple && !seg.hasIndex())

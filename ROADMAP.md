@@ -119,6 +119,13 @@ centralizes read (YAML or JSON, auto-detected) and render.
   for all field kinds: a single-instance path clears the value, an indexed multi-instance path
   deletes the entry, an unindexed multi-instance path clears the list. Idempotent; required
   fields may be unset (`requiredValue` is enforced at validation time).
+- `set_attribute_value(template, instance, field_path, attribute_name, value)` /
+  `unset_attribute_value(template, instance, field_path, attribute_name)` — populate an
+  attribute-value field, whose dynamic name→value entries are entered at fill time. field_path
+  locates the field (the group); attribute_name is the user-chosen key; value is its literal
+  string (attribute values are literal-only — the generated JSON Schema requires `@value` and
+  forbids `@id`). Set overwrites, unset is idempotent; entries are rewritten via the library's
+  withAttributeValueFieldGroup / withoutAttributeValueFieldGroup pair.
 - `set_literal_annotation(artifact, annotation, value)` / `set_iri_annotation(artifact,
   annotation, iri)` / `remove_annotation(artifact, annotation)` — attach metadata annotations
   (a property-IRI/CURIE → literal-or-IRI value pair) at an artifact's root. Accepts a template,

@@ -432,7 +432,7 @@ through the library and passed its structural validation.
 | Compose | `add_field` · `add_element` · `replace_field` · `replace_element` · `reorder_children` · `remove_child` |
 | Configure | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` · `remove_constraint` · `set_options` · `set_literal_default_value` · `set_iri_default_value` |
 | Annotate | `set_literal_annotation` · `set_iri_annotation` · `remove_annotation` |
-| Populate | `set_literal_field_value` · `set_iri_field_value` · `set_element_instance` · `unset_field_value` |
+| Populate | `set_literal_field_value` · `set_iri_field_value` · `set_element_instance` · `unset_field_value` · `set_attribute_value` · `unset_attribute_value` |
 | Validate | `validate_schema_artifact` · `validate_instance_artifact` |
 | Render | `schema_artifact_to_json` · `instance_artifact_to_json` · `schema_artifact_to_yaml` · `instance_artifact_to_yaml` |
 | Diagnostics | `ping` |
@@ -680,6 +680,24 @@ appends a new entry; any larger index errors.
 `template` is required because the instance JSON loses field-type
 information on round-trip — the schema is the source of truth for which kind
 of field the value belongs to.
+
+### `set_attribute_value(template, instance, field_path, attribute_name, value)` / `unset_attribute_value(template, instance, field_path, attribute_name)`
+
+Populate an **attribute-value field** — the one field whose *keys* are entered
+at fill time. Where a normal field has a fixed name and you supply a value, an
+attribute-value field lets an instance add arbitrarily-named attributes, each
+with its own value (e.g. a `Custom Properties` field filled with `color → red`,
+`size → large`). `field_path` locates the attribute-value field (the group);
+`attribute_name` is the user-chosen key within it; `value` is its literal
+string. `set_attribute_value` creates-or-overwrites the named attribute;
+`unset_attribute_value` removes it (idempotent).
+
+Attribute values are **literal-only** — the CEDAR JSON Schema an attribute-value
+field generates for its entries requires `@value` and forbids `@id`, so there is
+no IRI form and a single setter (unlike the literal/IRI split for ordinary field
+values). The attribute name shares the parent instance's child-key namespace, so
+it can't collide with another field or element key. Returns the updated instance
+as expanded YAML.
 
 ### `create_template_instance(template, name?, description?, id?)`
 
