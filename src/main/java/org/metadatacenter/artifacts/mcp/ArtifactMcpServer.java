@@ -21,13 +21,16 @@ import org.metadatacenter.artifacts.mcp.tools.CreateTemplateInstanceTool;
 import org.metadatacenter.artifacts.mcp.tools.CreateTemplateTool;
 import org.metadatacenter.artifacts.mcp.tools.InstanceArtifactToJsonTool;
 import org.metadatacenter.artifacts.mcp.tools.InstanceArtifactToYamlTool;
+import org.metadatacenter.artifacts.mcp.tools.RemoveAnnotationTool;
 import org.metadatacenter.artifacts.mcp.tools.RemoveChildTool;
 import org.metadatacenter.artifacts.mcp.tools.RemoveConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.ReorderChildrenTool;
 import org.metadatacenter.artifacts.mcp.tools.ReplaceElementTool;
 import org.metadatacenter.artifacts.mcp.tools.ReplaceFieldTool;
+import org.metadatacenter.artifacts.mcp.tools.SetLiteralAnnotationTool;
 import org.metadatacenter.artifacts.mcp.tools.SetLiteralFieldValueTool;
 import org.metadatacenter.artifacts.mcp.tools.SetElementInstanceTool;
+import org.metadatacenter.artifacts.mcp.tools.SetIriAnnotationTool;
 import org.metadatacenter.artifacts.mcp.tools.SetIriFieldValueTool;
 import org.metadatacenter.artifacts.mcp.tools.UnsetFieldValueTool;
 import org.metadatacenter.artifacts.mcp.tools.SchemaArtifactToJsonTool;
@@ -89,6 +92,9 @@ public final class ArtifactMcpServer
         .toolCall(SetIriFieldValueTool.tool(), SetIriFieldValueTool::handler)
         .toolCall(SetElementInstanceTool.tool(), SetElementInstanceTool::handler)
         .toolCall(UnsetFieldValueTool.tool(), UnsetFieldValueTool::handler)
+        .toolCall(SetLiteralAnnotationTool.tool(), SetLiteralAnnotationTool::handler)
+        .toolCall(SetIriAnnotationTool.tool(), SetIriAnnotationTool::handler)
+        .toolCall(RemoveAnnotationTool.tool(), RemoveAnnotationTool::handler)
         .build();
 
     // Stdio transport reads from System.in in a background thread. Keep the main thread

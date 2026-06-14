@@ -432,6 +432,7 @@ through the library and passed its structural validation.
 | Compose | `add_field` · `add_element` · `replace_field` · `replace_element` · `reorder_children` · `remove_child` |
 | Configure | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` · `remove_constraint` · `set_options` · `set_literal_default_value` · `set_iri_default_value` |
 | Populate | `set_literal_field_value` · `set_iri_field_value` · `set_element_instance` · `unset_field_value` |
+| Annotate | `set_literal_annotation` · `set_iri_annotation` · `remove_annotation` |
 | Validate | `validate_schema_artifact` · `validate_instance_artifact` |
 | Render | `schema_artifact_to_json` · `instance_artifact_to_json` · `schema_artifact_to_yaml` · `instance_artifact_to_yaml` |
 | Diagnostics | `ping` |
@@ -693,6 +694,24 @@ from, by construction; a template without an `@id` is rejected with guidance
 (`create_template` and `schema_artifact_to_json` mint one automatically). `id` is the
 instance's own identity — optional, and auto-minted as a fresh
 `template-instances` IRI when omitted.
+
+### `set_literal_annotation(artifact, annotation, value)` / `set_iri_annotation(artifact, annotation, iri)` / `remove_annotation(artifact, annotation)`
+
+Attach metadata **annotations** to an artifact's root. A CEDAR annotation is a
+property → value pair, keyed by an annotation property IRI or CURIE
+(`annotation`, e.g. `skos:prefLabel`, `http://purl.org/dc/terms/creator`). The
+value is either a literal string (`set_literal_annotation`) or an IRI
+(`set_iri_annotation`, absolute-IRI-validated) — the same literal/IRI split as
+the `set_*_field_value` pair. Setting a property that is already present
+overwrites it; `remove_annotation` drops one (idempotent — removing an absent
+property is a no-op).
+
+All three take an `artifact` that may be a **template, element, field, or
+template instance** (YAML or JSON; kind auto-detected) and return the updated
+artifact as expanded YAML. Annotations live at the artifact's root: to annotate
+a specific field or element inside a template, annotate the standalone artifact
+first, then `add_field` / `add_element` it. (Element *instances* do not carry
+annotations and are rejected.)
 
 ### `validate_instance_artifact(schema_artifact, instance_artifact)`
 

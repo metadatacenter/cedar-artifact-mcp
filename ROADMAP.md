@@ -119,6 +119,12 @@ centralizes read (YAML or JSON, auto-detected) and render.
   for all field kinds: a single-instance path clears the value, an indexed multi-instance path
   deletes the entry, an unindexed multi-instance path clears the list. Idempotent; required
   fields may be unset (`requiredValue` is enforced at validation time).
+- `set_literal_annotation(artifact, annotation, value)` / `set_iri_annotation(artifact,
+  annotation, iri)` / `remove_annotation(artifact, annotation)` — attach metadata annotations
+  (a property-IRI/CURIE → literal-or-IRI value pair) at an artifact's root. Accepts a template,
+  element, field, or template instance (kind auto-detected); set overwrites, remove is
+  idempotent. Edits the JSON-LD `_annotations` map at the node level (all four kinds carry it
+  identically). Element instances do not carry annotations.
 - `validate_instance_artifact(schema_artifact, instance_artifact)` — validates a template or
   element instance against the schema it is based on; the schema kind is auto-detected from its
   `@type`. Template → `CedarValidator.validateTemplateInstance`; element →
