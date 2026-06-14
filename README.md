@@ -431,8 +431,8 @@ through the library and passed its structural validation.
 | Create | `create_template` · `create_element` · `create_field` · `create_template_instance` · `create_element_instance` |
 | Compose | `add_field` · `add_element` · `replace_field` · `replace_element` · `reorder_children` · `remove_child` |
 | Configure | `set_class_constraint` · `set_ontology_constraint` · `set_branch_constraint` · `set_valueset_constraint` · `remove_constraint` · `set_options` · `set_literal_default_value` · `set_iri_default_value` |
-| Populate | `set_literal_field_value` · `set_iri_field_value` · `set_element_instance` · `unset_field_value` |
 | Annotate | `set_literal_annotation` · `set_iri_annotation` · `remove_annotation` |
+| Populate | `set_literal_field_value` · `set_iri_field_value` · `set_element_instance` · `unset_field_value` |
 | Validate | `validate_schema_artifact` · `validate_instance_artifact` |
 | Render | `schema_artifact_to_json` · `instance_artifact_to_json` · `schema_artifact_to_yaml` · `instance_artifact_to_yaml` |
 | Diagnostics | `ping` |
