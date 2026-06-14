@@ -154,7 +154,7 @@ centralizes read (YAML or JSON, auto-detected) and render.
 ## Next
 
 - **Build without a locally installed library** — building this MCP requires
-  `cedar-artifact-library:2.8.1-SNAPSHOT` to have been `mvn install`ed from a local checkout
+  `cedar-artifact-library:2.8.3-SNAPSHOT` to have been `mvn install`ed from a local checkout
   of the library's `develop` branch — and that library in turn sits atop `cedar-parent`,
   `cedar-model-library`, and `cedar-model-validation-library`, so a fresh machine must clone
   and install four repositories in dependency order; none of the snapshots resolve from any
@@ -163,18 +163,6 @@ centralizes read (YAML or JSON, auto-detected) and render.
   released, non-SNAPSHOT artifacts to a public Maven repository and pin this MCP to a
   released version. `cedar-cee-mcp` already resolves entirely from Maven Central and is the
   target state.
-
-- **Attribute-value instances cannot be populated.** `create_template_instance` seeds an
-  attribute-value field as an empty group, and the library models
-  `AttributeValueFieldInstance` fully — but no tool adds a name/value pair to the group, so
-  a template using attribute-value fields can be authored while its instances cannot be
-  filled. The biggest functional hole in the instance-side surface; needs a setter (and,
-  with it, a remove) addressing pairs within the group.
-
-- **Annotations are not exposed.** The library's `withAnnotations` carries the arbitrary
-  IRI-keyed annotation block any artifact may hold (DataCite-style templates use it); no
-  tool sets it. Annotations on input artifacts are preserved on round-trip — they just
-  can't be authored here.
 
 - **Field question metadata is not exposed.** The library carries several per-field
   presentation properties with no tool path: `skos:prefLabel` (the preferred question text —
