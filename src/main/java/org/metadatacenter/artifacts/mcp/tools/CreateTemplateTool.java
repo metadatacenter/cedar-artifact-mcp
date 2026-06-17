@@ -18,8 +18,7 @@ import java.util.Map;
  *
  * <p>Expanded YAML is the exchange form threaded between tool calls (DESIGN.md Principle 8):
  * the caller pipes the returned YAML into follow-up tools (e.g. {@code add_field}) to compose
- * larger templates, and uses {@code schema_artifact_to_json} to export the canonical JSON Schema.
- * See DESIGN.md Principle 3 for why the server is stateless.
+ * larger templates. See DESIGN.md Principle 3 for why the server is stateless.
  */
 public final class CreateTemplateTool
 {
@@ -54,9 +53,8 @@ public final class CreateTemplateTool
         .description(
             "Builds an empty CEDAR template schema artifact with the supplied name, description, "
                 + "version, and status. Returns the artifact as expanded YAML — the exchange form threaded "
-                + "into follow-up tools (add_field, add_element, ...) to compose larger templates. "
-                + "Use 'schema_artifact_to_json' to export the canonical JSON Schema for downstream CEDAR "
-                + "tooling." + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
+                + "into follow-up tools (add_field, add_element, ...) to compose larger templates."
+                + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
   }

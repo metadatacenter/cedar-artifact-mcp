@@ -41,12 +41,12 @@ import static org.metadatacenter.artifacts.model.yaml.YamlConstants.TEXT_FIELD;
  *
  * <p>Builds an empty CEDAR field schema artifact of the requested kebab-case type
  * (e.g. {@code text-field}, {@code controlled-term-field}, {@code numeric-field}) with
- * the supplied name, description, version, and status. Returns JSON Schema validated with
- * {@link CedarValidator#validateTemplateField}.
+ * the supplied name, description, version, and status. Returns the artifact as expanded YAML,
+ * validated with {@link CedarValidator#validateTemplateField}.
  *
  * <p>The full list of {@code type} values comes from the library's
  * {@link org.metadatacenter.artifacts.model.yaml.YamlConstants#FIELD_TYPES} — the same
- * vocabulary {@code schema_artifact_to_json} accepts in YAML {@code type:} discriminators.
+ * vocabulary {@code schema_artifact_to_yaml} accepts in YAML {@code type:} discriminators.
  */
 public final class CreateFieldTool
 {
@@ -59,7 +59,7 @@ public final class CreateFieldTool
         "type", "string",
         "enum", List.copyOf(FIELD_TYPES),
         "description",
-        "Kebab-case CEDAR field type. The same vocabulary 'schema_artifact_to_json' accepts: "
+        "Kebab-case CEDAR field type. The same vocabulary the YAML tools accept: "
             + "text-field, controlled-term-field, text-area-field, numeric-field, "
             + "temporal-field, radio-field, checkbox-field, single-select-list-field, "
             + "multi-select-list-field, phone-number-field, email-field, link-field, "
@@ -167,8 +167,8 @@ public final class CreateFieldTool
             "Builds a CEDAR field schema artifact of the supplied kebab-case type "
                 + "(e.g. text-field, controlled-term-field, numeric-field). Returns the "
                 + "artifact as expanded YAML (the exchange form), validated by CedarValidator. "
-                + "A field is a first-class, reusable CEDAR artifact; use 'schema_artifact_to_json' to "
-                + "export the canonical JSON Schema." + ArtifactExchange.STANDALONE_NOTICE
+                + "A field is a first-class, reusable CEDAR artifact."
+                + ArtifactExchange.STANDALONE_NOTICE
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE + "\n\n"
                 + "Beyond name/type/description/version, the tool accepts type-specific "
                 + "configuration for the common literal-field cases: numeric-field "
@@ -179,8 +179,8 @@ public final class CreateFieldTool
                 + "clear error.\n\n"
                 + "For shapes that need structured sub-objects — controlled-term values "
                 + "(class/branch/ontology/valueSet constraints), radio/checkbox/list inline "
-                + "values, multi-instance configuration, default values — use "
-                + "'schema_artifact_to_json' instead. Constraints and default values can also be "
+                + "values, multi-instance configuration, default values — author them in YAML "
+                + "('schema_artifact_to_yaml') instead. Constraints and default values can also be "
                 + "layered onto a created field via 'set_class_constraint', "
                 + "'set_branch_constraint', 'set_ontology_constraint', "
                 + "'set_valueset_constraint', 'set_literal_default_value', and "

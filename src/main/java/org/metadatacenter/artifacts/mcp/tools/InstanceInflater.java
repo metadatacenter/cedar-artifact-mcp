@@ -21,7 +21,7 @@ import java.util.function.Consumer;
  * Reconstructs a complete template instance from a (possibly sparse) instance and its template.
  *
  * <p>YAML instances are sparse: a field with no value is omitted entirely (no {@code value: null},
- * no {@code {}}). But the canonical CEDAR <em>JSON</em> instance must mirror the template — every
+ * no {@code {}}). But the CEDAR <em>JSON</em> instance must mirror the template — every
  * non-static, non-attribute-value field present, even when empty, because the template's JSON
  * Schema marks those properties required. That "all fields present" rule is a JSON-serialization
  * concern, not a property of the model or the YAML. This class bridges the two: it re-adds the

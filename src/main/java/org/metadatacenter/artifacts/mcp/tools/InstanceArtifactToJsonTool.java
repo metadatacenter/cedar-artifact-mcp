@@ -18,12 +18,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code instance_artifact_to_json} — exports a CEDAR instance (YAML exchange form) to
- * the canonical CEDAR JSON instance. Auto-detects whether the input is a template instance or an
+ * MCP tool {@code instance_artifact_to_json} — export escape hatch that renders a CEDAR instance
+ * (YAML exchange form) to a CEDAR JSON instance, for the narrow case where a downstream CEDAR tool
+ * or service cannot consume YAML. Auto-detects whether the input is a template instance or an
  * element instance from its {@code type:} discriminator and renders accordingly; a missing
  * top-level {@code @id} is minted with the matching IRI prefix (DESIGN.md Principle 10).
  *
- * <p>A YAML instance is sparse (unset fields omitted), whereas a canonical CEDAR JSON instance
+ * <p>A YAML instance is sparse (unset fields omitted), whereas a CEDAR JSON instance
  * carries every field its schema declares. When the optional {@code schema_artifact} (the
  * template or element the instance is based on) is supplied, the instance is inflated against it
  * so the exported JSON is complete; otherwise only the fields the instance actually carries are
@@ -52,7 +53,7 @@ public final class InstanceArtifactToJsonTool
         "description",
         "The schema the instance is based on (YAML or JSON Schema) — a template for a template "
             + "instance, an element for an element instance. Optional but recommended: a YAML "
-            + "instance is sparse (fields with no value are omitted), whereas a canonical CEDAR "
+            + "instance is sparse (fields with no value are omitted), whereas a CEDAR "
             + "JSON instance must carry every field the schema declares. When supplied, the "
             + "instance is inflated against it so the exported JSON is complete (and will "
             + "validate); when omitted, only the fields the instance actually carries are "
@@ -65,13 +66,15 @@ public final class InstanceArtifactToJsonTool
         .name("instance_artifact_to_json")
         .title("CEDAR instance: YAML → JSON (auto-detect template/element instance)")
         .description(
-            "Exports a CEDAR template instance or element instance (auto-detected; YAML exchange "
-                + "form) to the canonical CEDAR JSON instance for downstream CEDAR tooling. Supply "
-                + "the optional schema_artifact (the template or element it is based on) to inflate "
-                + "the sparse instance to a complete JSON instance; omit it to export only the "
-                + "fields present. Use validate_instance_artifact to verify the result. (For a "
-                + "standalone template, element, or field — a schema, not an instance — use "
-                + "schema_artifact_to_json.)")
+            "Export escape hatch: use only when a downstream CEDAR tool or service cannot consume "
+                + "YAML. JSON is far larger than YAML; for reading, writing, displaying, and "
+                + "exchanging instances prefer instance_artifact_to_yaml. Renders a CEDAR template "
+                + "instance or element instance (auto-detected; YAML exchange form) to a CEDAR JSON "
+                + "instance. Supply the optional schema_artifact (the template or element it is "
+                + "based on) to inflate the sparse instance to a complete JSON instance; omit it to "
+                + "export only the fields present. Use validate_instance_artifact to verify the "
+                + "result. (For a standalone template, element, or field — a schema, not an "
+                + "instance — use schema_artifact_to_json.)")
         .inputSchema(schema)
         .build();
   }

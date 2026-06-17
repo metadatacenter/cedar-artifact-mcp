@@ -47,11 +47,12 @@ public final class InstanceArtifactToYamlTool
         .name("instance_artifact_to_yaml")
         .title("Render a CEDAR instance as YAML (auto-detect template/element instance)")
         .description(
-            "Renders a CEDAR template instance or element instance (auto-detected; YAML or JSON) "
-                + "as YAML. 'isCompact' selects compact (lean, default) or expanded full-fidelity "
-                + "output. Reverse direction of instance_artifact_to_json. (For a standalone "
-                + "template, element, or field — a schema, not an instance — use "
-                + "schema_artifact_to_yaml.)" + ArtifactExchange.VERBATIM_NOTICE)
+            "Primary rendering path for CEDAR instances. Renders a CEDAR template instance or "
+                + "element instance (auto-detected; YAML or JSON) as YAML — the compact form these "
+                + "tools read, write, display, and exchange. 'isCompact' selects compact (lean, "
+                + "default) or expanded full-fidelity output. (For a standalone template, element, "
+                + "or field — a schema, not an instance — use schema_artifact_to_yaml.)"
+                + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();
   }

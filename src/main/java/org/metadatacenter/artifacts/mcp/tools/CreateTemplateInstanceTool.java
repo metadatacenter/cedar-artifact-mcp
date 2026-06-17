@@ -82,7 +82,7 @@ public final class CreateTemplateInstanceTool
                 + "hold a value — unset fields are omitted entirely (no null, no empty "
                 + "placeholders), so a freshly created instance is essentially just its identity. "
                 + "It is still structurally complete against the template: the empty fields the "
-                + "canonical JSON form requires are reconstructed at the JSON boundary — "
+                + "JSON form requires are reconstructed at the JSON boundary — "
                 + "'validate_instance_artifact' and 'instance_artifact_to_json' (given the template) inflate them. "
                 + "Fill values with set_literal_field_value / set_iri_field_value."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)

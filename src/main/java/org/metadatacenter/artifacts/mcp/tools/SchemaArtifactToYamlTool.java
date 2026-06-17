@@ -50,12 +50,13 @@ public final class SchemaArtifactToYamlTool
         .name("schema_artifact_to_yaml")
         .title("Render a CEDAR schema artifact as YAML (auto-detect template/element/field)")
         .description(
-            "Renders a CEDAR template, element, or field (a schema artifact; YAML or JSON Schema) "
-                + "as YAML. The kind is auto-detected. 'isCompact' selects compact (lean, default) "
-                + "or expanded full-fidelity output. Use it to recompact an expanded YAML artifact "
-                + "for display, or to import a JSON Schema into YAML. Reverse direction of "
-                + "schema_artifact_to_json. (To render a template instance or element instance — "
-                + "an instance, not a schema — use instance_artifact_to_yaml.)"
+            "Primary rendering path for CEDAR schema artifacts. Renders a CEDAR template, element, "
+                + "or field (a schema artifact; YAML or JSON Schema) as YAML — the compact form "
+                + "these tools read, write, display, and exchange. The kind is auto-detected. "
+                + "'isCompact' selects compact (lean, default) or expanded full-fidelity output. "
+                + "Use it to recompact an expanded YAML artifact for display, or to import a JSON "
+                + "Schema into YAML. (To render a template instance or element instance — an "
+                + "instance, not a schema — use instance_artifact_to_yaml.)"
                 + ArtifactExchange.VERBATIM_NOTICE)
         .inputSchema(schema)
         .build();

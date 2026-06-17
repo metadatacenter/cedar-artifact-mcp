@@ -22,8 +22,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code schema_artifact_to_json} — compiles a CEDAR schema artifact described in the
- * artifact library's YAML authoring form into the canonical CEDAR JSON Schema. The kind is
+ * MCP tool {@code schema_artifact_to_json} — export escape hatch that compiles a CEDAR schema
+ * artifact described in the artifact library's YAML authoring form into CEDAR JSON Schema, for the
+ * narrow case where a downstream CEDAR tool or service cannot consume YAML. The kind is
  * auto-detected from the YAML {@code type:} discriminator: {@code template}, {@code element}, or
  * any field discriminator (a field is the default). The matching pipeline runs — a missing
  * top-level {@code @id} is minted with the kind's IRI prefix (DESIGN.md Principle 10), the YAML is
@@ -64,12 +65,14 @@ public final class SchemaArtifactToJsonTool
         .name("schema_artifact_to_json")
         .title("CEDAR schema artifact: YAML → JSON Schema (auto-detect template/element/field)")
         .description(
-            "Compiles a CEDAR template, element, or field (a schema artifact) described in YAML "
-                + "(the compact authoring form) into the canonical CEDAR JSON Schema that "
-                + "downstream CEDAR tooling consumes. The kind is auto-detected from the YAML "
+            "Export escape hatch: use only when a downstream CEDAR tool or service cannot consume "
+                + "YAML. JSON Schema is far larger than YAML; for reading, writing, displaying, and "
+                + "exchanging schema artifacts prefer schema_artifact_to_yaml. Compiles a CEDAR "
+                + "template, element, or field (a schema artifact) described in YAML (the compact "
+                + "authoring form) into CEDAR JSON Schema. The kind is auto-detected from the YAML "
                 + "'type:' and the matching reader/renderer/validator runs. The returned JSON has "
                 + "been round-tripped through the artifact library and accepted by CedarValidator, "
-                + "so a non-error result is a guaranteed-valid CEDAR artifact. (To render a "
+                + "so a non-error result is a guaranteed-valid CEDAR artifact. (To export a "
                 + "template instance or element instance — an instance, not a schema — use "
                 + "instance_artifact_to_json.)")
         .inputSchema(schema)
