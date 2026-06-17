@@ -66,8 +66,12 @@ public final class SetLiteralFieldValueTool
         "description",
         "Slash-separated path to the target field. Top-level fields are just the key "
             + "(e.g. 'patient_name'); fields inside nested elements use the element key "
-            + "as a prefix (e.g. 'address/street'). Only single-instance fields and "
-            + "single-instance element steps are supported."));
+            + "as a prefix (e.g. 'address/street'). Multi-instance (repeatable) fields and "
+            + "elements are addressed by a 0-based bracket index on that segment: 'tags[0]' "
+            + "for the first value, 'addresses[2]/street' for a field in the third address. "
+            + "Each call sets one occurrence; to append to a repeatable field use the index "
+            + "equal to the current length (e.g. 'tags[2]' when two values already exist). "
+            + "Single-instance fields and elements take no index."));
     properties.put("value", Map.of(
         "description",
         "Value to set. String for text/text-area/temporal/phone/email/radio/checkbox/"

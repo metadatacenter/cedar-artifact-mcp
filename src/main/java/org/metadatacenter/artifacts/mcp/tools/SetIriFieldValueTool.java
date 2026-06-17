@@ -63,7 +63,10 @@ public final class SetIriFieldValueTool
     properties.put("field_path", Map.of(
         "type", "string",
         "description",
-        "Slash-separated path to the target field. Same syntax as 'set_literal_field_value'."));
+        "Slash-separated path to the target field, same syntax as 'set_literal_field_value': "
+            + "'patient_name', 'address/street', and a 0-based bracket index for repeatable "
+            + "fields/elements ('tags[0]', 'addresses[2]/street'; an index equal to the current "
+            + "length appends). Single-instance fields and elements take no index."));
     properties.put("iri", Map.of(
         "type", "string",
         "description", "URI to set as the field's @id."));
