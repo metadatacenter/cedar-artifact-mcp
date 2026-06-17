@@ -7,6 +7,7 @@ import org.metadatacenter.artifacts.model.core.TemplateInstanceArtifact;
 import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
 import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
 import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
+import org.metadatacenter.artifacts.model.tools.InstanceInflater;
 import org.metadatacenter.model.validation.CedarValidator;
 import org.metadatacenter.model.validation.report.ValidationReport;
 import org.yaml.snakeyaml.Yaml;

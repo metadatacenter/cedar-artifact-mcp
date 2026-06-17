@@ -13,6 +13,8 @@ import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
 import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
 import org.metadatacenter.artifacts.model.reader.JsonArtifactReader;
 import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
+import org.metadatacenter.artifacts.model.tools.EmptyFieldInstances;
+import org.metadatacenter.artifacts.model.tools.InstanceInflater;
 
 import java.net.URI;
 import java.net.URISyntaxException;

@@ -5,6 +5,7 @@ import io.modelcontextprotocol.spec.McpSchema;
 import org.metadatacenter.artifacts.model.core.ElementInstanceArtifact;
 import org.metadatacenter.artifacts.model.core.ElementSchemaArtifact;
 import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
+import org.metadatacenter.artifacts.model.tools.InstanceInflater;
 
 import java.net.URI;
 import java.net.URISyntaxException;

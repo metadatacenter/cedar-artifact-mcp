@@ -25,6 +25,7 @@ import org.metadatacenter.artifacts.model.core.fields.constraints.TemporalValueC
 import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
 import org.metadatacenter.artifacts.model.reader.JsonArtifactReader;
 import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
+import org.metadatacenter.artifacts.model.tools.InstanceInflater;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
