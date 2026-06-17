@@ -306,8 +306,9 @@ final class EndToEndStdioIT
           + "{\"name\":\"ping\",\"arguments\":{\"message\":\"first\"}}}");
       JsonNode r1 = readResponse(stdout, stderr);
       assertEquals(10, r1.path("id").asInt());
-      assertEquals("pong: first",
-          r1.path("result").path("content").get(0).path("text").asText());
+      assertTrue(r1.path("result").path("content").get(0).path("text").asText()
+              .startsWith("pong: first ("),
+          "ping reply should echo the message and append the server name and version");
 
       // Call 2: create_template
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":11,\"method\":\"tools/call\",\"params\":"
@@ -343,8 +344,9 @@ final class EndToEndStdioIT
           + "{\"name\":\"ping\",\"arguments\":{\"message\":\"still alive\"}}}");
       JsonNode r4 = readResponse(stdout, stderr);
       assertEquals(13, r4.path("id").asInt());
-      assertEquals("pong: still alive",
-          r4.path("result").path("content").get(0).path("text").asText());
+      assertTrue(r4.path("result").path("content").get(0).path("text").asText()
+              .startsWith("pong: still alive ("),
+          "ping reply should echo the message and append the server name and version");
     } finally {
       shutdown(server, stderr);
     }
