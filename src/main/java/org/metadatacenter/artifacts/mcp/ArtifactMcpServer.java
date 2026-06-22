@@ -10,6 +10,9 @@ import org.metadatacenter.artifacts.mcp.tools.SetClassConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.SetLiteralDefaultValueTool;
 import org.metadatacenter.artifacts.mcp.tools.AddElementTool;
 import org.metadatacenter.artifacts.mcp.tools.AddFieldTool;
+import org.metadatacenter.artifacts.mcp.tools.ArtifactFromFileTool;
+import org.metadatacenter.artifacts.mcp.tools.ArtifactToFileTool;
+import org.metadatacenter.artifacts.mcp.tools.ConvertArtifactFileTool;
 import org.metadatacenter.artifacts.mcp.tools.SetIriDefaultValueTool;
 import org.metadatacenter.artifacts.mcp.tools.SetOntologyConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.SetOptionsTool;
@@ -121,6 +124,9 @@ public final class ArtifactMcpServer
         .toolCall(RemoveAnnotationTool.tool(), RemoveAnnotationTool::handler)
         .toolCall(SetAttributeValueTool.tool(), SetAttributeValueTool::handler)
         .toolCall(UnsetAttributeValueTool.tool(), UnsetAttributeValueTool::handler)
+        .toolCall(ArtifactFromFileTool.tool(), ArtifactFromFileTool::handler)
+        .toolCall(ArtifactToFileTool.tool(), ArtifactToFileTool::handler)
+        .toolCall(ConvertArtifactFileTool.tool(), ConvertArtifactFileTool::handler)
         .build();
 
     // Stdio transport reads from System.in in a background thread. Keep the main thread

@@ -362,6 +362,49 @@ final class ArtifactExchange
     return toYaml(artifact, isCompact);
   }
 
+  /**
+   * Render an artifact — supplied as YAML or JSON, any kind — to the requested serialization:
+   * YAML (expanded unless {@code isCompact}) or pretty-printed JSON. The kind is auto-detected.
+   * A parse failure throws (malformed input is rejected); no semantic validation is run, matching
+   * the other rendering tools — validate with {@code validate_*} or rely on the server on upload.
+   */
+  static String renderArtifact(String text, boolean asYaml, boolean isCompact)
+  {
+    ObjectNode node = toObjectNode(text);
+    if (!asYaml) {
+      try {
+        return JACKSON2.writerWithDefaultPrettyPrinter().writeValueAsString(node);
+      } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+        throw new RuntimeException("JSON serialize failed: " + e.getMessage(), e);
+      }
+    }
+    try {
+      return jsonNodeToYaml(node, isCompact);
+    } catch (IllegalArgumentException notSchemaOrTemplateInstance) {
+      // Standalone element instance: no schema @type and no schema:isBasedOn for jsonNodeToYaml to
+      // key on, so read it explicitly from the original text.
+      return toYaml(readElementInstance(text), isCompact);
+    }
+  }
+
+  /** Best-effort human label for an artifact's kind, for tool result summaries. */
+  static String kindLabel(String text)
+  {
+    try {
+      ArtifactKinds.Kind kind = ArtifactKinds.detect(toObjectNode(text));
+      if (kind != null)
+        return switch (kind) {
+          case TEMPLATE -> "template";
+          case ELEMENT -> "element";
+          case FIELD -> "field";
+          case INSTANCE -> "template instance";
+        };
+      return isElementInstance(text) ? "element instance" : "artifact";
+    } catch (RuntimeException e) {
+      return "artifact";
+    }
+  }
+
   // ---------------------------------------------------------------------
   // validation (DESIGN.md Principle 6) — render JSON, run CedarValidator
   // ---------------------------------------------------------------------

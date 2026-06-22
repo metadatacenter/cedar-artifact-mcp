@@ -435,6 +435,7 @@ through the library and passed its structural validation.
 | Populate | `set_literal_field_value` · `set_iri_field_value` · `set_element_instance` · `unset_field_value` · `set_attribute_value` · `unset_attribute_value` |
 | Validate | `validate_schema_artifact` · `validate_instance_artifact` |
 | Render | `schema_artifact_to_json` · `instance_artifact_to_json` · `schema_artifact_to_yaml` · `instance_artifact_to_yaml` |
+| Files | `artifact_from_file` · `artifact_to_file` · `convert_artifact_file` |
 | Diagnostics | `ping` |
 
 **The exchange form.** Every tool that builds or modifies an artifact (`create_*`,
@@ -786,6 +787,37 @@ for a template or element instance. `isCompact` is the only compaction control, 
 both how you **recompact** an expanded-YAML artifact for a lean display (`isCompact: true`, no
 JSON detour) and how you **import** an external JSON artifact into the YAML loop. `isCompact`
 defaults to `true`; pass `false` for the expanded, provenance-preserving exchange form.
+
+
+### `artifact_from_file(path, format?, compact?)`
+
+**Load an artifact from disk.** Read a CEDAR artifact (template, element, field, or instance)
+from an absolute `path` — JSON or YAML, auto-detected — and return it as **YAML by default**
+(the compact exchange form, ~10× smaller than the JSON) or as JSON with `format: "json"`. This
+is how you pull a large artifact file into the conversation without pasting it: a big JSON file
+comes back as compact YAML. `compact` (default `false`) selects the lean YAML form. The path
+must be absolute — a localhost MCP's working directory is rarely what you expect. No semantic
+validation is run (use `validate_schema_artifact` / `validate_instance_artifact`, or let the
+server validate on upload). To convert a file without bringing its content into the conversation
+at all, use `convert_artifact_file`.
+
+### `artifact_to_file(artifact, path, format?, compact?)`
+
+**Save an artifact to disk.** Write `artifact` (supplied inline as YAML or JSON) to an absolute
+`path`. The output format follows the path **extension** (`.json` → JSON, `.yaml`/`.yml` → YAML)
+unless `format` overrides it. Returns only a short summary — path, kind, byte count — and **never
+echoes the content**, so saving a large artifact costs no tokens. Useful for exporting the JSON a
+non-YAML downstream CEDAR tool needs. Overwrites an existing file and creates parent directories.
+No validation.
+
+### `convert_artifact_file(source_path, dest_path, format?, compact?)`
+
+**Convert a file, on disk.** Read an artifact from `source_path` and write it to `dest_path` in
+the requested format — **entirely on disk, so the artifact never enters the conversation.** This
+is the zero-token way to turn a large JSON artifact into YAML (~10× smaller) or back. The output
+format is inferred from `dest_path`'s extension unless `format` overrides it; `compact` (default
+`false`) selects the lean YAML form. Both paths must be absolute. Returns only a summary;
+overwrites `dest_path` and creates parent directories. No validation.
 
 
 ### `ping(message)`
