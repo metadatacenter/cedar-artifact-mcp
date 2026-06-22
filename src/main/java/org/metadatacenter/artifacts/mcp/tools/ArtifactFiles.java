@@ -83,4 +83,16 @@ final class ArtifactFiles
     throw new IllegalArgumentException(
         "compact must be a boolean (got " + raw.getClass().getSimpleName() + ")");
   }
+
+  /**
+   * Reject {@code compact: true} paired with JSON output. Compaction drops provenance to produce
+   * the lean YAML exchange form — there is no analogous compact JSON, so the combination is a
+   * mistake rather than a silent no-op.
+   */
+  static void requireCompactCompatibleWith(boolean asYaml, boolean compact)
+  {
+    if (compact && !asYaml)
+      throw new IllegalArgumentException(
+          "compact applies only to YAML output; drop it or use format: yaml");
+  }
 }

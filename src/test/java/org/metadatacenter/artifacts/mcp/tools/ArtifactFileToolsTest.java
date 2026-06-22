@@ -74,6 +74,17 @@ final class ArtifactFileToolsTest
     assertTrue(errorText(result).contains("absolute"), errorText(result));
   }
 
+  @Test void rejects_compact_with_json_output(@TempDir Path dir)
+  {
+    // compact is a YAML-only notion; pairing it with JSON output is a mistake, not a silent no-op.
+    McpSchema.CallToolResult result = toFile(Map.of(
+        "artifact", createTemplate("Study"),
+        "path", dir.resolve("study.json").toString(),  // .json → JSON output
+        "compact", true));
+    assertTrue(result.isError());
+    assertTrue(errorText(result).contains("compact applies only to YAML"), errorText(result));
+  }
+
   // helpers
 
   private static McpSchema.CallToolResult fromFile(Map<String, Object> args)

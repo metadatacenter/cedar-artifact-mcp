@@ -42,7 +42,7 @@ public final class ArtifactToFileTool
         "type", "boolean",
         "description",
         "When writing YAML, emit the lean compact form (drops provenance, version, status). "
-            + "Default false (expanded, lossless)."));
+            + "Default false (expanded, lossless). YAML output only — an error with JSON output."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("artifact", "path"), Boolean.FALSE, null, null);
@@ -78,6 +78,7 @@ public final class ArtifactToFileTool
       path = ArtifactFiles.requireAbsolute(stringArg(args, "path"), "path");
       asYaml = ArtifactFiles.wantsYaml(stringArg(args, "format"), path);
       compact = ArtifactFiles.compactFlag(args.get("compact"));
+      ArtifactFiles.requireCompactCompatibleWith(asYaml, compact);
     } catch (IllegalArgumentException e) {
       return error(e.getMessage());
     }
