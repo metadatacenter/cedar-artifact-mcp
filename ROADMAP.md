@@ -142,8 +142,8 @@ centralizes read (YAML or JSON, auto-detected) and render.
 ### Export / import
 
 - `schema_artifact_to_json(artifact)` / `instance_artifact_to_json(instance_artifact, schema_artifact?)`
-  — **export** a (YAML) artifact to the canonical CEDAR JSON that cedar-server and other
-  downstream tooling consume. The schema renderer auto-detects template/element/field and
+  — **export** a (YAML) artifact to the CEDAR JSON form, an escape hatch for the rare tool that
+  can't read YAML (cedar-server itself now reads and writes YAML). The schema renderer auto-detects template/element/field and
   validates before returning; the instance renderer auto-detects template/element instance and,
   given the optional `schema_artifact`, inflates the sparse instance to a complete JSON instance.
 - `schema_artifact_to_yaml(artifact, isCompact?)` / `instance_artifact_to_yaml(instance_artifact, isCompact?)`

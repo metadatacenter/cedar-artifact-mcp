@@ -117,9 +117,10 @@ freely through the authoring loop.
 ## Principle 8 — Expanded YAML is the exchange; JSON Schema is an export
 
 CEDAR has two on-the-wire serializations for templates, elements, fields, and
-instances: the **JSON Schema** form (what cedar-server and every downstream
-CEDAR tool consumes) and the **YAML** the artifact library reader/renderer pair was
-built around. They carry the same information — both deserialize to the one canonical
+instances: the **JSON Schema** form (a verbose export, kept around for the rare tool
+that can't read YAML) and the **YAML** the artifact library reader/renderer pair was
+built around. cedar-server itself now reads and writes YAML, so JSON is no longer
+required even server-side. They carry the same information — both deserialize to the one canonical
 in-memory model — but they differ enormously in size:
 
 - **JSON Schema** is verbose, dense with `_ui`, `@context`, `xsd` plumbing, and
@@ -144,8 +145,8 @@ threads **YAML**. The tool surface:
   choice, so it lives only on the `*_to_yaml` rendering tools: `isCompact: true` drops the
   provenance keys for a lean display of a finished artifact.
 - **JSON Schema is an export, produced only on demand.** The four `*_to_json` tools take
-  an artifact (YAML) and emit the JSON Schema for cedar-server and other
-  downstream consumers. JSON is not threaded between tools.
+  an artifact (YAML) and emit the JSON Schema for the rare tool that can't read YAML
+  (cedar-server now takes YAML too). JSON is not threaded between tools.
 - **`*_to_yaml` renders any artifact (YAML or JSON) as YAML**, with an `isCompact`
   flag — so it recompacts an expanded artifact for display and imports external JSON into
   the YAML loop, with no JSON detour.

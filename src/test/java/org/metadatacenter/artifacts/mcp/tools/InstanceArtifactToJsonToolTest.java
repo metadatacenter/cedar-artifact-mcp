@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for {@code instance_artifact_to_json} — exports a template instance or an element instance
- * (auto-detected) to canonical CEDAR JSON, optionally inflating the sparse instance against the
+ * (auto-detected) to CEDAR JSON, optionally inflating the sparse instance against the
  * schema it is based on.
  */
 final class InstanceArtifactToJsonToolTest

@@ -55,7 +55,7 @@ public final class ArtifactToFileTool
                 + "The output format is inferred from the path extension (.json → JSON, otherwise "
                 + "YAML) unless 'format' overrides it. Returns only a short summary (path, kind, "
                 + "size) — never the content — so saving a large artifact costs no tokens. Handy "
-                + "for exporting the JSON a non-YAML downstream CEDAR tool needs. Path must be "
+                + "on the rare occasion a non-YAML tool needs the JSON form. Path must be "
                 + "absolute. Overwrites an existing file and creates parent directories. Does not "
                 + "validate.")
         .inputSchema(schema)

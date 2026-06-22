@@ -199,7 +199,7 @@ final class EndToEndStdioIT
       assertEquals("0.1.0", yamlMap.get("version"));
 
       // Re-validate end-to-end: read the YAML the wire returned back to the model and validate
-      // its canonical JSON rendering with CedarValidator.
+      // its JSON rendering with CedarValidator.
       var model = new org.metadatacenter.artifacts.model.reader.YamlArtifactReader(true)
           .readTemplateSchemaArtifact(yamlMap);
       com.fasterxml.jackson.databind.node.ObjectNode parsed =

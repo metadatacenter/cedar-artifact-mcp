@@ -421,7 +421,7 @@ validating, and so on, without the calling LLM ever needing to know any
 Java. Artifacts move between tools as **YAML** — the expanded exchange form (DESIGN.md
 Principle 8). The `create_*` / `add_*` / `set_*` / `remove_*` tools wrap the library's
 typed builders and return YAML; the `*_to_json` tools export the JSON Schema form
-(for downstream CEDAR tooling) and `*_to_yaml` imports an external
+(an escape hatch for the rare tool that can't read YAML) and `*_to_yaml` imports an external
 JSON Schema artifact back into the YAML loop; `validate_instance_artifact` calls the canonical
 CedarValidator. A non-error result from any tool is guaranteed to have round-tripped
 through the library and passed its structural validation.
@@ -769,8 +769,10 @@ needs the template it's based on.)
 
 ### `schema_artifact_to_json(artifact)` / `instance_artifact_to_json(instance_artifact, schema_artifact?)`
 
-**Render as JSON.** Take an artifact (YAML) and return the CEDAR JSON Schema that
-downstream CEDAR tooling consumes. `schema_artifact_to_json` handles a **template, element,
+**Render as JSON.** YAML is the form artifacts move in; this is the export escape hatch for the
+rare tool that can't read YAML. Take an artifact (YAML) and return the CEDAR JSON Schema form —
+the CEDAR server itself now reads and writes YAML, so even it no longer requires JSON.
+`schema_artifact_to_json` handles a **template, element,
 or field** — the kind is auto-detected from the YAML `type:`; the result is round-tripped
 through the library reader/renderer and validated (`CedarValidator`), so a non-error result
 is a guaranteed-valid artifact, and a top-level `id` is minted if omitted (nested children
@@ -806,8 +808,8 @@ at all, use `convert_artifact_file`.
 **Save an artifact to disk.** Write `artifact` (supplied inline as YAML or JSON) to an absolute
 `path`. The output format follows the path **extension** (`.json` → JSON, `.yaml`/`.yml` → YAML)
 unless `format` overrides it. Returns only a short summary — path, kind, byte count — and **never
-echoes the content**, so saving a large artifact costs no tokens. Useful for exporting the JSON a
-non-YAML downstream CEDAR tool needs. Overwrites an existing file and creates parent directories.
+echoes the content**, so saving a large artifact costs no tokens. Useful on the rare occasion a
+non-YAML tool needs the JSON form. Overwrites an existing file and creates parent directories.
 No validation.
 
 ### `convert_artifact_file(source_path, dest_path, format?, compact?)`
