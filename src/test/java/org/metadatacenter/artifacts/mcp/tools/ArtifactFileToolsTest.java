@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests for the artifact file tools: {@code artifact_from_file}, {@code artifact_to_file}, and
+ * Tests for the artifact file tools: {@code read_artifact_file}, {@code write_artifact_file}, and
  * {@code convert_artifact_file}. Covers format selection (explicit + extension-inferred), the
  * absolute-path requirement, and that the write tools return a summary rather than echoing content.
  */
@@ -89,12 +89,12 @@ final class ArtifactFileToolsTest
 
   private static McpSchema.CallToolResult fromFile(Map<String, Object> args)
   {
-    return ArtifactFromFileTool.handler(null, new McpSchema.CallToolRequest("artifact_from_file", args));
+    return ReadArtifactFileTool.handler(null, new McpSchema.CallToolRequest("read_artifact_file", args));
   }
 
   private static McpSchema.CallToolResult toFile(Map<String, Object> args)
   {
-    return ArtifactToFileTool.handler(null, new McpSchema.CallToolRequest("artifact_to_file", args));
+    return WriteArtifactFileTool.handler(null, new McpSchema.CallToolRequest("write_artifact_file", args));
   }
 
   private static McpSchema.CallToolResult convert(Map<String, Object> args)

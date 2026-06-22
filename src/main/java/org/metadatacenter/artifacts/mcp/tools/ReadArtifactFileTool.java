@@ -10,16 +10,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code artifact_from_file} — reads a CEDAR artifact from an absolute file path (JSON or
+ * MCP tool {@code read_artifact_file} — reads a CEDAR artifact from an absolute file path (JSON or
  * YAML, auto-detected) and returns it as YAML (the compact exchange form, by default) or as JSON.
  *
  * <p>The point is to pull a large artifact file into the conversation without pasting it: a big
  * JSON file comes back as YAML roughly a tenth the size. To convert a file without bringing the
  * content into the conversation at all, use {@code convert_artifact_file}.
  */
-public final class ArtifactFromFileTool
+public final class ReadArtifactFileTool
 {
-  private ArtifactFromFileTool() {}
+  private ReadArtifactFileTool() {}
 
   public static McpSchema.Tool tool()
   {
@@ -45,7 +45,7 @@ public final class ArtifactFromFileTool
         "object", properties, List.of("path"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
-        .name("artifact_from_file")
+        .name("read_artifact_file")
         .title("Load a CEDAR artifact from a file")
         .description(
             "Reads a CEDAR artifact (template, element, field, or instance) from an absolute file "

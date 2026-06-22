@@ -435,7 +435,7 @@ through the library and passed its structural validation.
 | Populate | `set_literal_field_value` · `set_iri_field_value` · `set_element_instance` · `unset_field_value` · `set_attribute_value` · `unset_attribute_value` |
 | Validate | `validate_schema_artifact` · `validate_instance_artifact` |
 | Render | `schema_artifact_to_json` · `instance_artifact_to_json` · `schema_artifact_to_yaml` · `instance_artifact_to_yaml` |
-| Files | `artifact_from_file` · `artifact_to_file` · `convert_artifact_file` |
+| Transfer | `read_artifact_file` · `write_artifact_file` · `convert_artifact_file` |
 | Diagnostics | `ping` |
 
 **The exchange form.** Every tool that builds or modifies an artifact (`create_*`,
@@ -791,7 +791,7 @@ JSON detour) and how you **import** an external JSON artifact into the YAML loop
 defaults to `true`; pass `false` for the expanded, provenance-preserving exchange form.
 
 
-### `artifact_from_file(path, format?, compact?)`
+### `read_artifact_file(path, format?, compact?)`
 
 **Load an artifact from disk.** Read a CEDAR artifact (template, element, field, or instance)
 from an absolute `path` — JSON or YAML, auto-detected — and return it as **YAML by default**
@@ -803,7 +803,7 @@ validation is run (use `validate_schema_artifact` / `validate_instance_artifact`
 server validate on upload). To convert a file without bringing its content into the conversation
 at all, use `convert_artifact_file`.
 
-### `artifact_to_file(artifact, path, format?, compact?)`
+### `write_artifact_file(artifact, path, format?, compact?)`
 
 **Save an artifact to disk.** Write `artifact` (supplied inline as YAML or JSON) to an absolute
 `path`. The output format follows the path **extension** (`.json` → JSON, `.yaml`/`.yml` → YAML)

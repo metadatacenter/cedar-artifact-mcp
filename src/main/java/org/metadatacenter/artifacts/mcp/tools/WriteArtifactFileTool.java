@@ -10,16 +10,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MCP tool {@code artifact_to_file} — writes a CEDAR artifact (supplied inline as YAML or JSON) to
+ * MCP tool {@code write_artifact_file} — writes a CEDAR artifact (supplied inline as YAML or JSON) to
  * an absolute file path, as YAML or JSON.
  *
  * <p>Returns only a short summary (path, kind, size) — never the content — so saving a large
  * artifact costs no tokens. The output format follows the path extension ({@code .json} → JSON,
  * otherwise YAML) unless overridden.
  */
-public final class ArtifactToFileTool
+public final class WriteArtifactFileTool
 {
-  private ArtifactToFileTool() {}
+  private WriteArtifactFileTool() {}
 
   public static McpSchema.Tool tool()
   {
@@ -48,7 +48,7 @@ public final class ArtifactToFileTool
         "object", properties, List.of("artifact", "path"), Boolean.FALSE, null, null);
 
     return McpSchema.Tool.builder()
-        .name("artifact_to_file")
+        .name("write_artifact_file")
         .title("Write a CEDAR artifact to a file")
         .description(
             "Writes a CEDAR artifact (supplied inline as YAML or JSON) to an absolute file path. "

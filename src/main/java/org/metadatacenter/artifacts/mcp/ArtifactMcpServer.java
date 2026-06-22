@@ -10,8 +10,8 @@ import org.metadatacenter.artifacts.mcp.tools.SetClassConstraintTool;
 import org.metadatacenter.artifacts.mcp.tools.SetLiteralDefaultValueTool;
 import org.metadatacenter.artifacts.mcp.tools.AddElementTool;
 import org.metadatacenter.artifacts.mcp.tools.AddFieldTool;
-import org.metadatacenter.artifacts.mcp.tools.ArtifactFromFileTool;
-import org.metadatacenter.artifacts.mcp.tools.ArtifactToFileTool;
+import org.metadatacenter.artifacts.mcp.tools.ReadArtifactFileTool;
+import org.metadatacenter.artifacts.mcp.tools.WriteArtifactFileTool;
 import org.metadatacenter.artifacts.mcp.tools.ConvertArtifactFileTool;
 import org.metadatacenter.artifacts.mcp.tools.SetIriDefaultValueTool;
 import org.metadatacenter.artifacts.mcp.tools.SetOntologyConstraintTool;
@@ -124,8 +124,8 @@ public final class ArtifactMcpServer
         .toolCall(RemoveAnnotationTool.tool(), RemoveAnnotationTool::handler)
         .toolCall(SetAttributeValueTool.tool(), SetAttributeValueTool::handler)
         .toolCall(UnsetAttributeValueTool.tool(), UnsetAttributeValueTool::handler)
-        .toolCall(ArtifactFromFileTool.tool(), ArtifactFromFileTool::handler)
-        .toolCall(ArtifactToFileTool.tool(), ArtifactToFileTool::handler)
+        .toolCall(ReadArtifactFileTool.tool(), ReadArtifactFileTool::handler)
+        .toolCall(WriteArtifactFileTool.tool(), WriteArtifactFileTool::handler)
         .toolCall(ConvertArtifactFileTool.tool(), ConvertArtifactFileTool::handler)
         .build();
 

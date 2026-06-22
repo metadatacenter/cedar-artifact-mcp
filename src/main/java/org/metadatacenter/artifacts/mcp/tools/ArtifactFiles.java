@@ -7,8 +7,8 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
 /**
- * Filesystem helpers for the artifact file tools ({@code artifact_from_file}, {@code
- * artifact_to_file}, {@code convert_artifact_file}). Paths must be absolute — a localhost MCP's
+ * Filesystem helpers for the artifact file tools ({@code read_artifact_file}, {@code
+ * write_artifact_file}, {@code convert_artifact_file}). Paths must be absolute — a localhost MCP's
  * working directory is rarely what a user expects, so a relative path would resolve somewhere
  * surprising. Reads and writes are UTF-8.
  */
