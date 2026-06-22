@@ -26,7 +26,7 @@ public final class SetValueSetConstraintTool
         "type", "string",
         "description",
         "CEDAR controlled-term field as YAML (the kind 'create_field' with "
-            + "type='controlled-term-field' or 'schema_artifact_to_json' returns)."));
+            + "type='controlled-term-field' or 'render_schema_artifact' with format: json returns)."));
     properties.put("value_set_iri", Map.of(
         "type", "string",
         "description", "Canonical IRI for the value set."));

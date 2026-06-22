@@ -141,15 +141,16 @@ centralizes read (YAML or JSON, auto-detected) and render.
 
 ### Export / import
 
-- `schema_artifact_to_json(artifact)` / `instance_artifact_to_json(instance_artifact, schema_artifact?)`
-  — **export** a (YAML) artifact to the CEDAR JSON form, an escape hatch for the rare tool that
-  can't read YAML (cedar-server itself now reads and writes YAML). The schema renderer auto-detects template/element/field and
-  validates before returning; the instance renderer auto-detects template/element instance and,
-  given the optional `schema_artifact`, inflates the sparse instance to a complete JSON instance.
-- `schema_artifact_to_yaml(artifact, isCompact?)` / `instance_artifact_to_yaml(instance_artifact, isCompact?)`
-  — render any artifact (YAML or JSON, auto-detected; kind auto-detected) as YAML. Two jobs:
-  **recompact** an expanded artifact for a lean display (`isCompact: true`, no JSON detour), and
-  **import** an external JSON artifact into the YAML loop.
+- `render_schema_artifact(schema_artifact, format?, compact?)` / `render_instance_artifact(instance_artifact, template_artifact?, format?, compact?)`
+  — render an artifact (YAML or JSON, auto-detected; kind auto-detected) to YAML (default) or
+  JSON. `format: yaml` does two jobs: **recompact** an expanded artifact for a lean display
+  (`compact: true`, no JSON detour) and **import** an external JSON artifact into the YAML loop.
+  `format: json` is the **export** escape hatch for the rare tool that can't read YAML
+  (cedar-server itself now reads and writes YAML). The schema renderer auto-detects
+  template/element/field; the instance renderer auto-detects template/element instance and, given
+  the optional `template_artifact`, inflates the sparse instance to a complete instance. Neither
+  validates — rendering renders; validation lives in `validate_schema_artifact` /
+  `validate_instance_artifact`.
 
 ## Next
 

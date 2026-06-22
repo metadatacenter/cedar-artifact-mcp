@@ -25,7 +25,7 @@ public final class SetBranchConstraintTool
         "type", "string",
         "description",
         "CEDAR controlled-term field as YAML (the kind 'create_field' with "
-            + "type='controlled-term-field' or 'schema_artifact_to_json' returns)."));
+            + "type='controlled-term-field' or 'render_schema_artifact' with format: json returns)."));
     properties.put("ontology_name", Map.of(
         "type", "string",
         "description", "Human-readable ontology name (e.g. 'Human Disease Ontology')."));

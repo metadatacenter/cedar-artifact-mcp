@@ -46,7 +46,7 @@ import static org.metadatacenter.artifacts.model.yaml.YamlConstants.TEXT_FIELD;
  *
  * <p>The full list of {@code type} values comes from the library's
  * {@link org.metadatacenter.artifacts.model.yaml.YamlConstants#FIELD_TYPES} — the same
- * vocabulary {@code schema_artifact_to_yaml} accepts in YAML {@code type:} discriminators.
+ * vocabulary {@code render_schema_artifact} accepts in YAML {@code type:} discriminators.
  */
 public final class CreateFieldTool
 {
@@ -180,7 +180,7 @@ public final class CreateFieldTool
                 + "For shapes that need structured sub-objects — controlled-term values "
                 + "(class/branch/ontology/valueSet constraints), radio/checkbox/list inline "
                 + "values, multi-instance configuration, default values — author them in YAML "
-                + "('schema_artifact_to_yaml') instead. Constraints and default values can also be "
+                + "('render_schema_artifact') instead. Constraints and default values can also be "
                 + "layered onto a created field via 'set_class_constraint', "
                 + "'set_branch_constraint', 'set_ontology_constraint', "
                 + "'set_valueset_constraint', 'set_literal_default_value', and "

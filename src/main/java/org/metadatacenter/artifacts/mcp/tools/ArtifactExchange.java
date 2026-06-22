@@ -48,8 +48,9 @@ import java.util.Map;
  * tolerates either way.
  *
  * <p>JSON Schema is no longer an exchange format between tools; it is produced only by the
- * dedicated {@code *_to_json} export tools and consumed only by the {@code *_to_yaml} import
- * tools. Validation (DESIGN.md Principle 6) still renders JSON internally and runs
+ * render tools ({@code render_schema_artifact} / {@code render_instance_artifact} with
+ * {@code format: json}) and consumed only by the same tools when importing a JSON Schema back to
+ * YAML. Validation (DESIGN.md Principle 6) still renders JSON internally and runs
  * {@link CedarValidator} — see the {@code validate*} helpers — because the validator's
  * contract is with the JSON Schema serialization.
  */
@@ -72,7 +73,8 @@ final class ArtifactExchange
    * artifact's identity and are the most common casualty of "summarize for brevity".
    */
   static final String VERBATIM_NOTICE =
-      " Whatever YAML you show the user — this result or a *_to_yaml rendering of it — show it "
+      " Whatever YAML you show the user — this result or a render_schema_artifact / "
+          + "render_instance_artifact rendering of it — show it "
           + "verbatim: never hand-edit, summarize, or reformat it, never drop the 'id:' (@id) "
           + "lines or any other field, and do not replace the YAML with a table that omits "
           + "content.";
@@ -86,8 +88,9 @@ final class ArtifactExchange
    */
   static final String DISPLAY_NOTICE =
       " This result is the expanded exchange form. When showing the artifact to the user in an "
-          + "interactive session, prefer the lean view: call the matching *_to_yaml tool with "
-          + "isCompact: true and display its output instead. But ALWAYS pass THIS returned YAML "
+          + "interactive session, prefer the lean view: call the matching render tool "
+          + "(render_schema_artifact / render_instance_artifact) with compact: true and display "
+          + "its output instead. But ALWAYS pass THIS returned YAML "
           + "into subsequent tool calls — the compacted display view drops provenance (version, "
           + "status) and must never be threaded onward.";
 
@@ -120,7 +123,7 @@ final class ArtifactExchange
   // serialized artifact -> model (incoming artifacts)
   //
   // The exchange form is expanded YAML, but a JSON Schema artifact (e.g. one produced by a
-  // *_to_json export tool, or fetched from a CEDAR server) is also accepted: the format is
+  // render tool with format: json, or fetched from a CEDAR server) is also accepted: the format is
   // auto-detected so callers never have to convert before threading. Both serializations
   // resolve to the same in-memory model — the canonical representation.
   // ---------------------------------------------------------------------
@@ -162,7 +165,7 @@ final class ArtifactExchange
 
   /**
    * Distinguishes the two instance kinds (YAML or JSON) for the auto-detecting
-   * {@code instance_artifact_to_json} / {@code instance_artifact_to_yaml} tools. A YAML document
+   * {@code render_instance_artifact} tool. A YAML document
    * is keyed on its {@code type:} discriminator ({@code element-instance} vs {@code instance}); a
    * JSON document has no such discriminator, so a template instance is recognized by its
    * {@code schema:isBasedOn} (which an element instance lacks) and everything else is taken to be
@@ -256,8 +259,9 @@ final class ArtifactExchange
   /**
    * Render any artifact as YAML. {@code isCompact} true is the lean display form — provenance,
    * status, version, and modelVersion omitted; {@code isCompact} false is the expanded, lossless
-   * form. The flag is a rendering choice and is exposed only by the {@code *_to_yaml} rendering
-   * tools; every mutating tool returns {@link #exchangeYaml} unconditionally.
+   * form. The flag is a rendering choice and is exposed only by the render tools
+   * ({@code render_schema_artifact} / {@code render_instance_artifact}); every mutating tool
+   * returns {@link #exchangeYaml} unconditionally.
    */
   static String toYaml(Artifact artifact, boolean isCompact)
   {
@@ -269,7 +273,7 @@ final class ArtifactExchange
    * {@code remove_child}) returns: expanded, lossless YAML. Always expanded so that nothing set
    * on an artifact — version, status, provenance, value-less instance slots — is ever silently
    * dropped between tool calls; the returned YAML is the artifact the next tool receives.
-   * Compaction is a display choice, available via the {@code *_to_yaml} tools.
+   * Compaction is a display choice, available via the render tools.
    */
   static String exchangeYaml(Artifact artifact)
   {

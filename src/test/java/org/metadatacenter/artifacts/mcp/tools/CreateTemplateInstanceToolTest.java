@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Tests for the {@code create_template_instance} tool. A created instance is <em>sparse</em>: unset
  * fields are omitted from the YAML (no `value: null`, no `{}`). The structural completeness the
  * template requires lives at the JSON boundary — {@code validate_instance_artifact} and
- * {@code instance_artifact_to_json} inflate the instance against the template. So the headline check is
+ * {@code render_instance_artifact} (format: json) inflate the instance against the template. So the headline check is
  * that the instance validates, and structural assertions are made against the inflated JSON
  * (see {@link #inflatedJson}).
  */
@@ -367,8 +367,8 @@ final class CreateTemplateInstanceToolTest
 
   private static String compileTemplate(String yaml)
   {
-    McpSchema.CallToolResult result = SchemaArtifactToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("schema_artifact_to_json", Map.of("artifact", yaml)));
+    McpSchema.CallToolResult result = RenderSchemaArtifactTool.handler(null,
+        new McpSchema.CallToolRequest("render_schema_artifact", Map.of("schema_artifact", yaml, "format", "json")));
     assertFalse(result.isError(),
         "fixture template YAML must compile cleanly; got: " + errorText(result));
     return textOf(result);
@@ -399,9 +399,9 @@ final class CreateTemplateInstanceToolTest
    */
   private ObjectNode inflatedJson(McpSchema.CallToolResult result, String templateJson) throws Exception
   {
-    McpSchema.CallToolResult json = InstanceArtifactToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("instance_artifact_to_json", Map.of(
-            "instance_artifact", textOf(result), "schema_artifact", templateJson)));
+    McpSchema.CallToolResult json = RenderInstanceArtifactTool.handler(null,
+        new McpSchema.CallToolRequest("render_instance_artifact", Map.of(
+            "instance_artifact", textOf(result), "template_artifact", templateJson, "format", "json")));
     assertFalse(json.isError(), errorText(json));
     return (ObjectNode) jackson.readTree(textOf(json));
   }

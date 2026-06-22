@@ -108,8 +108,8 @@ final class ValidateInstanceArtifactToolTest
 
   @Test void rejects_schema_that_is_neither_template_nor_element() throws Exception
   {
-    String fieldJson = textOf(SchemaArtifactToJsonTool.handler(null,
-        new McpSchema.CallToolRequest("schema_artifact_to_json", Map.of("artifact", createField("Name", "text-field")))));
+    String fieldJson = textOf(RenderSchemaArtifactTool.handler(null,
+        new McpSchema.CallToolRequest("render_schema_artifact", Map.of("schema_artifact", createField("Name", "text-field"), "format", "json"))));
 
     McpSchema.CallToolResult result = invoke(Map.of(
         "schema_artifact", fieldJson, "instance_artifact", "{}"));

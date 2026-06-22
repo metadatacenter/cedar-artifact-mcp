@@ -434,7 +434,7 @@ through the library and passed its structural validation.
 | Annotate | `set_literal_annotation` · `set_iri_annotation` · `remove_annotation` |
 | Populate | `set_literal_field_value` · `set_iri_field_value` · `set_element_instance` · `unset_field_value` · `set_attribute_value` · `unset_attribute_value` |
 | Validate | `validate_schema_artifact` · `validate_instance_artifact` |
-| Render | `schema_artifact_to_json` · `instance_artifact_to_json` · `schema_artifact_to_yaml` · `instance_artifact_to_yaml` |
+| Render | `render_schema_artifact` · `render_instance_artifact` |
 | Transfer | `read_artifact_file` · `write_artifact_file` · `convert_artifact_file` |
 | Diagnostics | `ping` |
 
@@ -448,7 +448,7 @@ description directs the LLM to use exactly that for interactive display, while t
 the expanded form onward. Instances are **sparse** in
 either form — a field with no value is omitted entirely (no `null`, no `{}`, no empty `[]`);
 the empty slots the JSON form requires are reconstructed from the template at the
-JSON boundary (`validate_instance_artifact`, `instance_artifact_to_json`).
+JSON boundary (`validate_instance_artifact`, `render_instance_artifact` with `format: json`).
 
 ### `create_template(name, description?, version?, status?, id?)`
 
@@ -706,11 +706,11 @@ Creates an instance from a template, ready to be populated with field values.
 The returned instance is **sparse** — it carries its identity (`@id`, `name`,
 `isBasedOn`) and only fields that hold a value, so a fresh instance is
 essentially just its identity. Unset fields are reconstructed from the template
-when JSON is produced (`validate_instance_artifact`, `instance_artifact_to_json`), so the instance
+when JSON is produced (`validate_instance_artifact`, `render_instance_artifact` with `format: json`), so the instance
 is still structurally complete. `isBasedOn` is always derived from the
 template's `@id` — the instance points at exactly the template it was built
 from, by construction; a template without an `@id` is rejected with guidance
-(`create_template` and `schema_artifact_to_json` mint one automatically). `id` is the
+(`create_template` and `render_schema_artifact` mint one automatically). `id` is the
 instance's own identity — optional, and auto-minted as a fresh
 `template-instances` IRI when omitted.
 
@@ -767,28 +767,30 @@ validator, so you need not say whether you've got a template, element, or field.
 template *instance* is detected but must go through `validate_instance_artifact`, which also
 needs the template it's based on.)
 
-### `schema_artifact_to_json(artifact)` / `instance_artifact_to_json(instance_artifact, schema_artifact?)`
+### `render_schema_artifact(schema_artifact, format?, compact?)`
 
-**Render as JSON.** YAML is the form artifacts move in; this is the export escape hatch for the
-rare tool that can't read YAML. Take an artifact (YAML) and return the CEDAR JSON Schema form —
-the CEDAR server itself now reads and writes YAML, so even it no longer requires JSON.
-`schema_artifact_to_json` handles a **template, element,
-or field** — the kind is auto-detected from the YAML `type:`; the result is round-tripped
-through the library reader/renderer and validated (`CedarValidator`), so a non-error result
-is a guaranteed-valid artifact, and a top-level `id` is minted if omitted (nested children
-untouched). `instance_artifact_to_json` handles a **template instance or element instance**
-(auto-detected); its optional `schema_artifact` (the template or element it is based on)
-inflates the sparse instance back to a complete CEDAR JSON instance (every declared field
-present) — omit it to export only the fields the instance carries.
+**Render a schema artifact.** Take a **template, element, or field** as YAML or JSON Schema
+(both the serialization and the kind are auto-detected) and render it. `format` is `yaml`
+(default) or `json`; `compact` (YAML only, default `true`) selects the lean display form versus
+the expanded, provenance-preserving exchange form. A top-level `id` is minted if omitted (nested
+children untouched). With `format: yaml` this is the **primary rendering path** — both how you
+**recompact** an expanded-YAML artifact for a lean display and how you **import** an external
+JSON Schema into the YAML loop. With `format: json` it is the **export escape hatch** for the
+rare tool that can't read YAML; the CEDAR server itself now reads and writes YAML, so even it no
+longer requires JSON. No validation runs here — validate separately with `validate_schema_artifact`.
+Pairing `compact: true` with `format: json` is an error. (An instance is redirected to
+`render_instance_artifact`.)
 
-### `schema_artifact_to_yaml(artifact, isCompact?)` / `instance_artifact_to_yaml(instance_artifact, isCompact?)`
+### `render_instance_artifact(instance_artifact, template_artifact?, format?, compact?)`
 
-**Render as YAML.** Take an artifact as YAML or JSON (auto-detected, kind auto-detected) and
-emit YAML — `schema_artifact_to_yaml` for a template/element/field, `instance_artifact_to_yaml`
-for a template or element instance. `isCompact` is the only compaction control, so this is
-both how you **recompact** an expanded-YAML artifact for a lean display (`isCompact: true`, no
-JSON detour) and how you **import** an external JSON artifact into the YAML loop. `isCompact`
-defaults to `true`; pass `false` for the expanded, provenance-preserving exchange form.
+**Render an instance.** Take a **template instance or element instance** as YAML or JSON
+(auto-detected) and render it. `format` is `yaml` (default) or `json`; `compact` (YAML only,
+default `true`) selects the lean form versus the expanded exchange form. A top-level `id` is
+minted if omitted. The optional `template_artifact` (the template or element the instance is
+based on) inflates the sparse instance to a complete CEDAR instance (every declared field
+present) — omit it to render only the fields the instance carries. No validation runs here;
+validate separately with `validate_instance_artifact`. Pairing `compact: true` with `format: json`
+is an error. (A standalone template/element/field is redirected to `render_schema_artifact`.)
 
 
 ### `read_artifact_file(path, format?, compact?)`

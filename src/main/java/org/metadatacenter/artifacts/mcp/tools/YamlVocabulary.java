@@ -10,9 +10,9 @@ package org.metadatacenter.artifacts.mcp.tools;
  * the LLM's documentation") makes this a hard requirement, not a style preference.
  *
  * <p>Each constant below is a focused vocabulary block. Tools compose the blocks they
- * need: a {@code schema_artifact_to_json} tool wants the field vocabulary; a
- * {@code schema_artifact_to_json} tool wants the full template+element+field set; an
- * {@code instance_artifact_to_json} tool wants the instance vocabulary instead.
+ * need: a {@code create_field} tool wants the field vocabulary; a
+ * {@code render_schema_artifact} tool wants the full template+element+field set; a
+ * {@code render_instance_artifact} tool wants the instance vocabulary instead.
  *
  * <p>When a new field type or value-constraint kind is added to the library, update the
  * relevant block here. The tests don't catch missing documentation — only the LLM does,

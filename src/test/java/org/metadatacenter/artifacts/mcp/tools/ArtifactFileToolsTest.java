@@ -104,8 +104,8 @@ final class ArtifactFileToolsTest
 
   private static McpSchema.CallToolResult toJson(String artifact)
   {
-    return invokeTool(SchemaArtifactToJsonTool::handler, "schema_artifact_to_json",
-        Map.of("artifact", artifact));
+    return invokeTool(RenderSchemaArtifactTool::handler, "render_schema_artifact",
+        Map.of("schema_artifact", artifact, "format", "json"));
   }
 
   private static String createTemplate(String name)
