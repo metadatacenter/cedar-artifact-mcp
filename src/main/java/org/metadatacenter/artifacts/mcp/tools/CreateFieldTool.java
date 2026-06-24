@@ -233,7 +233,7 @@ public final class CreateFieldTool
         return error("invalid id \"" + idText + "\": an id must be an absolute IRI "
             + "(e.g. https://repo.metadatacenter.org/template-fields/5c48700a-4163-436d-8daa-95af7311cded)");
     } else {
-      // No caller-supplied id: mint a top-level CEDAR IRI (DESIGN.md Principle 10).
+      // No caller-supplied id — mint a top-level CEDAR IRI (DESIGN.md Principle 10).
       id = IdMinter.mintFieldId();
     }
 

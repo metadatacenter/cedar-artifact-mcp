@@ -60,7 +60,7 @@ final class ValidateSchemaArtifactToolTest
 
   @Test void invalid_artifact_reports_errors_not_tool_error() throws Exception
   {
-    // A wild artifact that claims to be a template but is missing every required property: the
+    // A wild artifact that claims to be a template but is missing every required property — the
     // validator must say so as a {"valid": false} report, not a tool error.
     String junk = "{ \"@type\": \"https://schema.metadatacenter.org/core/Template\" }";
     McpSchema.CallToolResult result = invoke(Map.of("artifact", junk));

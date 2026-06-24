@@ -29,7 +29,7 @@ import java.util.Set;
  * just another call. The complete-permutation requirement is load-bearing — the library
  * prunes children absent from the order, so a partial list would silently delete
  * children; requiring exactly the current keys turns that into a clean error. One tool
- * for both child kinds (like {@code remove_child}): ordering is kind-agnostic, and
+ * for both child kinds (like {@code remove_child}) — ordering is kind-agnostic, and
  * static fields participate like any other child — moving a section break is ordinary
  * reordering.
  */
@@ -55,7 +55,7 @@ public final class ReorderChildrenTool
         "minItems", 1,
         "description",
         "The parent's child keys in the desired display order — the COMPLETE list, each "
-            + "existing key exactly once. A partial list is rejected: omitting a key would "
+            + "existing key exactly once. A partial list is rejected — omitting a key would "
             + "delete the child, not just leave it unordered."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(

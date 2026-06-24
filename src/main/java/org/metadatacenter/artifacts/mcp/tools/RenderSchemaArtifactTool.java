@@ -29,7 +29,7 @@ import java.util.Map;
  *
  * <p>A missing top-level {@code @id} is minted with the kind's IRI prefix (DESIGN.md Principle 10).
  * No CedarValidator step runs — rendering renders; validation lives in
- * {@code validate_schema_artifact}. Instances are not schema artifacts: a {@code type: instance} or
+ * {@code validate_schema_artifact}. Instances are not schema artifacts — a {@code type: instance} or
  * {@code type: element-instance} document is redirected to {@code render_instance_artifact}.
  */
 public final class RenderSchemaArtifactTool
@@ -126,7 +126,7 @@ public final class RenderSchemaArtifactTool
       return error(e.getMessage());
     }
 
-    // JSON input: render straight through ArtifactExchange (auto-detects kind and instance).
+    // JSON input — render straight through ArtifactExchange (auto-detects kind and instance).
     if (artifactText.stripLeading().startsWith("{"))
       return renderJsonInput(artifactText, asYaml, compact);
 

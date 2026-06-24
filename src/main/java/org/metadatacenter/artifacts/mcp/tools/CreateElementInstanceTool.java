@@ -22,7 +22,7 @@ import java.util.Map;
  * is the one slot kind {@code create_template_instance} cannot pre-populate (it has no
  * way to know how many entries an instance will need).
  *
- * <p>No CedarValidator step at creation: validate the element instance against its element with
+ * <p>No CedarValidator step at creation. Validate the element instance against its element with
  * {@code validate_instance_artifact} (which auto-detects the element schema), or in context once
  * attached to a parent instance.
  */

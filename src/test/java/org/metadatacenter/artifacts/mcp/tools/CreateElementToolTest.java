@@ -50,7 +50,7 @@ final class CreateElementToolTest
 
     assertEquals("Address", yaml.get("name"));
     assertEquals("Postal address element", yaml.get("description"));
-    // The exchange form is expanded: what was set at creation survives in the returned YAML.
+    // The exchange form is expanded — what was set at creation survives in the returned YAML.
     assertEquals("0.1.0", String.valueOf(yaml.get("version")));
 
     ValidationReport report = cedarValidator.validateTemplateElement(renderJson(yaml));

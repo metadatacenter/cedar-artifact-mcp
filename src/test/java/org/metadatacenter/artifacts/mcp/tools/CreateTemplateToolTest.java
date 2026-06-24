@@ -48,7 +48,7 @@ final class CreateTemplateToolTest
 
     assertEquals("Patient demographics", yaml.get("name"));
     assertEquals("Minimal demographics template", yaml.get("description"));
-    // The exchange form is expanded: what was set at creation survives in the returned YAML.
+    // The exchange form is expanded — what was set at creation survives in the returned YAML.
     assertEquals("0.1.0", String.valueOf(yaml.get("version")));
 
     ValidationReport report = cedarValidator.validateTemplate(renderJson(yaml));

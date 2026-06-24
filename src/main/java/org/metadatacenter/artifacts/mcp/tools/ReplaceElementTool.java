@@ -24,7 +24,7 @@ import java.util.Map;
  * template or element with the supplied element, keeping the key and its position in
  * the parent's display order ({@code _ui.order}).
  *
- * <p>Semantically remove_child + add_element, except position-preserving: the library's
+ * <p>Semantically remove_child + add_element, except position-preserving — the library's
  * builders append on add, so the two-step route would move the child to the end of the
  * form. The per-add-site overrides (isMultiInstance, minItems, maxItems) mirror
  * {@link AddElementTool} and apply to the incoming child. The child being replaced may

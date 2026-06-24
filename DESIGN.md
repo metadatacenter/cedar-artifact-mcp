@@ -66,7 +66,7 @@ works for a human caller. Every tool needs:
   tools where there's a partner workflow
 - a tight `required` list
 
-Naming convention to avoid: this principle is about the **MCP tool-input-schema
+Naming convention to avoid. This principle is about the **MCP tool-input-schema
 mechanism** (which MCP defines using JSON Schema syntax). That is a different
 thing from **CEDAR's JSON Schema serialization** of templates/elements/fields/
 instances — one of several artifact serializations alongside YAML, spreadsheets,

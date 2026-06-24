@@ -49,7 +49,7 @@ final class InstanceChildOrderTest
     String instance = setValue(template, createInstance(template), "a", "va");
     instance = setValue(template, instance, "c", "vc");
 
-    // Feed a deliberately reversed instance through a value tool: the result must come
+    // Feed a deliberately reversed instance through a value tool — the result must come
     // back in the template's order, values intact.
     String yaml = setValue(template, reverseChildren(instance), "b", "vb");
 

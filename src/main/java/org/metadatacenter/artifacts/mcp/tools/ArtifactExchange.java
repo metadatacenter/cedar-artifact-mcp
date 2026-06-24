@@ -88,7 +88,7 @@ final class ArtifactExchange
    */
   static final String DISPLAY_NOTICE =
       " This result is the expanded exchange form. When showing the artifact to the user in an "
-          + "interactive session, prefer the lean view: call the matching render tool "
+          + "interactive session, prefer the lean view — call the matching render tool "
           + "(render_schema_artifact / render_instance_artifact) with compact: true and display "
           + "its output instead. But ALWAYS pass THIS returned YAML "
           + "into subsequent tool calls — the compacted display view drops provenance (version, "
@@ -113,7 +113,7 @@ final class ArtifactExchange
    * rather than the artifact in hand.
    */
   static final String VERBATIM_INPUT_NOTICE =
-      " Supply the artifact exactly as you obtained it: read its file and paste the content inline "
+      " Supply the artifact exactly as you obtained it. Read its file and paste the content inline "
           + "(a large artifact inline is fine — there is no size limit to worry about and no "
           + "file-path parameter). Do not reformat, re-indent, re-serialize, or otherwise massage "
           + "the content — pass the bytes verbatim, so the operation sees the real artifact and not "
@@ -385,7 +385,7 @@ final class ArtifactExchange
     try {
       return jsonNodeToYaml(node, isCompact);
     } catch (IllegalArgumentException notSchemaOrTemplateInstance) {
-      // Standalone element instance: no schema @type and no schema:isBasedOn for jsonNodeToYaml to
+      // Standalone element instance — no schema @type and no schema:isBasedOn for jsonNodeToYaml to
       // key on, so read it explicitly from the original text.
       return toYaml(readElementInstance(text), isCompact);
     }

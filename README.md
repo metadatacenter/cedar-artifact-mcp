@@ -54,7 +54,7 @@ Every top-level artifact is auto-assigned an `@id` of the right CEDAR form when
 you don't supply one — `https://repo.metadatacenter.org/{templates,
 template-elements,template-fields,template-instances}/<uuid>`. The `@id` is
 the artifact's *identity*, so the compact view keeps it; it shows up as the
-`id:` line in the YAML below. Minting is top-level only: a child authored
+`id:` line in the YAML below. Minting is top-level only — a child authored
 inline inside a parent (a field in a template's `children:`, a value in a
 controlled-term field) is left id-less unless you set one explicitly — which
 is why `Street` and the controlled-term values further down carry no `id:`.
@@ -579,14 +579,14 @@ several, mixing kinds.
 
 Detaches a constraint, addressed by the IRI it points at — the class IRI,
 ontology IRI, branch root IRI, or value-set IRI it was attached with. One
-tool for all four kinds: setting is split because the input tuples differ,
+tool for all four kinds. Setting is split because the input tuples differ,
 but removal needs only identity, and an unknown IRI errors with a
 kind-labelled listing of the field's current constraints. Removing the
 *last* constraint is allowed but consequential — an unconstrained
 controlled-term field is wire-identical to a plain text field, so that is
 what comes back — and is refused while a controlled-term default value would
 be orphaned (unset or change the default first). Literal options are not
-constraints in this sense: `set_options` has replace semantics, so removing
+constraints in this sense — `set_options` has replace semantics, so removing
 an option is restating the list.
 
 ### `set_options(field, options, default_option?)`
@@ -665,7 +665,7 @@ value back to unset (instances are sparse, so it simply disappears); an
 indexed multi-instance path (`emails[1]`, `addresses[2]`) deletes that entry
 and shifts later entries down; an unindexed multi-instance path (`emails`)
 clears the whole list. Idempotent — unsetting an already-unset field succeeds.
-Required fields may be unset: an in-progress instance is allowed to be
+Required fields may be unset — an in-progress instance is allowed to be
 incomplete, and `requiredValue` is enforced by `validate_instance_artifact`, not
 mid-edit. Deleting at an out-of-range index is an error — unlike setting,
 where an index equal to the list size appends, there is nothing there to
@@ -727,7 +727,7 @@ property is a no-op).
 
 All three take an `artifact` that may be a **template, element, field, or
 template instance** (YAML or JSON; kind auto-detected) and return the updated
-artifact as expanded YAML. Annotations live at the artifact's root: to annotate
+artifact as expanded YAML. Annotations live at the artifact's root. To annotate
 a specific field or element inside a template, annotate the standalone artifact
 first, then `add_field` / `add_element` it. (Element *instances* do not carry
 annotations and are rejected.)
@@ -938,7 +938,7 @@ The exhaustive real-world battery — every vendored CEDAR template
 round-tripped through reader / renderer / validator — lives in
 `cedar-artifact-library` as `TemplateBatteryYamlToJsonTest`,
 `TemplateBatteryYamlRoundTripTest`, and `TemplateBatteryJsonRoundTripTest`.
-That's the right home for it: the tests exercise the library's
+That's the right home for it — the tests exercise the library's
 reader/renderer/validator without any MCP wrapping, and the goldens are
 derived from the library's own round-trip.
 

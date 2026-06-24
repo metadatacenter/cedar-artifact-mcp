@@ -61,7 +61,7 @@ public final class RenderInstanceArtifactTool
         "description",
         "The schema the instance is based on (YAML or JSON Schema) — a template for a template "
             + "instance, an element for an element instance. Optional but recommended when you need "
-            + "a complete instance: a YAML instance is sparse (fields with no value are omitted), "
+            + "a complete instance — a YAML instance is sparse (fields with no value are omitted), "
             + "whereas a complete CEDAR instance carries every field the schema declares. When "
             + "supplied, the instance is inflated against it so the output is complete (and will "
             + "validate); when omitted, only the fields the instance actually carries are rendered."));

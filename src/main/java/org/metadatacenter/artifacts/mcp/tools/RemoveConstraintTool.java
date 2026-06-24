@@ -19,12 +19,12 @@ import java.util.Map;
 /**
  * MCP tool {@code remove_constraint} — detaches a controlled-term constraint from a
  * field, the inverse of the {@code set_*_constraint} family. One tool rather than a
- * per-kind quartet: setting is split because the input tuples differ, but removal needs
+ * per-kind quartet — setting is split because the input tuples differ, but removal needs
  * only identity, and every constraint kind is identified the same way — by the IRI it
  * points at (class, ontology, branch root, or value set). The tool searches all four
  * constraint lists for that IRI.
  *
- * <p>Removing the <em>last</em> constraint is allowed but consequential: a
+ * <p>Removing the <em>last</em> constraint is allowed but consequential — a
  * constraint-less controlled-term field is wire-indistinguishable from a plain text
  * field, so that is what the result reads back as. It is refused when it would orphan a
  * controlled-term default value — unset or change the default first (no silent drops).

@@ -26,7 +26,7 @@ import java.util.Map;
  * or element with the supplied field, keeping the key and its position in the parent's
  * display order ({@code _ui.order}).
  *
- * <p>Semantically remove_child + add_field, except position-preserving: the library's
+ * <p>Semantically remove_child + add_field, except position-preserving — the library's
  * builders append on add, so the two-step route would move the child to the end of the
  * form. The per-add-site overrides (isMultiInstance, minItems, maxItems, isRequired,
  * isHidden) mirror {@link AddFieldTool} and apply to the incoming child. The child being

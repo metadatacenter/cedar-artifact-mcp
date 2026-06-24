@@ -84,8 +84,8 @@ public final class CreateTemplateInstanceTool
                 + "carries the instance identity (@id, name, isBasedOn) and only the fields that "
                 + "hold a value — unset fields are omitted entirely (no null, no empty "
                 + "placeholders), so a freshly created instance is essentially just its identity. "
-                + "It is still structurally complete against the template: the empty fields the "
-                + "JSON form requires are reconstructed at the JSON boundary — "
+                + "It is still structurally complete against the template — the empty fields the "
+                + "JSON form requires are reconstructed at the JSON boundary, "
                 + "'validate_instance_artifact' and 'render_instance_artifact' (format: json, given "
                 + "the template) inflate them. "
                 + "Fill values with set_literal_field_value / set_iri_field_value."
@@ -118,7 +118,7 @@ public final class CreateTemplateInstanceTool
         return error("invalid id \"" + idText + "\": an id must be an absolute IRI "
             + "(e.g. https://repo.metadatacenter.org/template-instances/5c48700a-4163-436d-8daa-95af7311cded)");
     } else {
-      // No caller-supplied id: mint a top-level CEDAR instance IRI (DESIGN.md Principle 10).
+      // No caller-supplied id — mint a top-level CEDAR instance IRI (DESIGN.md Principle 10).
       id = IdMinter.mintInstanceId();
     }
 
@@ -146,7 +146,7 @@ public final class CreateTemplateInstanceTool
     URI isBasedOn = template.jsonLdId().get();
 
     String name = nameOverride == null || nameOverride.isBlank() ? template.name() : nameOverride;
-    // No auto-stand-in: if the caller didn't supply a description and the template doesn't
+    // No auto-stand-in — if the caller didn't supply a description and the template doesn't
     // carry one, default to an empty string. The JSON Schema generated from the template
     // requires schema:description to be present on the instance (the validator rejects its
     // absence), so we have to emit *something*; the YAML renderer's compact mode then

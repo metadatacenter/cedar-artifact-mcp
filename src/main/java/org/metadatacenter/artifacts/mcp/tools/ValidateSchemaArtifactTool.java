@@ -18,7 +18,7 @@ import java.util.Map;
  * don't-know-the-kind" entry point. (Instances are not schema artifacts — hence the name; they go
  * through {@code validate_instance_artifact}.)
  *
- * <p>Instances are detected (by {@code schema:isBasedOn}) but not validated here: an instance can
+ * <p>Instances are detected (by {@code schema:isBasedOn}) but not validated here — an instance can
  * only be validated against the template it is based on, so the caller is redirected to
  * {@code validate_instance_artifact}. JSON is validated exactly as received (no round-trip through the
  * library reader/renderer, so the verdict reflects the artifact itself, not our library's
