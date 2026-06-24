@@ -155,7 +155,7 @@ public final class ValidateInstanceArtifactTool
       }
     }
 
-    // Nested shape: the standalone document's identity keys don't exist inside a parent.
+    // Nested shape — the standalone document's identity keys don't exist inside a parent.
     entryNode.remove("schema:name");
     entryNode.remove("schema:description");
 

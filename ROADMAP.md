@@ -189,7 +189,7 @@ centralizes read (YAML or JSON, auto-detected) and render.
   modelVersion, created/modified, …) only when actually set — absent ⇒ omitted, present ⇒
   shown and round-tripped — making the default view naturally lean with no lossy compaction.
 
-  The load-bearing prerequisite: that only yields a lean default if `version` / `status` /
+  The load-bearing prerequisite is that this only yields a lean default if `version` / `status` /
   `modelVersion` stop being *injected* as defaults — both here and in the library builder
   and readers (which now default them deliberately). That has cross-consumer reach
   (cedar-server tooling, the CLI), so it needs coordinating, not just an MCP edit. Tradeoff

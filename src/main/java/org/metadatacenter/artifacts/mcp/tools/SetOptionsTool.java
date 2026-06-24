@@ -17,7 +17,7 @@ import java.util.Map;
 /**
  * MCP tool {@code set_options} — replaces the literal option list of a choice field (radio,
  * checkbox, single- or multi-select list). The constraints counterpart to the
- * {@code set_*_constraint} tools: those bind a field to <em>ontology</em> values, this binds it
+ * {@code set_*_constraint} tools — those bind a field to <em>ontology</em> values, whereas this binds it
  * to <em>literal</em> values.
  *
  * <p>Replace semantics: the call states the complete option list in display order, and whatever

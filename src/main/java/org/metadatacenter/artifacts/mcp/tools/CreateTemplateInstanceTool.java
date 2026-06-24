@@ -27,7 +27,7 @@ import java.util.Map;
  *
  * <p>Walks the template and builds a complete instance model (an empty {@code FieldInstance}
  * per non-static, non-attribute-value child, recursing on elements). The rendered YAML, however,
- * is <em>sparse</em>: the renderer omits every unset field (no {@code value: null}, no
+ * is <em>sparse</em> — the renderer omits every unset field (no {@code value: null}, no
  * {@code {}}), so a freshly created instance is essentially just its identity (@id, name,
  * isBasedOn). The required empty slots are reconstructed from the template at the JSON boundary
  * (see {@link InstanceInflater}) by {@code validate_instance_artifact} and
@@ -80,7 +80,7 @@ public final class CreateTemplateInstanceTool
         .name("create_template_instance")
         .title("Create an empty CEDAR template instance")
         .description(
-            "Builds a CEDAR template instance from a template. The returned YAML is sparse: it "
+            "Builds a CEDAR template instance from a template. The returned YAML is sparse — it "
                 + "carries the instance identity (@id, name, isBasedOn) and only the fields that "
                 + "hold a value — unset fields are omitted entirely (no null, no empty "
                 + "placeholders), so a freshly created instance is essentially just its identity. "

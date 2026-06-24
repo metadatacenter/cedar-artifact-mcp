@@ -123,7 +123,7 @@ final class ArtifactExchange
   // serialized artifact -> model (incoming artifacts)
   //
   // The exchange form is expanded YAML, but a JSON Schema artifact (e.g. one produced by a
-  // render tool with format: json, or fetched from a CEDAR server) is also accepted: the format is
+  // render tool with format: json, or fetched from a CEDAR server) is also accepted — the format is
   // auto-detected so callers never have to convert before threading. Both serializations
   // resolve to the same in-memory model — the canonical representation.
   // ---------------------------------------------------------------------

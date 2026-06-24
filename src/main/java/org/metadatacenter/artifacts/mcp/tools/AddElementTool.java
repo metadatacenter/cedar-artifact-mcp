@@ -23,7 +23,7 @@ import java.util.Map;
  * MCP tool {@code add_element} — adds an existing element (passed as YAML) as a child
  * of an existing parent (template or element) artifact.
  *
- * <p>Pairs with {@link AddFieldTool}: this is the "add an entire sub-tree" path where
+ * <p>Pairs with {@link AddFieldTool} — this is the "add an entire sub-tree" path where
  * the child element has already been composed (likely by an earlier
  * {@code create_element} call).
  */

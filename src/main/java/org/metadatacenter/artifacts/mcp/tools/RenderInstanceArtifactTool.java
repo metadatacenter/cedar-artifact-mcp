@@ -146,7 +146,7 @@ public final class RenderInstanceArtifactTool
           + e.getMessage());
     }
 
-    // Reject a schema artifact (template/element/field) up front: it is not an instance.
+    // Reject a schema artifact (template/element/field) up front — it is not an instance.
     McpSchema.CallToolResult redirect = rejectIfSchemaArtifact(instanceText);
     if (redirect != null)
       return redirect;
