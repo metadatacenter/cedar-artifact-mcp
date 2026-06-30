@@ -26,9 +26,11 @@ import org.metadatacenter.artifacts.model.core.fields.XsdTemporalDatatype;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.metadatacenter.artifacts.model.yaml.YamlConstants.FIELD_TYPES;
 import static org.metadatacenter.artifacts.model.yaml.YamlConstants.NUMERIC_FIELD;
@@ -50,6 +52,16 @@ import static org.metadatacenter.artifacts.model.yaml.YamlConstants.TEXT_FIELD;
  */
 public final class CreateFieldTool
 {
+  // Schema enum vocabularies, derived from the library enums so they cannot drift from what the
+  // handler's fromString() parsers accept. getText() is the wire form each fromString() round-trips.
+  private static final List<String> DATATYPES = Stream.concat(
+      Arrays.stream(XsdNumericDatatype.values()).map(XsdNumericDatatype::getText),
+      Arrays.stream(XsdTemporalDatatype.values()).map(XsdTemporalDatatype::getText)).toList();
+  private static final List<String> GRANULARITIES =
+      Arrays.stream(TemporalGranularity.values()).map(TemporalGranularity::getText).toList();
+  private static final List<String> TIME_FORMATS =
+      Arrays.stream(InputTimeFormat.values()).map(InputTimeFormat::getText).toList();
+
   private CreateFieldTool() {}
 
   public static McpSchema.Tool tool()
@@ -112,11 +124,11 @@ public final class CreateFieldTool
 
     properties.put("datatype", Map.of(
         "type", "string",
+        "enum", DATATYPES,
         "description",
-        "For numeric-field: one of xsd:int, xsd:long, xsd:byte, xsd:short, xsd:decimal, "
-            + "xsd:float, xsd:double (default xsd:decimal). "
-            + "For temporal-field: one of xsd:date, xsd:dateTime, xsd:time (default xsd:dateTime). "
-            + "Ignored — and an error — for any other field type."));
+        "The field's datatype. For a numeric-field, one of the xsd numeric types (default "
+            + "xsd:decimal); for a temporal-field, one of the xsd temporal types (default "
+            + "xsd:dateTime). Ignored — and an error — for any other field type."));
 
     // Numeric-only
     properties.put("min_value", Map.of(
@@ -135,13 +147,15 @@ public final class CreateFieldTool
     // Temporal-only
     properties.put("granularity", Map.of(
         "type", "string",
+        "enum", GRANULARITIES,
         "description",
-        "temporal-field granularity: one of year, month, day, hour, minute, second, decimalSecond. "
-            + "Optional (defaults to day for xsd:date / xsd:dateTime, minute for xsd:time)."));
+        "temporal-field granularity. Optional; defaults to day for xsd:date / xsd:dateTime, "
+            + "minute for xsd:time."));
     properties.put("input_time_format", Map.of(
         "type", "string",
+        "enum", TIME_FORMATS,
         "description",
-        "temporal-field clock format: 12h or 24h. Optional; only meaningful when granularity is sub-day."));
+        "temporal-field clock format. Optional; only meaningful when granularity is sub-day."));
     properties.put("input_time_zone", Map.of(
         "type", "boolean",
         "description", "temporal-field timezone toggle. Optional; only meaningful when granularity is sub-day."));
