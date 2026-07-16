@@ -155,15 +155,15 @@ centralizes read (YAML or JSON, auto-detected) and render.
 ## Next
 
 - **Build without a locally installed library** — building this MCP requires
-  `cedar-artifact-library:2.8.3-SNAPSHOT` to have been `mvn install`ed from a local checkout
+  `cedar-artifact-library:2.8.4-SNAPSHOT` to have been `mvn install`ed from a local checkout
   of the library's `develop` branch — and that library in turn sits atop `cedar-parent`,
   `cedar-model-library`, and `cedar-model-validation-library`, so a fresh machine must clone
   and install four repositories in dependency order; none of the snapshots resolve from any
-  public repository. That makes the MCP heavier to distribute than it needs to be (the
-  prebuilt shaded jar is the workaround). The fix lives on the library side — publish
-  released, non-SNAPSHOT artifacts to a public Maven repository and pin this MCP to a
-  released version. `cedar-cee-mcp` already resolves entirely from Maven Central and is the
-  target state.
+  public repository. All three Java MCPs share this — `cedar-artifact-mcp`,
+  `cedar-artifact-rest-mcp`, and `cedar-cee-mcp` each pin the same library SNAPSHOT — so the
+  prebuilt shaded jars are the distribution workaround. The fix lives on the library side —
+  publish released, non-SNAPSHOT artifacts to a public Maven repository and pin all three MCPs
+  to a released version.
 
 - **Field question metadata is not exposed.** The library carries several per-field
   presentation properties with no tool path: `skos:prefLabel` (the preferred question text —
