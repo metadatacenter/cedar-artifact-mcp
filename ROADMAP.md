@@ -7,7 +7,7 @@ architectural principles see [DESIGN.md](./DESIGN.md).
 
 ### Scaffold
 
-- Maven scaffold with the official MCP Java SDK and `cedar-artifact-library:2.8.1-SNAPSHOT`
+- Maven scaffold with the official MCP Java SDK and `cedar-artifact-library:2.8.4-SNAPSHOT`
   (tracking the library's `develop` branch).
 - Stdio transport server with a diagnostic `ping` tool.
 - Shaded executable jar (`mvn package` → `target/cedar-artifact-mcp-<v>-all.jar`); the
