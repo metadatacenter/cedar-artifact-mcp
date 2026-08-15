@@ -165,6 +165,17 @@ centralizes read (YAML or JSON, auto-detected) and render.
   publish released, non-SNAPSHOT artifacts to a public Maven repository and pin all three MCPs
   to a released version.
 
+- **The value-constraint keys change on the next library bump.** A controlled-term entry
+  names its vocabulary with `source*` keys and its term with `term*` keys as of
+  `cedar-artifact-library` 2.9.x — `acronym` → `sourceAcronym`, `ontologyName` → `sourceName`,
+  `valueSetName` and a branch's `termLabel` → `termBaseLabel`, `maxDepth` → `termMaxDepth`,
+  `numTerms` → `termCount`, and `iri` → `termIri` or `termBaseIri` by what it points at — and
+  the library refuses the form it replaced. This MCP pins 2.8.4-SNAPSHOT, so its README's YAML
+  examples still show the older keys. They and any fixture carrying a constraint have to move
+  in the same change that bumps the pin. Three keys are also new: `sourceSystem`, `sourceIri`,
+  and a `version` block pinning one vocabulary snapshot; the spec documents all of it on the
+  Controlled Term Field page.
+
 - **Field question metadata is not exposed.** The library carries several per-field
   presentation properties with no tool path: `skos:prefLabel` (the preferred question text —
   an alternative phrasing of the field's name shown in forms, distinct from the value-level
