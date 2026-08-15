@@ -228,7 +228,7 @@ bound to an ontology class, a whole ontology, a subtree of one, or a curated
 value set, so every value carries a stable IRI as well as a human-readable
 label.
 Authoring those bindings by hand means looking up IRIs in BioPortal and
-pasting in the right `iri` / `acronym` / `ontologyName` / `termLabel` tuple
+pasting in the right `termBaseIri` / `sourceAcronym` / `sourceName` / `termBaseLabel` tuple
 — error-prone, and the IRI is the part the LLM is *least* likely to invent
 correctly.
 
@@ -239,7 +239,7 @@ exposes BioPortal search and lookup as tools an LLM can call —
 `get_value_set` — so the same LLM that's driving the artifact MCP can
 discover the IRIs and tuples it needs without leaving the conversation. The
 two MCPs are designed to pair: the bioportal one returns exactly the
-`iri` / `acronym` / `ontologyName` / `termLabel` shape the artifact MCP's
+`termBaseIri` / `sourceAcronym` / `sourceName` / `termBaseLabel` shape the artifact MCP's
 `set_*_constraint` and `set_iri_field_value` tools take as
 input.
 
@@ -256,11 +256,11 @@ id: https://repo.metadatacenter.org/template-fields/9cbbefa4-d408-4170-91ba-fde7
 datatype: iri
 values:
   - type: branch
-    ontologyName: Human Disease Ontology
-    acronym: DOID
-    termLabel: disease
-    iri: http://purl.obolibrary.org/obo/DOID_4
-    maxDepth: 0
+    sourceAcronym: DOID
+    sourceName: Human Disease Ontology
+    termBaseIri: http://purl.obolibrary.org/obo/DOID_4
+    termBaseLabel: disease
+    termMaxDepth: 0
 ```
 
 Under the hood the LLM looks up DOID and its `disease` root class (`DOID_4`)
@@ -283,11 +283,11 @@ children:
     datatype: iri
     values:
       - type: branch
-        ontologyName: Human Disease Ontology
-        acronym: DOID
-        termLabel: disease
-        iri: http://purl.obolibrary.org/obo/DOID_4
-        maxDepth: 0
+        sourceAcronym: DOID
+        sourceName: Human Disease Ontology
+        termBaseIri: http://purl.obolibrary.org/obo/DOID_4
+        termBaseLabel: disease
+        termMaxDepth: 0
 ```
 
 The LLM adds the Disease field to the new template. The template is auto-assigned
