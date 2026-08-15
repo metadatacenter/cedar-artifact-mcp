@@ -39,7 +39,6 @@ import java.util.Map;
 public final class RenderInstanceArtifactTool
 {
   private static final ObjectMapper JACKSON2 = new ObjectMapper();
-  private static final YamlArtifactReader READER = new YamlArtifactReader(true);
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
 
   private RenderInstanceArtifactTool() {}
@@ -214,7 +213,7 @@ public final class RenderInstanceArtifactTool
       return ArtifactExchange.readInstance(text);
     LinkedHashMap<String, Object> yamlMap = ArtifactExchange.parseYamlMap(text);
     mintIdIfAbsent(yamlMap, false);
-    return READER.readTemplateInstanceArtifact(yamlMap);
+    return ArtifactExchange.readTemplateInstanceYaml(yamlMap);
   }
 
   private static ElementInstanceArtifact readElementInstance(String text, boolean inputIsJson)
@@ -223,7 +222,7 @@ public final class RenderInstanceArtifactTool
       return ArtifactExchange.readElementInstance(text);
     LinkedHashMap<String, Object> yamlMap = ArtifactExchange.parseYamlMap(text);
     mintIdIfAbsent(yamlMap, true);
-    return READER.readElementInstanceArtifact(yamlMap);
+    return ArtifactExchange.readElementInstanceYaml(yamlMap);
   }
 
   private static void mintIdIfAbsent(LinkedHashMap<String, Object> yamlMap, boolean isElement)

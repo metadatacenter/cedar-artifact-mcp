@@ -186,7 +186,7 @@ final class CreateTemplateToolTest
   private static ObjectNode renderJson(Map<String, Object> yaml)
   {
     LinkedHashMap<String, Object> map = new LinkedHashMap<>(yaml);
-    TemplateSchemaArtifact model = new YamlArtifactReader(true).readTemplateSchemaArtifact(map);
+    TemplateSchemaArtifact model = ArtifactExchange.readTemplateSchemaYaml(map);
     return new JsonArtifactRenderer().renderTemplateSchemaArtifact(model);
   }
 

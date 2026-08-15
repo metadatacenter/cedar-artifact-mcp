@@ -160,7 +160,7 @@ final class CreateElementToolTest
   private static ObjectNode renderJson(Map<String, Object> yaml)
   {
     LinkedHashMap<String, Object> map = new LinkedHashMap<>(yaml);
-    ElementSchemaArtifact model = new YamlArtifactReader(true).readElementSchemaArtifact(map);
+    ElementSchemaArtifact model = ArtifactExchange.readElementSchemaYaml(map);
     return new JsonArtifactRenderer().renderElementSchemaArtifact(model);
   }
 

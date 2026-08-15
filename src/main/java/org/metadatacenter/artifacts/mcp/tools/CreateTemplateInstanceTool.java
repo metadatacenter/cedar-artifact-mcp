@@ -34,10 +34,13 @@ import java.util.Map;
  * {@code render_instance_artifact} (with {@code format: json}). The
  * LLM fills values via {@code set_literal_field_value} and friends.
  *
- * <p>The {@code isBasedOn} URI is always derived from the template's {@code @id} — the
- * instance points at exactly the template it was built from, by construction. A template
- * without an {@code @id} is rejected with guidance ({@code create_template} and
- * {@code render_schema_artifact} mint one automatically).
+ * <p>The {@code isBasedOn} URI says which stored template the instance was filled from. It is taken
+ * from the template's own {@code @id} when the supplied document has one, so an instance built from a
+ * template fetched out of a repository points at exactly that template. A template in the compact form
+ * carries no identifier — the form describes an artifact being authored rather than one already stored
+ * — so an instance built from one needs the {@code isBasedOn} argument, naming the template as the
+ * repository knows it. Without either, there is nothing to point at: an instance of a template that
+ * was never saved refers to nothing, and the tool says so.
  */
 public final class CreateTemplateInstanceTool
 {
@@ -64,6 +67,15 @@ public final class CreateTemplateInstanceTool
         "description",
         "Free-text instance description. Optional. Falls back to the template's own "
             + "description when present; otherwise the instance carries no description."));
+    properties.put("isBasedOn", Map.of(
+        "type", "string",
+        "description",
+        "IRI of the stored template this instance is filled from, written into the instance's "
+            + "schema:isBasedOn. Required when the supplied template carries no @id of its own, "
+            + "which is the case for a template in the compact form: that form describes a template "
+            + "being authored, and only a repository can say which stored template an instance "
+            + "belongs to. Save the template first and pass the IRI the repository assigned. Must be "
+            + "an absolute IRI."));
     properties.put("id", Map.of(
         "type", "string",
         "description",
@@ -71,7 +83,7 @@ public final class CreateTemplateInstanceTool
             + "CEDAR instance IRI is auto-minted "
             + "(https://repo.metadatacenter.org/template-instances/<uuid>). Supply one only "
             + "when you have an id assigned by a CEDAR repository. Must be an absolute IRI. "
-            + "Distinct from isBasedOn, which is always derived from the template's @id."));
+            + "Distinct from isBasedOn, which names the template rather than the instance."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("template"), Boolean.FALSE, null, null);
@@ -139,11 +151,25 @@ public final class CreateTemplateInstanceTool
           + ": " + e.getMessage());
     }
 
-    if (template.jsonLdId().isEmpty())
-      return error("the template carries no @id, so the instance's isBasedOn cannot be "
-          + "derived. Add an id: to the template, or build it with create_template / export "
-          + "it with render_schema_artifact - both mint one automatically.");
-    URI isBasedOn = template.jsonLdId().get();
+    String isBasedOnText = stringArg(args, "isBasedOn");
+    URI isBasedOn;
+    if (isBasedOnText != null && !isBasedOnText.isBlank()) {
+      try {
+        isBasedOn = new URI(isBasedOnText);
+      } catch (URISyntaxException e) {
+        return error("invalid isBasedOn \"" + isBasedOnText + "\": not a valid IRI (" + e.getMessage() + ")");
+      }
+      if (!isBasedOn.isAbsolute())
+        return error("invalid isBasedOn \"" + isBasedOnText + "\": must be an absolute IRI "
+            + "(e.g. https://repo.metadatacenter.org/templates/5c48700a-4163-436d-8daa-95af7311cded)");
+    } else if (template.jsonLdId().isPresent()) {
+      isBasedOn = template.jsonLdId().get();
+    } else {
+      return error("the template carries no @id, so there is nothing for the instance's isBasedOn to "
+          + "point at. A template in the compact form never carries one: that form describes a "
+          + "template being authored, and an instance belongs to a template a repository has stored. "
+          + "Save the template, then pass the IRI the repository assigned as isBasedOn.");
+    }
 
     String name = nameOverride == null || nameOverride.isBlank() ? template.name() : nameOverride;
     // No auto-stand-in — if the caller didn't supply a description and the template doesn't

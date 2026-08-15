@@ -196,8 +196,8 @@ final class EndToEndStdioIT
 
       // Re-validate end-to-end: read the YAML the wire returned back to the model and validate
       // its JSON rendering with CedarValidator.
-      var model = new org.metadatacenter.artifacts.model.reader.YamlArtifactReader(true)
-          .readTemplateSchemaArtifact(yamlMap);
+      var model = new org.metadatacenter.artifacts.model.reader.YamlArtifactReader(
+          !yamlMap.containsKey("modelVersion")).readTemplateSchemaArtifact(yamlMap);
       com.fasterxml.jackson.databind.node.ObjectNode parsed =
           new org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer()
               .renderTemplateSchemaArtifact(model);

@@ -249,7 +249,7 @@ final class UnsetFieldValueToolTest
     Object parsed = new Yaml().load(yaml);
     assertTrue(parsed instanceof Map, "instance must be a YAML mapping; got: " + yaml);
     LinkedHashMap<String, Object> map = new LinkedHashMap<>((Map<String, Object>) parsed);
-    return new YamlArtifactReader(true).readTemplateInstanceArtifact(map);
+    return ArtifactExchange.readTemplateInstanceYaml(map);
   }
 
   @SuppressWarnings("unchecked")

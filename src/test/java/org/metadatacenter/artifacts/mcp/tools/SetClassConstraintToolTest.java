@@ -179,7 +179,7 @@ final class SetClassConstraintToolTest
     Object loaded = new org.yaml.snakeyaml.Yaml().load(text);
     assertTrue(loaded instanceof Map, "result must be a YAML mapping; got: " + text);
     LinkedHashMap<String, Object> map = new LinkedHashMap<>((Map<String, Object>) loaded);
-    FieldSchemaArtifact field = new YamlArtifactReader(true).readFieldSchemaArtifact(map);
+    FieldSchemaArtifact field = ArtifactExchange.readFieldSchemaYaml(map);
     return new JsonArtifactRenderer().renderFieldSchemaArtifact(field);
   }
 

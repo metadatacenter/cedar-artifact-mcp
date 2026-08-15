@@ -42,10 +42,12 @@ import java.util.Map;
  *   <li><strong>render</strong> an outgoing model back to expanded YAML.</li>
  * </ul>
  *
- * <p>The reader runs in compact mode ({@code new YamlArtifactReader(true)}) so it accepts
- * both the compact authoring form and the expanded exchange form the tools emit — the only
- * difference between them is the presence of provenance keys, which the compact reader
- * tolerates either way.
+ * <p>Two readers, chosen by what the document looks like. The compact form describes an artifact
+ * being authored: it names neither the artifact nor what a repository records about it, and its
+ * reader refuses a document that carries an identifier. The expanded form the tools emit between
+ * calls does carry one — identity is what has to survive from one stateless call to the next — and
+ * its reader wants the model version the compact form omits. {@link #readerFor} picks by inspecting
+ * the document, so an author may hand in either.
  *
  * <p>JSON Schema is no longer an exchange format between tools; it is produced only by the
  * render tools ({@code render_schema_artifact} / {@code render_instance_artifact} with
@@ -60,9 +62,52 @@ final class ArtifactExchange
   private static final ModelValidator VALIDATOR = new CedarValidator();
   private static final ObjectMapper JACKSON2 = new ObjectMapper();
   private static final JsonArtifactReader JSON_READER = new JsonArtifactReader();
-  // Compact-mode reader: accepts both compact and expanded YAML (modelVersion absent is
-  // defaulted; present-but-wrong is still rejected).
-  private static final YamlArtifactReader YAML_READER = new YamlArtifactReader(true);
+  private static final YamlArtifactReader COMPACT_YAML_READER = new YamlArtifactReader(true);
+  private static final YamlArtifactReader EXPANDED_YAML_READER = new YamlArtifactReader(false);
+
+  /**
+   * The reader the document asks for.
+   *
+   * A document naming the artifact it describes, or stating a model version, is the expanded form the
+   * tools exchange; anything else is the compact form an author writes. Choosing wrongly is not a
+   * matter of tolerance: the compact reader refuses an identifier, and the expanded reader requires a
+   * model version.
+   */
+  private static YamlArtifactReader readerFor(LinkedHashMap<String, Object> document)
+  {
+    return document.containsKey("modelVersion") ? EXPANDED_YAML_READER : COMPACT_YAML_READER;
+  }
+
+  static TemplateSchemaArtifact readTemplateSchemaYaml(LinkedHashMap<String, Object> map)
+  {
+    return readerFor(map).readTemplateSchemaArtifact(map);
+  }
+
+  static ElementSchemaArtifact readElementSchemaYaml(LinkedHashMap<String, Object> map)
+  {
+    return readerFor(map).readElementSchemaArtifact(map);
+  }
+
+  static FieldSchemaArtifact readFieldSchemaYaml(LinkedHashMap<String, Object> map)
+  {
+    return readerFor(map).readFieldSchemaArtifact(map);
+  }
+
+  /**
+   * An instance carries no model version in either form, so a document cannot say which form it is in.
+   * The tools exchange instances that name themselves — identity is what has to survive between two
+   * stateless calls — so instances are read with the reader that accepts an identifier. An author
+   * writing one by hand simply leaves it out.
+   */
+  static TemplateInstanceArtifact readTemplateInstanceYaml(LinkedHashMap<String, Object> map)
+  {
+    return EXPANDED_YAML_READER.readTemplateInstanceArtifact(map);
+  }
+
+  static ElementInstanceArtifact readElementInstanceYaml(LinkedHashMap<String, Object> map)
+  {
+    return EXPANDED_YAML_READER.readElementInstanceArtifact(map);
+  }
 
   private ArtifactExchange() {}
 
@@ -132,35 +177,35 @@ final class ArtifactExchange
   {
     return looksLikeJson(text)
         ? JSON_READER.readTemplateSchemaArtifact(asObjectNode(text))
-        : YAML_READER.readTemplateSchemaArtifact(parseYamlMap(text));
+        : readTemplateSchemaYaml(parseYamlMap(text));
   }
 
   static ElementSchemaArtifact readElement(String text)
   {
     return looksLikeJson(text)
         ? JSON_READER.readElementSchemaArtifact(asObjectNode(text))
-        : YAML_READER.readElementSchemaArtifact(parseYamlMap(text));
+        : readElementSchemaYaml(parseYamlMap(text));
   }
 
   static FieldSchemaArtifact readField(String text)
   {
     return looksLikeJson(text)
         ? JSON_READER.readFieldSchemaArtifact(asObjectNode(text))
-        : YAML_READER.readFieldSchemaArtifact(parseYamlMap(text));
+        : readFieldSchemaYaml(parseYamlMap(text));
   }
 
   static TemplateInstanceArtifact readInstance(String text)
   {
     return looksLikeJson(text)
         ? JSON_READER.readTemplateInstanceArtifact(asObjectNode(text))
-        : YAML_READER.readTemplateInstanceArtifact(parseYamlMap(text));
+        : readTemplateInstanceYaml(parseYamlMap(text));
   }
 
   static ElementInstanceArtifact readElementInstance(String text)
   {
     return looksLikeJson(text)
         ? JSON_READER.readElementInstanceArtifact(asObjectNode(text))
-        : YAML_READER.readElementInstanceArtifact(parseYamlMap(text));
+        : readElementInstanceYaml(parseYamlMap(text));
   }
 
   /**
@@ -337,13 +382,13 @@ final class ArtifactExchange
     LinkedHashMap<String, Object> map = parseYamlMap(text);
     String type = map.get("type") == null ? "" : String.valueOf(map.get("type"));
     return switch (type) {
-      case "template" -> JSON_RENDERER.renderTemplateSchemaArtifact(YAML_READER.readTemplateSchemaArtifact(map));
-      case "element" -> JSON_RENDERER.renderElementSchemaArtifact(YAML_READER.readElementSchemaArtifact(map));
-      case "instance" -> JSON_RENDERER.renderTemplateInstanceArtifact(YAML_READER.readTemplateInstanceArtifact(map));
-      case "element-instance" -> JSON_RENDERER.renderElementInstanceArtifact(YAML_READER.readElementInstanceArtifact(map));
+      case "template" -> JSON_RENDERER.renderTemplateSchemaArtifact(readTemplateSchemaYaml(map));
+      case "element" -> JSON_RENDERER.renderElementSchemaArtifact(readElementSchemaYaml(map));
+      case "instance" -> JSON_RENDERER.renderTemplateInstanceArtifact(readTemplateInstanceYaml(map));
+      case "element-instance" -> JSON_RENDERER.renderElementInstanceArtifact(readElementInstanceYaml(map));
       // Every other top-level type discriminator is a field kind (text-field, numeric-field,
       // controlled-term-field, the ext-* and static-* families, ...).
-      default -> JSON_RENDERER.renderFieldSchemaArtifact(YAML_READER.readFieldSchemaArtifact(map));
+      default -> JSON_RENDERER.renderFieldSchemaArtifact(readFieldSchemaYaml(map));
     };
   }
 

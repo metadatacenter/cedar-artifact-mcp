@@ -393,14 +393,14 @@ final class AddFieldToolTest
   {
     LinkedHashMap<String, Object> map = new LinkedHashMap<>(yaml);
     return new JsonArtifactRenderer().renderTemplateSchemaArtifact(
-        new YamlArtifactReader(true).readTemplateSchemaArtifact(map));
+        ArtifactExchange.readTemplateSchemaYaml(map));
   }
 
   private static ObjectNode renderElementJson(Map<String, Object> yaml)
   {
     LinkedHashMap<String, Object> map = new LinkedHashMap<>(yaml);
     return new JsonArtifactRenderer().renderElementSchemaArtifact(
-        new YamlArtifactReader(true).readElementSchemaArtifact(map));
+        ArtifactExchange.readElementSchemaYaml(map));
   }
 
   private static int asInt(Object value)

@@ -199,7 +199,7 @@ final class RemoveChildToolTest
 
   private static void assertTemplateValidates(String yaml)
   {
-    var model = new YamlArtifactReader(true).readTemplateSchemaArtifact(toReaderMap(yaml));
+    var model = ArtifactExchange.readTemplateSchemaYaml(toReaderMap(yaml));
     var json = new JsonArtifactRenderer().renderTemplateSchemaArtifact(model);
     ValidationReport report;
     try {
@@ -213,7 +213,7 @@ final class RemoveChildToolTest
 
   private static void assertElementValidates(String yaml)
   {
-    var model = new YamlArtifactReader(true).readElementSchemaArtifact(toReaderMap(yaml));
+    var model = ArtifactExchange.readElementSchemaYaml(toReaderMap(yaml));
     var json = new JsonArtifactRenderer().renderElementSchemaArtifact(model);
     ValidationReport report;
     try {

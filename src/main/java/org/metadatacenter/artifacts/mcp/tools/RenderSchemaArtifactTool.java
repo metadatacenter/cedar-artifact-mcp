@@ -8,6 +8,7 @@ import org.metadatacenter.artifacts.model.core.ElementSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
 import org.metadatacenter.artifacts.model.reader.ArtifactParseException;
+import org.metadatacenter.model.ModelNodeNames;
 import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
 import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
 import org.metadatacenter.artifacts.model.yaml.YamlConstants;
@@ -36,7 +37,6 @@ public final class RenderSchemaArtifactTool
 {
   private static final ObjectMapper JACKSON2 = new ObjectMapper();
   // Compact-mode reader: tolerant of the lean authoring YAML the LLM produces.
-  private static final YamlArtifactReader READER = new YamlArtifactReader(true);
   private static final JsonArtifactRenderer RENDERER = new JsonArtifactRenderer();
 
   private RenderSchemaArtifactTool() {}
@@ -150,25 +150,19 @@ public final class RenderSchemaArtifactTool
       default -> { kind = Kind.FIELD; mintedId = IdMinter.mintFieldId(); }
     }
 
-    // Mint a top-level @id when the YAML omits one (DESIGN.md Principle 10). Only the top-level
-    // map is touched; nested children under 'children:' are never given an id.
-    Object suppliedId = yamlMap.get(YamlConstants.ID);
-    if (suppliedId == null || suppliedId.toString().isBlank())
-      yamlMap.put(YamlConstants.ID, mintedId.toString());
-
     ObjectNode rendered;
     try {
       rendered = switch (kind) {
         case TEMPLATE -> {
-          TemplateSchemaArtifact t = READER.readTemplateSchemaArtifact(yamlMap);
+          TemplateSchemaArtifact t = ArtifactExchange.readTemplateSchemaYaml(yamlMap);
           yield RENDERER.renderTemplateSchemaArtifact(t);
         }
         case ELEMENT -> {
-          ElementSchemaArtifact el = READER.readElementSchemaArtifact(yamlMap);
+          ElementSchemaArtifact el = ArtifactExchange.readElementSchemaYaml(yamlMap);
           yield RENDERER.renderElementSchemaArtifact(el);
         }
         case FIELD -> {
-          FieldSchemaArtifact f = READER.readFieldSchemaArtifact(yamlMap);
+          FieldSchemaArtifact f = ArtifactExchange.readFieldSchemaYaml(yamlMap);
           yield RENDERER.renderFieldSchemaArtifact(f);
         }
       };
@@ -178,6 +172,12 @@ public final class RenderSchemaArtifactTool
       return error(kind.name().toLowerCase() + " reader threw " + e.getClass().getSimpleName()
           + ": " + e.getMessage());
     }
+
+    // Mint a top-level @id when the document named no artifact (DESIGN.md Principle 10), on the
+    // rendering rather than on the input: a compact document may not carry one, and putting it back
+    // into the input would make a document its own reader refuses. Nested children are untouched.
+    if (!rendered.hasNonNull(ModelNodeNames.JSON_LD_ID))
+      rendered.put(ModelNodeNames.JSON_LD_ID, mintedId.toString());
 
     if (asYaml) {
       String yaml;

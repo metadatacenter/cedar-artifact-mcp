@@ -438,7 +438,7 @@ final class CreateFieldToolTest
   private static ObjectNode renderJson(Map<String, Object> yaml)
   {
     LinkedHashMap<String, Object> map = new LinkedHashMap<>(yaml);
-    FieldSchemaArtifact model = new YamlArtifactReader(true).readFieldSchemaArtifact(map);
+    FieldSchemaArtifact model = ArtifactExchange.readFieldSchemaYaml(map);
     return new JsonArtifactRenderer().renderFieldSchemaArtifact(model);
   }
 

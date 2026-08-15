@@ -158,7 +158,7 @@ final class SetIriDefaultValueToolTest
     LinkedHashMap<String, Object> map = new LinkedHashMap<>();
     for (Map.Entry<?, ?> e : ((Map<?, ?>) parsed).entrySet())
       map.put(String.valueOf(e.getKey()), e.getValue());
-    FieldSchemaArtifact field = new YamlArtifactReader(true).readFieldSchemaArtifact(map);
+    FieldSchemaArtifact field = ArtifactExchange.readFieldSchemaYaml(map);
     return new JsonArtifactRenderer().renderFieldSchemaArtifact(field);
   }
 

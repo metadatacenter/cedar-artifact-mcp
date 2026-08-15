@@ -388,7 +388,7 @@ final class SetLiteralFieldValueToolTest
    */
   private static void assertValidatesAgainst(String instanceYaml, String templateYaml)
   {
-    YamlArtifactReader reader = new YamlArtifactReader(true);
+    YamlArtifactReader reader = new YamlArtifactReader(false);
     JsonArtifactRenderer renderer = new JsonArtifactRenderer();
     TemplateSchemaArtifact template = reader.readTemplateSchemaArtifact(yamlMap(templateYaml));
     TemplateInstanceArtifact instance = reader.readTemplateInstanceArtifact(yamlMap(instanceYaml));

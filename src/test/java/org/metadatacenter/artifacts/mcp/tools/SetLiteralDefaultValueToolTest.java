@@ -176,7 +176,7 @@ final class SetLiteralDefaultValueToolTest
     // Parse via ArtifactExchange so date-like temporal values stay strings (no SnakeYAML
     // auto-typing to java.util.Date), matching how the threading tools read YAML.
     LinkedHashMap<String, Object> map = ArtifactExchange.parseYamlMap(textOf(result));
-    FieldSchemaArtifact field = new YamlArtifactReader(true).readFieldSchemaArtifact(map);
+    FieldSchemaArtifact field = ArtifactExchange.readFieldSchemaYaml(map);
     return new JsonArtifactRenderer().renderFieldSchemaArtifact(field);
   }
 
