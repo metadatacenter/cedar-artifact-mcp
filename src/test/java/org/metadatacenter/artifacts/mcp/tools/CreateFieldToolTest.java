@@ -20,6 +20,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -144,17 +145,16 @@ final class CreateFieldToolTest
     assertEquals(id, yaml.get("id"));
   }
 
-  @Test void createField_mintsIdWhenOmitted() throws Exception
+  @Test void createField_carriesNoIdWhenOmitted() throws Exception
   {
-    // Fields are first-class, reusable CEDAR artifacts, so a standalone field minted with
-    // no id gets a fresh template-fields IRI like any other root (DESIGN.md Principle 10).
+    // No identifier is invented (DESIGN.md Principle 10): CEDAR assigns one when the field is
+    // created on a server, and until then the field names nothing.
     McpSchema.CallToolResult result = invoke(Map.of(
         "name", "Patient name",
         "type", "text-field"));
 
     assertFalse(result.isError(), "omitting id should still succeed");
-    Map<String, Object> yaml = parseYaml(result);
-    MintedIds.assertMintedId((String) yaml.get("id"), "template-fields");
+    assertNull(parseYaml(result).get("id"), "an unsaved field must name no artifact");
   }
 
   @Test void createField_rejectsRelativeIri()

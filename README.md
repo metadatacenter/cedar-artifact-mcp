@@ -50,14 +50,11 @@ show the user the lean **compact view** instead, produced by the matching
 sees: the compact view (the first step also shows the expanded form it was
 rendered from).
 
-Every top-level artifact is auto-assigned an `@id` of the right CEDAR form when
-you don't supply one — `https://repo.metadatacenter.org/{templates,
-template-elements,template-fields,template-instances}/<uuid>`. The `@id` is
-the artifact's *identity*, so the compact view keeps it; it shows up as the
-`id:` line in the YAML below. Minting is top-level only — a child authored
-inline inside a parent (a field in a template's `children:`, a value in a
-controlled-term field) is left id-less unless you set one explicitly — which
-is why `Street` and the controlled-term values further down carry no `id:`.
+No artifact built here carries an `@id`. CEDAR assigns identity — the artifact's own IRI, each
+child's, and the property IRIs its `@context` maps — when the artifact is created on a server, so
+what these tools produce names nothing until it is saved. That is why no `id:` line appears in the
+YAML below until the template reaches the server, and why an instance can only be built once its
+template has: `isBasedOn` has to name a template a repository holds.
 
 ### A first template, end to end
 
@@ -67,8 +64,7 @@ The tool returns the expanded exchange form:
 
 ```yaml
 type: template
-name: Patient Study
-id: https://repo.metadatacenter.org/templates/76cf7229-d0ae-462a-a40a-e2f8eeb5d041
+name: "Patient Study"
 status: draft
 version: 0.0.1
 modelVersion: 1.6.0
@@ -78,8 +74,7 @@ and the LLM displays the compact view:
 
 ```yaml
 type: template
-name: Patient Study
-id: https://repo.metadatacenter.org/templates/76cf7229-d0ae-462a-a40a-e2f8eeb5d041
+name: "Patient Study"
 ```
 
 Subsequent steps show only the compact view the user sees.
@@ -88,16 +83,14 @@ Subsequent steps show only the compact view the user sees.
 
 ```yaml
 type: text-field
-name: Patient Name
-id: https://repo.metadatacenter.org/template-fields/0252465c-1c51-4fae-a41a-a9263bc9dc31
+name: "Patient Name"
 ```
 
 *Create a numeric field called Age with type `xsd:int`.*
 
 ```yaml
 type: numeric-field
-name: Age
-id: https://repo.metadatacenter.org/template-fields/cbb34a8a-d754-4425-b0e9-52f3db4ade08
+name: "Age"
 datatype: xsd:int
 ```
 
@@ -105,8 +98,7 @@ datatype: xsd:int
 
 ```yaml
 type: numeric-field
-name: Age
-id: https://repo.metadatacenter.org/template-fields/cbb34a8a-d754-4425-b0e9-52f3db4ade08
+name: "Age"
 datatype: xsd:int
 default: 42
 ```
@@ -115,25 +107,20 @@ default: 42
 
 ```yaml
 type: template
-name: Patient Study
-id: https://repo.metadatacenter.org/templates/76cf7229-d0ae-462a-a40a-e2f8eeb5d041
+name: "Patient Study"
 children:
-  - key: Patient Name
+  - key: "Patient Name"
     type: text-field
-    name: Patient Name
-    id: https://repo.metadatacenter.org/template-fields/0252465c-1c51-4fae-a41a-a9263bc9dc31
+    name: "Patient Name"
     configuration:
       required: true
-  - key: Age
+  - key: "Age"
     type: numeric-field
-    name: Age
-    id: https://repo.metadatacenter.org/template-fields/cbb34a8a-d754-4425-b0e9-52f3db4ade08
+    name: "Age"
     datatype: xsd:int
     default: 42
 ```
 
-The two fields keep the `@id`s they were minted with when they were created as
-standalone artifacts above; adding them into the template doesn't change them.
 `add_field`'s `isRequired: true` marked the embedded Patient Name copy required —
 visible as `configuration: required: true` on the child.
 
@@ -141,81 +128,94 @@ visible as `configuration: required: true` on the child.
 
 ```yaml
 type: element
-name: Address
-id: https://repo.metadatacenter.org/template-elements/4384440e-ad84-4f4e-80d9-73893742026b
+name: "Address"
 children:
-  - key: Street
+  - key: "Street"
     type: text-field
-    name: Street
+    name: "Street"
 ```
-
-`Street` is authored inline as a child of the element, so it is not minted an
-`@id` — only the top-level `Address` element is.
 
 *Add the Address element to Patient Study.*
 
 ```yaml
 type: template
-name: Patient Study
-id: https://repo.metadatacenter.org/templates/76cf7229-d0ae-462a-a40a-e2f8eeb5d041
+name: "Patient Study"
 children:
-  - key: Patient Name
+  - key: "Patient Name"
     type: text-field
-    name: Patient Name
-    id: https://repo.metadatacenter.org/template-fields/0252465c-1c51-4fae-a41a-a9263bc9dc31
+    name: "Patient Name"
     configuration:
       required: true
-  - key: Age
+  - key: "Age"
     type: numeric-field
-    name: Age
-    id: https://repo.metadatacenter.org/template-fields/cbb34a8a-d754-4425-b0e9-52f3db4ade08
+    name: "Age"
     datatype: xsd:int
     default: 42
-  - key: Address
+  - key: "Address"
     type: element
-    name: Address
-    id: https://repo.metadatacenter.org/template-elements/4384440e-ad84-4f4e-80d9-73893742026b
+    name: "Address"
     children:
-      - key: Street
+      - key: "Street"
         type: text-field
-        name: Street
+        name: "Street"
 ```
+
+*Save Patient Study to the CEDAR server.*
+
+This step leaves this MCP: `cedar-artifact-rest-mcp`'s `create_template` writes the template and
+returns what CEDAR stored, which is the first version of it that has an identity.
+
+```yaml
+type: template
+name: "Patient Study"
+id: "https://repo.metadatacenter.org/templates/76d52b2d-a22e-4898-9ee9-a18e4ee8a182"
+status: draft
+version: 0.0.1
+modelVersion: 1.6.0
+createdOn: "2026-08-18T18:16:53-07:00"
+createdBy: "https://metadatacenter.org/users/0e97ec85-77a9-434c-8549-33f9eae22608"
+modifiedOn: "2026-08-18T18:16:53-07:00"
+modifiedBy: "https://metadatacenter.org/users/0e97ec85-77a9-434c-8549-33f9eae22608"
+children:
+  - key: "Patient Name"
+    ...
+```
+
+Every identifier in that document was assigned by the server: the template's own, one for each
+child, and a property IRI per child in the `@context` the JSON form carries.
 
 *Create an instance of Patient Study.*
 
 ```yaml
 type: instance
-name: Patient Study
-id: https://repo.metadatacenter.org/template-instances/8f785ae9-d33d-4566-a785-5f868b20bd75
-isBasedOn: https://repo.metadatacenter.org/templates/76cf7229-d0ae-462a-a40a-e2f8eeb5d041
+name: "Patient Study"
+isBasedOn: "https://repo.metadatacenter.org/templates/76d52b2d-a22e-4898-9ee9-a18e4ee8a182"
 ```
 
-The instance gets its own minted `@id` (a `template-instances` IRI), distinct
-from `isBasedOn`, which is taken from the template's `@id`. An instance carries
-no `version` / `status` — those are schema-artifact concerns.
+`isBasedOn` is taken from the stored template's `@id`, which is why the template had to be saved
+first. The instance itself carries no `@id` — CEDAR assigns that when the instance is created — and
+no `version` / `status`, which are schema-artifact concerns.
 
 *Set Patient Name to Alice in the instance.*
 
 ```yaml
 type: instance
-name: Patient Study
-id: https://repo.metadatacenter.org/template-instances/8f785ae9-d33d-4566-a785-5f868b20bd75
-isBasedOn: https://repo.metadatacenter.org/templates/76cf7229-d0ae-462a-a40a-e2f8eeb5d041
+name: "Patient Study"
+isBasedOn: "https://repo.metadatacenter.org/templates/76d52b2d-a22e-4898-9ee9-a18e4ee8a182"
 children:
   Patient Name:
-    value: Alice
+    value: "Alice"
 ```
 
 *Set Age to 30 in the instance.*
 
 ```yaml
 type: instance
-name: Patient Study
-id: https://repo.metadatacenter.org/template-instances/8f785ae9-d33d-4566-a785-5f868b20bd75
-isBasedOn: https://repo.metadatacenter.org/templates/76cf7229-d0ae-462a-a40a-e2f8eeb5d041
+name: "Patient Study"
+isBasedOn: "https://repo.metadatacenter.org/templates/76d52b2d-a22e-4898-9ee9-a18e4ee8a182"
 children:
   Patient Name:
-    value: Alice
+    value: "Alice"
   Age:
     datatype: xsd:int
     value: 30
@@ -250,16 +250,15 @@ branch of the DOID ontology in BioPortal.*
 
 ```yaml
 type: controlled-term-field
-name: Disease
-description: Disease term sourced from the Disease branch of the DOID ontology.
-id: https://repo.metadatacenter.org/template-fields/9cbbefa4-d408-4170-91ba-fde7edb06b2f
+name: "Disease"
+description: "Disease term sourced from the Disease branch of the DOID ontology."
 datatype: iri
 values:
   - type: branch
-    sourceAcronym: DOID
-    sourceName: Human Disease Ontology
-    termBaseIri: http://purl.obolibrary.org/obo/DOID_4
-    termBaseLabel: disease
+    sourceAcronym: "DOID"
+    sourceName: "Human Disease Ontology"
+    termBaseIri: "http://purl.obolibrary.org/obo/DOID_4"
+    termBaseLabel: "disease"
     termMaxDepth: 0
 ```
 
@@ -272,52 +271,48 @@ every descendant of `disease` in DOID is permitted.
 
 ```yaml
 type: template
-name: Study
-id: https://repo.metadatacenter.org/templates/f2e8500d-3c42-4f89-9dc6-4a9f564b39f1
+name: "Study"
 children:
-  - key: Disease
+  - key: "Disease"
     type: controlled-term-field
-    name: Disease
-    description: Disease term sourced from the Disease branch of the DOID ontology.
-    id: https://repo.metadatacenter.org/template-fields/9cbbefa4-d408-4170-91ba-fde7edb06b2f
+    name: "Disease"
+    description: "Disease term sourced from the Disease branch of the DOID ontology."
     datatype: iri
     values:
       - type: branch
-        sourceAcronym: DOID
-        sourceName: Human Disease Ontology
-        termBaseIri: http://purl.obolibrary.org/obo/DOID_4
-        termBaseLabel: disease
+        sourceAcronym: "DOID"
+        sourceName: "Human Disease Ontology"
+        termBaseIri: "http://purl.obolibrary.org/obo/DOID_4"
+        termBaseLabel: "disease"
         termMaxDepth: 0
 ```
 
-The LLM adds the Disease field to the new template. The template is auto-assigned
-an `@id` (a `templates` IRI), and the Disease field keeps the `@id` it was minted
-with when it was created standalone above. The branch `values` are inline value
-constraints, not artifacts, so they carry no `@id` of their own — just the
-ontology `iri` they point at. The template's `@id` is what the instance's
-`isBasedOn` references below.
+The LLM adds the Disease field to the new template. Nothing here carries an `@id` yet: the branch
+`values` are inline value constraints rather than artifacts, so they never get one — just the
+ontology `iri` they point at — and the template and its field get theirs from CEDAR when the
+template is saved. The instance below is built against the saved template, so its `isBasedOn` is
+the IRI the server assigned.
 
 *Create an instance of this template with a value of sickle cell anemia for
 the Disease field.*
 
 ```yaml
 type: instance
-name: Study
-id: https://repo.metadatacenter.org/template-instances/24bbf170-4035-468f-8840-a7a87f12759c
-isBasedOn: https://repo.metadatacenter.org/templates/f2e8500d-3c42-4f89-9dc6-4a9f564b39f1
+name: "Study"
+isBasedOn: "https://repo.metadatacenter.org/templates/f2e8500d-3c42-4f89-9dc6-4a9f564b39f1"
 children:
   Disease:
-    id: http://purl.obolibrary.org/obo/DOID_10923
-    label: sickle cell anemia
+    id: "http://purl.obolibrary.org/obo/DOID_10923"
+    label: "sickle cell anemia"
 ```
 
 The LLM looks up `sickle cell anemia` in DOID via `bioportal-term-mcp`'s
 `find_class` (returning `DOID_10923`), confirms it sits under the branch the
 field constrains to, and calls `set_iri_field_value` with the
-IRI + label tuple. The instance gets its own minted `@id`; `isBasedOn` is taken
-straight from the template's `@id`. Note the `Disease` child's `id:` is the
-DOID class IRI of the chosen value, not a minted instance id — it's the value the
-field points at. The instance now carries the full identifier + label pair, not
+IRI + label tuple. `isBasedOn` is the IRI CEDAR assigned the template when it was saved; the
+instance's own identity comes later, when the instance is created. Note the `Disease` child's `id:`
+is the DOID class IRI of the chosen value, not an artifact identifier — it is the value the field
+points at. The instance now carries the full identifier + label pair, not
 just a free-text string — which is what makes the data downstream-queryable.
 
 ### Working with Elements
@@ -331,59 +326,50 @@ field, up to 3 addresses).*
 
 ```yaml
 type: template
-name: Contacts
-id: https://repo.metadatacenter.org/templates/8765865e-f9b4-4e4f-8904-4b641f280c93
+name: "Contacts"
 children:
-  - key: Address
+  - key: "Address"
     type: element
-    name: Address
-    id: https://repo.metadatacenter.org/template-elements/4f1b852c-2505-483f-87b6-a92ff32da64b
+    name: "Address"
     children:
-      - key: Street
+      - key: "Street"
         type: text-field
-        name: Street
-        id: https://repo.metadatacenter.org/template-fields/f25a7ad8-6fc7-431a-aec5-d0a492451876
+        name: "Street"
     configuration:
       multiple: true
       minItems: 0
       maxItems: 3
 ```
 
-*Create an instance with two addresses.*
+*Save it, then create an instance with two addresses.*
 
 ```yaml
 type: instance
-name: Contacts
-id: https://repo.metadatacenter.org/template-instances/aae94f9a-5aca-436d-aef8-1a6f1c36537a
-isBasedOn: https://repo.metadatacenter.org/templates/8765865e-f9b4-4e4f-8904-4b641f280c93
+name: "Contacts"
+isBasedOn: "https://repo.metadatacenter.org/templates/8765865e-f9b4-4e4f-8904-4b641f280c93"
 children:
   Address:
     - type: element-instance
-      id: https://repo.metadatacenter.org/template-element-instances/a5f49127-879a-4e7b-86d9-93d46f184afb
     - type: element-instance
-      id: https://repo.metadatacenter.org/template-element-instances/dc8c3f5e-3ee7-43a9-81f0-1d2f00c39b1f
 ```
 
 A fresh instance's `Address` list starts empty; each entry is created with
-`create_element_instance` (an element instance is a standalone artifact with
-its own minted `@id`) and appended with `set_element_instance`. An entry that
-holds no values yet displays as just its identity.
+`create_element_instance` and appended with `set_element_instance`. An entry that holds no values
+yet shows as nothing but its kind — an element instance names no artifact until CEDAR creates the
+instance that carries it.
 
 *Set the first address's street to 123 Main St.*
 
 ```yaml
 type: instance
-name: Contacts
-id: https://repo.metadatacenter.org/template-instances/aae94f9a-5aca-436d-aef8-1a6f1c36537a
-isBasedOn: https://repo.metadatacenter.org/templates/8765865e-f9b4-4e4f-8904-4b641f280c93
+name: "Contacts"
+isBasedOn: "https://repo.metadatacenter.org/templates/8765865e-f9b4-4e4f-8904-4b641f280c93"
 children:
   Address:
-    - id: https://repo.metadatacenter.org/template-element-instances/a5f49127-879a-4e7b-86d9-93d46f184afb
-      children:
+    - children:
         Street:
-          value: 123 Main St
+          value: "123 Main St"
     - type: element-instance
-      id: https://repo.metadatacenter.org/template-element-instances/dc8c3f5e-3ee7-43a9-81f0-1d2f00c39b1f
 ```
 
 The value tools address into entries with bracketed indices —
@@ -393,15 +379,13 @@ The value tools address into entries with bracketed indices —
 
 ```yaml
 type: instance
-name: Contacts
-id: https://repo.metadatacenter.org/template-instances/aae94f9a-5aca-436d-aef8-1a6f1c36537a
-isBasedOn: https://repo.metadatacenter.org/templates/8765865e-f9b4-4e4f-8904-4b641f280c93
+name: "Contacts"
+isBasedOn: "https://repo.metadatacenter.org/templates/8765865e-f9b4-4e4f-8904-4b641f280c93"
 children:
   Address:
-    - id: https://repo.metadatacenter.org/template-element-instances/a5f49127-879a-4e7b-86d9-93d46f184afb
-      children:
+    - children:
         Street:
-          value: 123 Main St
+          value: "123 Main St"
 ```
 
 `unset_field_value` with `Address[1]` deletes the entry; later entries shift
@@ -456,13 +440,14 @@ Creates a new, empty CEDAR template. `version` and `status` are optional and def
 `0.0.1` / `draft`. Pass the returned template into
 `add_field` or `add_element` to attach children, or into `create_template_instance` to
 make an empty instance of it. `id` is optional: supply one assigned by a CEDAR
-repository, or omit it and a fresh `templates` IRI is auto-minted.
+repository, or omit it — normally you do, since CEDAR assigns an artifact's identity when it is
+created on a server.
 
 ### `create_element(name, description?, version?, status?, id?)`
 
 Creates a new, empty CEDAR element — a reusable sub-schema that can be embedded
-inside templates or other elements. `id` is optional; omit it and a fresh
-`template-elements` IRI is auto-minted.
+inside templates or other elements. `id` is optional and normally omitted: CEDAR assigns an
+artifact's identity when it is created on a server.
 
 ### `create_field(type, name, description?, version?, status?, id?, [type-specific config])`
 
@@ -485,9 +470,8 @@ inline radio/checkbox/list options, multi-instance configuration, default
 values), author the field directly as YAML and pass it to whatever consumes it
 (`add_field`, the `set_*` tools, …) — the threading tools accept YAML. Constraints
 and default values can also be layered on via the `set_*_constraint` and `set_*_default_value`
-tools. `id` is optional; omit it and a fresh `template-fields` IRI is
-auto-minted (a field is a first-class, reusable CEDAR artifact, so a standalone
-one gets an id like any other top-level artifact).
+tools. `id` is optional and normally omitted: CEDAR assigns an artifact's identity when it is
+created on a server, and a field is a first-class artifact like any other.
 
 ### `add_field(parent, child, key?, name?, description?, isMultiInstance?, minItems?, maxItems?, isRequired?, isHidden?, property_iri?)`
 
@@ -624,7 +608,7 @@ into a template instance with `set_element_instance`, most usefully to append
 an entry to a multi-instance element list (the one slot kind
 `create_template_instance` cannot pre-populate, since it can't know how many
 entries an instance will need), then fill its fields with the value tools.
-The `@id` is auto-minted as a `template-element-instances` IRI when omitted.
+The `@id` is left unset when omitted — CEDAR assigns it when the instance is created.
 Validate the element instance against its element with `validate_instance_artifact`
 (which auto-detects the element schema), or in context once attached.
 
@@ -709,10 +693,10 @@ essentially just its identity. Unset fields are reconstructed from the template
 when JSON is produced (`validate_instance_artifact`, `render_instance_artifact` with `format: json`), so the instance
 is still structurally complete. `isBasedOn` is always derived from the
 template's `@id` — the instance points at exactly the template it was built
-from, by construction; a template without an `@id` is rejected with guidance
-(`create_template` and `render_schema_artifact` mint one automatically). `id` is the
-instance's own identity — optional, and auto-minted as a fresh
-`template-instances` IRI when omitted.
+from, by construction. A template without an `@id` is rejected with guidance: only a template a
+repository has stored can be based on, so save the template first and pass the IRI it was
+assigned. `id` is the instance's own identity — optional, and left unset when omitted, since
+CEDAR assigns it when the instance is created.
 
 ### `set_literal_annotation(artifact, annotation, value)` / `set_iri_annotation(artifact, annotation, iri)` / `remove_annotation(artifact, annotation)`
 
@@ -772,8 +756,8 @@ needs the template it's based on.)
 **Render a schema artifact.** Take a **template, element, or field** as YAML or JSON Schema
 (both the serialization and the kind are auto-detected) and render it. `format` is `yaml`
 (default) or `json`; `compact` (YAML only, default `true`) selects the lean display form versus
-the expanded, provenance-preserving exchange form. A top-level `id` is minted if omitted (nested
-children untouched). With `format: yaml` this is the **primary rendering path** — both how you
+the expanded, provenance-preserving exchange form. An artifact that names no `id` is rendered
+without one. With `format: yaml` this is the **primary rendering path** — both how you
 **recompact** an expanded-YAML artifact for a lean display and how you **import** an external
 JSON Schema into the YAML loop. With `format: json` it is the **export escape hatch** for the
 rare tool that can't read YAML; the CEDAR server itself now reads and writes YAML, so even it no
@@ -785,8 +769,8 @@ Pairing `compact: true` with `format: json` is an error. (An instance is redirec
 
 **Render an instance.** Take a **template instance or element instance** as YAML or JSON
 (auto-detected) and render it. `format` is `yaml` (default) or `json`; `compact` (YAML only,
-default `true`) selects the lean form versus the expanded exchange form. A top-level `id` is
-minted if omitted. The optional `template_artifact` (the template or element the instance is
+default `true`) selects the lean form versus the expanded exchange form. An instance that names
+no `id` is rendered without one. The optional `template_artifact` (the template or element the instance is
 based on) inflates the sparse instance to a complete CEDAR instance (every declared field
 present) — omit it to render only the fields the instance carries. No validation runs here;
 validate separately with `validate_instance_artifact`. Pairing `compact: true` with `format: json`

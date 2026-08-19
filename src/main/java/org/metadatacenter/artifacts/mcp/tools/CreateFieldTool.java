@@ -92,10 +92,10 @@ public final class CreateFieldTool
     properties.put("status", ArtifactExchange.statusSchemaProperty());
     properties.put("id", Map.of(
         "type", "string",
-        "description", "IRI that identifies the field itself (the @id). Optional; if omitted, "
-            + "a fresh CEDAR field IRI is auto-minted "
-            + "(https://repo.metadatacenter.org/template-fields/<uuid>). Supply one only when you "
-            + "have an id assigned by a CEDAR repository. Must be an absolute IRI."));
+        "description", "IRI that identifies the field itself (the @id). Optional, and normally "
+            + "omitted: CEDAR mints an artifact's identifier when it is created on a server, so a "
+            + "field built here carries none until then. Supply one only to repeat an id a "
+            + "CEDAR repository already assigned. Must be an absolute IRI."));
 
     // ---- Per-type configuration (all optional; applicable only to the matching type) ----
 
@@ -247,8 +247,9 @@ public final class CreateFieldTool
         return error("invalid id \"" + idText + "\": an id must be an absolute IRI "
             + "(e.g. https://repo.metadatacenter.org/template-fields/5c48700a-4163-436d-8daa-95af7311cded)");
     } else {
-      // No caller-supplied id — mint a top-level CEDAR IRI (DESIGN.md Principle 10).
-      id = IdMinter.mintFieldId();
+      // No identifier is invented here: CEDAR mints every identifier when the artifact is created
+      // on a server, so an artifact that has not been created yet simply carries none.
+      id = null;
     }
 
     FieldSchemaArtifact field;

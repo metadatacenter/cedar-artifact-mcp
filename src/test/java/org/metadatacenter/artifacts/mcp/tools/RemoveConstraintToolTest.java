@@ -35,7 +35,7 @@ final class RemoveConstraintToolTest
     String yaml = textOf(result);
     assertFalse(yaml.contains(DISEASE_CLASS), "the class constraint must be gone; got: " + yaml);
     // The entry names the ontology by acronym; its BioPortal address is derived from that on read.
-    assertTrue(yaml.contains("sourceAcronym: LOINC"), "the ontology constraint must survive; got: " + yaml);
+    assertTrue(yaml.contains("sourceAcronym: \"LOINC\""), "the ontology constraint must survive; got: " + yaml);
     assertTrue(yaml.contains("controlled-term-field"),
         "a still-constrained field stays controlled-term; got: " + yaml);
   }

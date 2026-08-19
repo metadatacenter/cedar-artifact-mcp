@@ -15,6 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 final class AttributeValueToolsTest
 {
+
+  /** Stands in for a template a repository has stored: only such a template can be based on. */
+  private static final String STORED_TEMPLATE_IRI =
+      "https://repo.metadatacenter.org/templates/f0c1a2b3-4d5e-6f70-8192-a3b4c5d6e7f8";
   @Test void adds_an_attribute_entry()
   {
     String template = templateWithAttributeValueField();
@@ -73,7 +77,7 @@ final class AttributeValueToolsTest
     String field = textOf(invokeTool(CreateFieldTool::handler, "create_field",
         Map.of("name", "Name", "type", "text-field")));
     String template = textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
-        "parent", textOf(invokeTool(CreateTemplateTool::handler, "create_template", Map.of("name", "Study"))),
+        "parent", textOf(invokeTool(CreateTemplateTool::handler, "create_template", Map.of("name", "Study", "id", STORED_TEMPLATE_IRI))),
         "child", field, "key", "Name")));
 
     McpSchema.CallToolResult result = set(template, instanceOf(template), "Name", "color", "red");
@@ -118,7 +122,7 @@ final class AttributeValueToolsTest
     String av = textOf(invokeTool(CreateFieldTool::handler, "create_field",
         Map.of("name", "Custom Properties", "type", "attribute-value-field")));
     return textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
-        "parent", textOf(invokeTool(CreateTemplateTool::handler, "create_template", Map.of("name", "Study"))),
+        "parent", textOf(invokeTool(CreateTemplateTool::handler, "create_template", Map.of("name", "Study", "id", STORED_TEMPLATE_IRI))),
         "child", av, "key", "Custom Properties")));
   }
 

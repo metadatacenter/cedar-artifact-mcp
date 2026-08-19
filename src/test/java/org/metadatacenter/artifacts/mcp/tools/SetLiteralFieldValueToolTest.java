@@ -30,6 +30,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 final class SetLiteralFieldValueToolTest
 {
+
+  /** Stands in for a template a repository has stored: only such a template can be based on. */
+  private static final String STORED_TEMPLATE_IRI =
+      "https://repo.metadatacenter.org/templates/f0c1a2b3-4d5e-6f70-8192-a3b4c5d6e7f8";
   @Test void sets_text_field_value_at_top_level()
   {
     String templateJson = templateWithField(createField("Patient name", "text-field"), "patient_name");
@@ -271,7 +275,7 @@ final class SetLiteralFieldValueToolTest
 
   private static String createTemplate(String name)
   {
-    return textOf(invokeTool(CreateTemplateTool::handler, "create_template", Map.of("name", name)));
+    return textOf(invokeTool(CreateTemplateTool::handler, "create_template", Map.of("name", name, "id", STORED_TEMPLATE_IRI)));
   }
 
   private static String createElement(String name)

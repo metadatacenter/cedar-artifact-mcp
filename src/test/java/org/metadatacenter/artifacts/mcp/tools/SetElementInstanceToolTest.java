@@ -11,6 +11,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -21,7 +22,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 final class SetElementInstanceToolTest
 {
-  @Test void create_element_instance_returns_a_typed_skeleton_with_a_minted_id()
+
+  /** Stands in for a template a repository has stored: only such a template can be based on. */
+  private static final String STORED_TEMPLATE_IRI =
+      "https://repo.metadatacenter.org/templates/f0c1a2b3-4d5e-6f70-8192-a3b4c5d6e7f8";
+  @Test void create_element_instance_returns_a_typed_skeleton_that_names_no_artifact()
   {
     McpSchema.CallToolResult result = CreateElementInstanceTool.handler(null,
         new McpSchema.CallToolRequest("create_element_instance",
@@ -30,9 +35,7 @@ final class SetElementInstanceToolTest
     assertFalse(result.isError(), errorText(result));
     Map<String, Object> entry = parseYaml(result, "element-instance");
     assertEquals("Address", entry.get("name"), "name defaults to the element's name; got: " + entry);
-    assertTrue(String.valueOf(entry.get("id"))
-            .startsWith("https://repo.metadatacenter.org/template-element-instances/"),
-        "id must be minted in the element-instances collection; got: " + entry);
+    assertNull(entry.get("id"), "CEDAR assigns identity on create; got: " + entry);
   }
 
   @Test void create_element_instance_honours_explicit_identity()
@@ -279,7 +282,7 @@ final class SetElementInstanceToolTest
 
   private static String createTemplate()
   {
-    return textOf(invokeTool(CreateTemplateTool::handler, "create_template", Map.of("name", "Fixture")));
+    return textOf(invokeTool(CreateTemplateTool::handler, "create_template", Map.of("name", "Fixture", "id", STORED_TEMPLATE_IRI)));
   }
 
   private static String createField(String name, String type)

@@ -42,9 +42,9 @@ centralizes read (YAML or JSON, auto-detected) and render.
   Static fields take their `content` (rich-text body, image URL, video URL, section text) and,
   for image/video, `width` / `height`; there is deliberately no set_static_content — static
   fields carry no constraints or defaults, so edit-by-recreate plus `replace_field` covers it.
-- A top-level `@id` is auto-minted of the correct CEDAR form when omitted (DESIGN.md
-  Principle 10: `templates` / `template-elements` / `template-fields` / `template-instances`);
-  nested children are never minted.
+- No identifier is invented: CEDAR mints every identifier when an artifact is created on a
+  server, so an artifact built here names nothing until then (DESIGN.md Principle 10). A
+  caller-supplied `id` is passed through, for naming an artifact a repository already stored.
 
 ### Incremental builders
 
@@ -98,11 +98,12 @@ centralizes read (YAML or JSON, auto-detected) and render.
 
 - `create_template_instance(template, name?, description?, id?)` — walks a
   template and produces an empty instance skeleton that validates against it. Attribute-value
-  fields are seeded as empty groups; static fields are skipped; the instance `@id` is
-  auto-minted when omitted.
+  fields are seeded as empty groups; static fields are skipped; the instance names nothing until
+  CEDAR creates it. The template must be one a repository has stored, since `isBasedOn` is derived
+  from its `@id`.
 - `create_element_instance(element, name?, description?, id?)` — the element counterpart:
-  an empty element instance as a standalone `type: element-instance` document (`@id` minted in the
-  `template-element-instances` collection), to be grafted in with `set_element_instance`.
+  an empty element instance as a standalone `type: element-instance` document, naming nothing until
+  CEDAR creates it, to be grafted in with `set_element_instance`.
   Backed by the library's standalone element-instance serialization (readers, renderers, and
   the YAML `element-instance` document kind added for this).
 - `set_element_instance(template, instance, field_path, element_instance)` — grafts an

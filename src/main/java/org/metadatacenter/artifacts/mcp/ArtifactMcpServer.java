@@ -85,6 +85,8 @@ public final class ArtifactMcpServer
   public static void main(String[] args) throws InterruptedException
   {
     McpSyncServer server = McpServer.sync(new StdioServerTransportProvider(McpJsonDefaults.getMapper()))
+        // Supplied rather than left to the SDK's ServiceLoader default; see JsonSchemaValidation.
+        .jsonSchemaValidator(new JsonSchemaValidation())
         .serverInfo(SERVER_NAME, SERVER_VERSION)
         .capabilities(McpSchema.ServerCapabilities.builder().tools(true).build())
         .toolCall(pingTool(), ArtifactMcpServer::pingHandler)

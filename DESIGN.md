@@ -179,44 +179,38 @@ without redundantly testing what the library tests already cover. The exhaustive
 real-world battery lives in `cedar-artifact-library` as
 `HubmapTemplatesRoundTripTest`, where it tests reader/renderer/validator directly.
 
-## Principle 10 — Top-level @id is minted, not required
+## Principle 10 — Identity belongs to the server
 
-A CEDAR artifact's `@id` is the IRI that identifies the artifact itself. The artifact
-library leaves it optional — the model, the reader, and the renderer all treat an absent
-`@id` as valid (a missing id simply isn't rendered). That purity stays in the library.
+A CEDAR artifact's `@id` is the IRI that identifies the artifact itself, and CEDAR assigns it:
+every identifier a stored artifact carries — its own, its children's, and the property IRIs its
+`@context` maps — is minted by the server when the artifact is created. This MCP mints none of
+them. An artifact built here and not yet saved simply names nothing, which the artifact library
+allows: the model, the reader, and the renderer all treat an absent `@id` as valid.
 
-This MCP, as the LLM-facing convenience layer, fills an absent `@id` in: when a caller
-creates a **top-level** template, element, field, or instance without supplying one, the
-tool mints a fresh IRI of the correct CEDAR form — `https://repo.metadatacenter.org/
-{templates,template-elements,template-fields,template-instances}/<uuid>` — via `IdMinter`.
-A caller-supplied `@id` is never touched (still validated as an absolute IRI).
+A caller may still supply an `id`, and it is passed through untouched (validated as an absolute
+IRI). The reason to supply one is to name an artifact a repository already stored — editing a
+fetched template, say — not to invent an identity ahead of time.
 
-For instances the minted `@id` is the instance's own identity; it is independent of
-`isBasedOn`, which points to the template the instance is filled out against. The two are
-set and minted separately.
+Two consequences are worth stating.
 
-Two boundaries make this safe:
-
-- **Top-level only.** The `create_*` tools mint the artifact they return. The `*_to_json`
-  tools mint only the top-level map's `id` key before handing it to the reader; nested
-  children under `children:` are never walked, so a template's fields and elements stay
-  id-less unless the author set one explicitly. Fields are first-class, reusable CEDAR
-  artifacts, so a *standalone* field minted via `create_field` / `render_schema_artifact` gets an
-  id like any other root — a field that subsequently becomes a child via `add_field` simply
-  carries the id it was born with, which the renderer round-trips correctly.
-- **Absence only.** Like the compact-mode `modelVersion` defaulting in Principle 7, minting
-  fills an *absent optional*; it never overrides or coerces a value the caller provided.
-
-This is a deliberate, documented exception to "the MCP adds no defaults on top of the
-reader" (Principle 7). It is justified because a usable artifact almost always needs an id,
-the minted form is exactly what the tool descriptions already instructed callers to
-hand-mint, and the library model is left untouched so non-MCP callers keep full control.
+- **An instance belongs to a stored template.** `create_template_instance` derives `isBasedOn`
+  from the template's `@id`, so a template that names nothing cannot be based on, and the tool
+  refuses it with that guidance. Save the template first — `cedar-artifact-rest-mcp`'s
+  `create_template` returns it with the identity CEDAR assigned — then build instances against
+  the IRI it came back with.
+- **A minted IRI used to point at nothing.** An identifier of the right shape is not an
+  identifier a repository knows, and an instance based on a locally minted template IRI named a
+  template that did not exist. Leaving identity to the server removes that class of artifact.
 
 ## Principle 11 — Instances are sparse; the template reconstructs the rest
 
 CEDAR's JSON Schema marks every template field `required` in its instances, so the
-**JSON** instance must carry every field — even unset ones, as `{"@value": null}`. That is a
-fact of the *JSON serialization*, not of the model or the YAML. The YAML serialization is free
+**JSON** instance must carry every field, unset ones included. How an unset one is written depends
+on the kind of value the field takes: a literal-valued field carries `{"@value": null}`, an
+IRI-valued one (controlled term, link, external identifier) carries `{}`. The key that would
+otherwise be nulled there is `@id`, and `"@id": null` is not legal JSON-LD — `@id` takes an IRI —
+so an empty object is what says "present, and holding nothing". All of that is a fact of the *JSON
+serialization*, not of the model or the YAML. The YAML serialization is free
 to omit what isn't known, and it does: an instance's **YAML is sparse** — it carries the
 identity (`@id`, `name`, `isBasedOn`) and only the fields that hold a value. Unset fields are
 omitted entirely (no `value: null`, no `{}`, no empty multi-instance `[]`, and an element with

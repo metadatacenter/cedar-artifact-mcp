@@ -28,8 +28,8 @@ import java.util.Map;
  * selects the lean display form (provenance, status, version, {@code modelVersion} omitted) versus
  * the expanded exchange form that round-trips losslessly.
  *
- * <p>A missing top-level {@code @id} is minted with the kind's IRI prefix (DESIGN.md Principle 10).
- * No CedarValidator step runs — rendering renders; validation lives in
+ * <p>An artifact that names no {@code @id} is rendered without one — CEDAR assigns identity on
+ * create (DESIGN.md Principle 10). No CedarValidator step runs — rendering renders; validation lives in
  * {@code validate_schema_artifact}. Instances are not schema artifacts — a {@code type: instance} or
  * {@code type: element-instance} document is redirected to {@code render_instance_artifact}.
  */
@@ -139,15 +139,14 @@ public final class RenderSchemaArtifactTool
 
     String type = yamlMap.get("type") == null ? "" : String.valueOf(yamlMap.get("type"));
     Kind kind;
-    URI mintedId;
     switch (type) {
-      case "template" -> { kind = Kind.TEMPLATE; mintedId = IdMinter.mintTemplateId(); }
-      case "element" -> { kind = Kind.ELEMENT; mintedId = IdMinter.mintElementId(); }
+      case "template" -> kind = Kind.TEMPLATE;
+      case "element" -> kind = Kind.ELEMENT;
       case "instance", "element-instance" ->
           { return error("this is an instance, not a schema artifact — use "
               + "render_instance_artifact to render it"); }
       // Every other discriminator is a field kind (text-field, numeric-field, ...).
-      default -> { kind = Kind.FIELD; mintedId = IdMinter.mintFieldId(); }
+      default -> kind = Kind.FIELD;
     }
 
     ObjectNode rendered;
@@ -172,12 +171,6 @@ public final class RenderSchemaArtifactTool
       return error(kind.name().toLowerCase() + " reader threw " + e.getClass().getSimpleName()
           + ": " + e.getMessage());
     }
-
-    // Mint a top-level @id when the document named no artifact (DESIGN.md Principle 10), on the
-    // rendering rather than on the input: a compact document may not carry one, and putting it back
-    // into the input would make a document its own reader refuses. Nested children are untouched.
-    if (!rendered.hasNonNull(ModelNodeNames.JSON_LD_ID))
-      rendered.put(ModelNodeNames.JSON_LD_ID, mintedId.toString());
 
     if (asYaml) {
       String yaml;

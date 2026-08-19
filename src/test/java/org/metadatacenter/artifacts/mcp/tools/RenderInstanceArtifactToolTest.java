@@ -21,6 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 final class RenderInstanceArtifactToolTest
 {
+
+  /** Stands in for a template a repository has stored: only such a template can be based on. */
+  private static final String STORED_TEMPLATE_IRI =
+      "https://repo.metadatacenter.org/templates/f0c1a2b3-4d5e-6f70-8192-a3b4c5d6e7f8";
   private ObjectMapper jackson;
 
   @BeforeEach void setUp() { jackson = new ObjectMapper(); }
@@ -100,14 +104,15 @@ final class RenderInstanceArtifactToolTest
         "redirect should name render_schema_artifact; got: " + errorText(result));
   }
 
-  @Test void mints_a_top_level_id_when_absent() throws Exception
+  @Test void renders_no_top_level_id_when_the_instance_names_none() throws Exception
   {
-    // A hand-authored sparse element instance with no id: must come back with a minted instance IRI.
+    // A hand-authored sparse element instance with no id stays without one: CEDAR assigns identity.
     String entry = "type: element-instance\nname: Address\n";
     McpSchema.CallToolResult result = invoke(Map.of("instance_artifact", entry, "format", "json"));
     assertFalse(result.isError(), errorText(result));
-    assertTrue(jackson.readTree(textOf(result)).path("@id").asText().startsWith("https://"),
-        "an element instance with no id must be minted one; got:\n" + textOf(result));
+    assertTrue(jackson.readTree(textOf(result)).path("@id").isNull()
+            || jackson.readTree(textOf(result)).path("@id").isMissingNode(),
+        "rendering invents no identity; got:\n" + textOf(result));
   }
 
   @Test void rejects_missing_instance()
@@ -139,7 +144,7 @@ final class RenderInstanceArtifactToolTest
     String weight = textOf(invokeTool(CreateFieldTool::handler, "create_field", fieldArgs));
     return textOf(invokeTool(AddFieldTool::handler, "add_field", Map.of(
         "parent", textOf(invokeTool(CreateTemplateTool::handler, "create_template",
-            Map.of("name", "Vitals"))),
+            Map.of("name", "Vitals", "id", STORED_TEMPLATE_IRI))),
         "child", weight,
         "key", "Weight")));
   }

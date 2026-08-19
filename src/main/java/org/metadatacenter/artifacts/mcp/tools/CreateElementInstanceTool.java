@@ -49,9 +49,8 @@ public final class CreateElementInstanceTool
     properties.put("id", Map.of(
         "type", "string",
         "description",
-        "Optional @id for the element instance. Omit it and a fresh "
-            + "'https://repo.metadatacenter.org/template-element-instances/<uuid>' IRI is "
-            + "auto-minted."));
+        "Optional @id for the element instance. Normally omitted: CEDAR mints an "
+            + "artifact's identifier when it is created on a server."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("element"), Boolean.FALSE, null, null);
@@ -87,7 +86,9 @@ public final class CreateElementInstanceTool
     URI id;
     String idArg = stringArg(args, "id");
     if (idArg == null || idArg.isBlank()) {
-      id = IdMinter.mintElementInstanceId();
+      // No identifier is invented here: CEDAR mints every identifier when the artifact is created
+      // on a server, so an artifact that has not been created yet simply carries none.
+      id = null;
     } else {
       try {
         id = new URI(idArg);

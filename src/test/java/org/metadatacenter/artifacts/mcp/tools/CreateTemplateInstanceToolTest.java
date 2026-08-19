@@ -24,6 +24,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 final class CreateTemplateInstanceToolTest
 {
+
+  /** Stands in for a template a repository has stored: only such a template can be based on. */
+  private static final String STORED_TEMPLATE_IRI =
+      "https://repo.metadatacenter.org/templates/f0c1a2b3-4d5e-6f70-8192-a3b4c5d6e7f8";
   private ObjectMapper jackson;
 
   @BeforeEach void setUp() { jackson = new ObjectMapper(); }
@@ -49,6 +53,7 @@ final class CreateTemplateInstanceToolTest
   {
     String templateJson = compileTemplate(
         "type: template\n"
+            + "id: " + STORED_TEMPLATE_IRI + "\n"
             + "name: Patient\n"
             + "description: Patient template\n"
             + "version: 0.0.1\n"
@@ -83,6 +88,7 @@ final class CreateTemplateInstanceToolTest
     // "object has missing required properties (['@type']), /Age".
     String templateJson = compileTemplate(
         "type: template\n"
+            + "id: " + STORED_TEMPLATE_IRI + "\n"
             + "name: PatientStudy\n"
             + "modelVersion: 1.6.0\n"
             + "version: 0.0.1\n"
@@ -114,6 +120,7 @@ final class CreateTemplateInstanceToolTest
   {
     String templateJson = compileTemplate(
         "type: template\n"
+            + "id: " + STORED_TEMPLATE_IRI + "\n"
             + "name: WithTemporal\n"
             + "modelVersion: 1.6.0\n"
             + "version: 0.0.1\n"
@@ -143,6 +150,7 @@ final class CreateTemplateInstanceToolTest
   {
     String templateJson = compileTemplate(
         "type: template\n"
+            + "id: " + STORED_TEMPLATE_IRI + "\n"
             + "name: Patient with tags\n"
             + "description: Multi-instance test\n"
             + "version: 0.0.1\n"
@@ -171,6 +179,7 @@ final class CreateTemplateInstanceToolTest
   {
     String templateJson = compileTemplate(
         "type: template\n"
+            + "id: " + STORED_TEMPLATE_IRI + "\n"
             + "name: With address\n"
             + "description: Template with nested element\n"
             + "version: 0.0.1\n"
@@ -199,39 +208,7 @@ final class CreateTemplateInstanceToolTest
     assertTrue(addr.path("street").isObject(),
         "nested field instance must appear inside the element; got address:\n" + addr);
 
-    // Not assertValidatesAgainst: a skeleton with a nested element does not validate against its
-    // template, and the reason is in the artifact library rather than here. See
-    // aNestedElementOccurrenceHasNoIdentifierItsTemplateWillAccept below.
-    assertNestedElementIdentifierIsTheOnlyComplaint(rendered, templateJson);
-  }
-
-  /**
-   * A finding, not an exemption: an element occurrence inside a freshly built instance carries no
-   * identifier — a repository assigns that on save — and the artifact library renders it {@code null}.
-   * A template types its own instances' {@code @id} as a URI or null, but types a nested element's as
-   * a URI, so the template refuses the instance the same library builds from it.
-   *
-   * <p>Aligning the two would change the schema every stored CEDAR element carries, so it is a model
-   * decision rather than a fix to make here. This asserts that the mismatch is the only thing wrong
-   * with the skeleton; when the library settles it, this fails and should become
-   * {@code assertValidatesAgainst}.
-   */
-  private void assertNestedElementIdentifierIsTheOnlyComplaint(JsonNode instanceJson, String templateJson)
-      throws Exception
-  {
-    McpSchema.CallToolResult result = ValidateInstanceArtifactTool.handler(null,
-        new McpSchema.CallToolRequest("validate_instance_artifact", Map.of(
-            "schema_artifact", templateJson,
-            "instance_artifact", jackson.writeValueAsString(instanceJson))));
-    assertFalse(result.isError(), errorText(result));
-
-    JsonNode report = jackson.readTree(textOf(result));
-    JsonNode errors = report.path("errors");
-    assertEquals(1, errors.size(), "expected only the element identifier to be refused; got:\n"
-        + report.toPrettyString());
-    String only = errors.get(0).asText();
-    assertTrue(only.contains("/address/@id") && only.contains("null found, string expected"),
-        "expected the nested element identifier to be the complaint; got: " + only);
+    assertValidatesAgainst(rendered, templateJson);
   }
 
   @Test void attribute_value_field_seeds_empty_group() throws Exception
@@ -242,6 +219,7 @@ final class CreateTemplateInstanceToolTest
     // being missing.
     String templateJson = compileTemplate(
         "type: template\n"
+            + "id: " + STORED_TEMPLATE_IRI + "\n"
             + "name: With av\n"
             + "description: Template with attribute-value field\n"
             + "version: 0.0.1\n"
@@ -273,6 +251,7 @@ final class CreateTemplateInstanceToolTest
     // walker must skip it without erroring.
     String templateJson = compileTemplate(
         "type: template\n"
+            + "id: " + STORED_TEMPLATE_IRI + "\n"
             + "name: With static\n"
             + "description: Template with a static field\n"
             + "version: 0.0.1\n"
@@ -306,6 +285,7 @@ final class CreateTemplateInstanceToolTest
     // entirely. It is still structurally complete once inflated against its template (validates).
     String templateJson = compileTemplate(
         "type: template\n"
+            + "id: " + STORED_TEMPLATE_IRI + "\n"
             + "name: PatientStudy\n"
             + "modelVersion: 1.6.0\n"
             + "version: 0.0.1\n"
@@ -334,18 +314,19 @@ final class CreateTemplateInstanceToolTest
     assertValidatesAgainst(parseJson(result), templateJson);
   }
 
-  @Test void mints_instance_id_when_omitted() throws Exception
+  @Test void carries_no_instance_id_when_omitted() throws Exception
   {
-    // The instance's own @id is auto-minted when absent (DESIGN.md Principle 10), distinct
-    // from isBasedOn, which is derived from the template's @id.
+    // The instance names nothing until CEDAR creates it (DESIGN.md Principle 10). isBasedOn is
+    // unaffected: it names the stored template, which does have an identity.
     String templateJson = createTemplate("Demographics");
     McpSchema.CallToolResult result = invoke(Map.of("template", templateJson));
 
     assertFalse(result.isError(), errorText(result));
     ObjectNode rendered = parseJson(result);
-    MintedIds.assertMintedId(rendered.get("@id"), "template-instances");
+    assertTrue(rendered.path("@id").isMissingNode() || rendered.path("@id").isNull(),
+        "an unsaved instance must name no artifact; got: " + rendered.path("@id"));
     assertEquals(templateId(templateJson), rendered.path("schema:isBasedOn").asText(),
-        "minting the instance @id must not disturb isBasedOn");
+        "the instance still names the template it is based on");
   }
 
   @Test void preserves_supplied_instance_id() throws Exception
@@ -391,7 +372,7 @@ final class CreateTemplateInstanceToolTest
   private static String createTemplate(String name)
   {
     McpSchema.CallToolResult result = CreateTemplateTool.handler(null,
-        new McpSchema.CallToolRequest("create_template", Map.of("name", name)));
+        new McpSchema.CallToolRequest("create_template", Map.of("name", name, "id", STORED_TEMPLATE_IRI)));
     assertFalse(result.isError(),
         "fixture template must build cleanly; got: " + errorText(result));
     return textOf(result);
@@ -463,12 +444,13 @@ final class CreateTemplateInstanceToolTest
     if (result.content() == null || result.content().isEmpty()) return "(no content)";
     return ((McpSchema.TextContent) result.content().get(0)).text();
   }
-  /** The minted @id the fixture template carries; isBasedOn must always equal it. */
+  /** The @id the fixture template carries; isBasedOn must always equal it. */
   private String templateId(String templateYaml)
   {
+    // Canonical YAML quotes an identifier, as it quotes every string that is not a structural token.
     java.util.regex.Matcher m =
-        java.util.regex.Pattern.compile("(?m)^id: (\\S+)$").matcher(templateYaml);
-    assertTrue(m.find(), "fixture template must carry a minted id:; got:\n" + templateYaml);
+        java.util.regex.Pattern.compile("(?m)^id: \"?([^\"\\s]+)\"?$").matcher(templateYaml);
+    assertTrue(m.find(), "fixture template must carry an id:; got:\n" + templateYaml);
     return m.group(1);
   }
 

@@ -28,6 +28,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 final class InstanceChildOrderTest
 {
+
+  /** Stands in for a template a repository has stored: only such a template can be based on. */
+  private static final String STORED_TEMPLATE_IRI =
+      "https://repo.metadatacenter.org/templates/f0c1a2b3-4d5e-6f70-8192-a3b4c5d6e7f8";
   @Test void a_scrambled_instance_still_validates()
   {
     String template = templateWithChildren("a", "b", "c");
@@ -112,7 +116,7 @@ final class InstanceChildOrderTest
 
   private static String createTemplate()
   {
-    return textOf(invokeTool(CreateTemplateTool::handler, "create_template", Map.of("name", "Fixture")));
+    return textOf(invokeTool(CreateTemplateTool::handler, "create_template", Map.of("name", "Fixture", "id", STORED_TEMPLATE_IRI)));
   }
 
   private static String createField(String name)

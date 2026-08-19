@@ -307,10 +307,18 @@ final class ArtifactExchange
    * form. The flag is a rendering choice and is exposed only by the render tools
    * ({@code render_schema_artifact} / {@code render_instance_artifact}); every mutating tool
    * returns {@link #exchangeYaml} unconditionally.
+   *
+   * <p>Written in the canonical scalar style, which the specification defines and the CEDAR server
+   * also writes: plain scalars for the structural keys whose vocabulary CEDAR controls — {@code
+   * type}, {@code modelVersion}, {@code status}, {@code version}, {@code datatype}, {@code action},
+   * {@code granularity}, {@code termType}, {@code inputTimeFormat} — and double quotes on every
+   * other string. Quoting only where a parser would otherwise re-type the value was tried and
+   * rejected: it makes the style of a scalar depend on its content, so the same key is written two
+   * ways across artifacts, and a reader cannot tell a deliberate string from a rescued one.
    */
   static String toYaml(Artifact artifact, boolean isCompact)
   {
-    return YamlSerializer.getYAML(artifact, isCompact, false);
+    return YamlSerializer.getYAML(artifact, isCompact, true);
   }
 
   /**

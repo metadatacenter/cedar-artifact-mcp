@@ -270,7 +270,7 @@ final class AddElementToolTest
         "property_iri", "https://schema.org/address"));
 
     assertFalse(result.isError(), errorText(result));
-    assertTrue(textOf(result).contains("propertyIri: https://schema.org/address"),
+    assertTrue(textOf(result).contains("propertyIri: \"https://schema.org/address\""),
         "the property IRI must appear on the embedded child; got: " + textOf(result));
   }
 

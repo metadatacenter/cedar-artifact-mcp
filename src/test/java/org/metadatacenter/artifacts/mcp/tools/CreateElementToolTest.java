@@ -18,6 +18,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -110,15 +111,14 @@ final class CreateElementToolTest
     assertEquals(id, yaml.get("id"));
   }
 
-  @Test void createElement_mintsIdWhenOmitted() throws Exception
+  @Test void createElement_carriesNoIdWhenOmitted() throws Exception
   {
-    // Auto-mint convenience (DESIGN.md Principle 10): no id supplied -> a fresh CEDAR
-    // element IRI of the correct form.
+    // No identifier is invented (DESIGN.md Principle 10): CEDAR assigns one when the element is
+    // created on a server, and until then the element names nothing.
     McpSchema.CallToolResult result = invoke(Map.of("name", "Address"));
 
     assertFalse(result.isError(), "omitting id should still succeed");
-    Map<String, Object> yaml = parseYaml(result);
-    MintedIds.assertMintedId((String) yaml.get("id"), "template-elements");
+    assertNull(parseYaml(result).get("id"), "an unsaved element must name no artifact");
   }
 
   @Test void createElement_rejectsRelativeIri()

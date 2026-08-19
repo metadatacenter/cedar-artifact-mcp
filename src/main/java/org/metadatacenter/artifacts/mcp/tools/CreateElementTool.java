@@ -39,10 +39,10 @@ public final class CreateElementTool
     properties.put("status", ArtifactExchange.statusSchemaProperty());
     properties.put("id", Map.of(
         "type", "string",
-        "description", "IRI that identifies the element itself (the @id). Optional; if omitted, "
-            + "a fresh CEDAR element IRI is auto-minted "
-            + "(https://repo.metadatacenter.org/template-elements/<uuid>). Supply one only when you "
-            + "have an id assigned by a CEDAR repository. Must be an absolute IRI."));
+        "description", "IRI that identifies the element itself (the @id). Optional, and normally "
+            + "omitted: CEDAR mints an artifact's identifier when it is created on a server, so an "
+            + "element built here carries none until then. Supply one only to repeat an id a "
+            + "CEDAR repository already assigned. Must be an absolute IRI."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
         "object", properties, List.of("name"), Boolean.FALSE, null, null);
@@ -99,8 +99,9 @@ public final class CreateElementTool
         return error("invalid id \"" + idText + "\": an id must be an absolute IRI "
             + "(e.g. https://repo.metadatacenter.org/template-elements/5c48700a-4163-436d-8daa-95af7311cded)");
     } else {
-      // No caller-supplied id — mint a top-level CEDAR IRI (DESIGN.md Principle 10).
-      id = IdMinter.mintElementId();
+      // No identifier is invented here: CEDAR mints every identifier when the artifact is created
+      // on a server, so an artifact that has not been created yet simply carries none.
+      id = null;
     }
 
     ElementSchemaArtifact element;

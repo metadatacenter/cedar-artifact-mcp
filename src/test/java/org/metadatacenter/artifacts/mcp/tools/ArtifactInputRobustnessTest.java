@@ -23,12 +23,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 final class ArtifactInputRobustnessTest
 {
+
+  /** Stands in for a template a repository has stored: only such a template can be based on. */
+  private static final String STORED_TEMPLATE_IRI =
+      "https://repo.metadatacenter.org/templates/f0c1a2b3-4d5e-6f70-8192-a3b4c5d6e7f8";
   // ---------------------------------------------------------------- fixtures
 
   private static String templateYaml()
   {
     return textOf(CreateTemplateTool.handler(null,
-        new McpSchema.CallToolRequest("create_template", Map.of("name", "Robustness"))));
+        new McpSchema.CallToolRequest("create_template", Map.of("name", "Robustness", "id", STORED_TEMPLATE_IRI))));
   }
 
   private static String templateJson(String templateYaml)
@@ -61,7 +65,7 @@ final class ArtifactInputRobustnessTest
         new McpSchema.CallToolRequest("add_field", Map.of("parent", template, "child", field)));
 
     assertFalse(result.isError(), textOf(result));
-    assertTrue(textOf(result).contains("key: Probe"),
+    assertTrue(textOf(result).contains("key: \"Probe\""),
         "JSON child must graft like its YAML twin; got:\n" + textOf(result));
   }
 
@@ -74,7 +78,7 @@ final class ArtifactInputRobustnessTest
         new McpSchema.CallToolRequest("add_field", Map.of("parent", template, "child", field)));
 
     assertFalse(result.isError(), textOf(result));
-    assertTrue(textOf(result).contains("key: Probe"),
+    assertTrue(textOf(result).contains("key: \"Probe\""),
         "YAML child must graft onto a JSON parent; got:\n" + textOf(result));
   }
 

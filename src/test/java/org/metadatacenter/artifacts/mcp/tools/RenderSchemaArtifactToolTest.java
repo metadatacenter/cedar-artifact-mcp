@@ -77,13 +77,15 @@ final class RenderSchemaArtifactToolTest
         "the error should mention compact; got: " + errorText(result));
   }
 
-  @Test void mints_a_top_level_id_when_absent_json() throws Exception
+  @Test void renders_no_top_level_id_when_the_artifact_names_none() throws Exception
   {
     McpSchema.CallToolResult result = invoke(Map.of(
         "schema_artifact", "type: text-field\nname: Bare\n", "format", "json"));
     assertFalse(result.isError(), errorText(result));
-    assertTrue(jackson.readTree(textOf(result)).path("@id").asText().contains("/template-fields/"),
-        "a field with no id must be minted a template-fields IRI; got:\n" + textOf(result));
+    JsonNode id = jackson.readTree(textOf(result)).path("@id");
+    assertTrue(id.isNull() || id.isMissingNode(),
+        "rendering invents no identity — a null @id is how JSON asks CEDAR for one; got:\n"
+            + textOf(result));
   }
 
   @Test void redirects_an_instance() throws Exception

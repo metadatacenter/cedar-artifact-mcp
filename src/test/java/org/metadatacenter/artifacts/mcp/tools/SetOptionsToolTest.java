@@ -35,9 +35,9 @@ final class SetOptionsToolTest
 
     assertFalse(result.isError(), textOf(result));
     String yaml = textOf(result);
-    int male = yaml.indexOf("label: Male");
-    int female = yaml.indexOf("label: Female");
-    int prefer = yaml.indexOf("label: Prefer not to say");
+    int male = yaml.indexOf("label: \"Male\"");
+    int female = yaml.indexOf("label: \"Female\"");
+    int prefer = yaml.indexOf("label: \"Prefer not to say\"");
     assertTrue(male >= 0 && female > male && prefer > female,
         "options must render in display order; got:\n" + yaml);
     assertFalse(yaml.contains("selected: true"), "no default was requested; got:\n" + yaml);
@@ -54,8 +54,8 @@ final class SetOptionsToolTest
 
     assertFalse(result.isError(), textOf(result));
     String yaml = textOf(result);
-    assertTrue(yaml.contains("label: Other"), yaml);
-    assertTrue(yaml.indexOf("selected: true") > yaml.indexOf("label: Other"),
+    assertTrue(yaml.contains("label: \"Other\""), yaml);
+    assertTrue(yaml.indexOf("selected: true") > yaml.indexOf("label: \"Other\""),
         "the selected marker must sit on the named option; got:\n" + yaml);
   }
 
@@ -69,9 +69,9 @@ final class SetOptionsToolTest
 
     assertFalse(second.isError(), textOf(second));
     String yaml = textOf(second);
-    assertTrue(yaml.contains("label: Headache"), yaml);
-    assertFalse(yaml.contains("label: Fever"), "old options must be replaced; got:\n" + yaml);
-    assertFalse(yaml.contains("label: Cough"), "old options must be replaced; got:\n" + yaml);
+    assertTrue(yaml.contains("label: \"Headache\""), yaml);
+    assertFalse(yaml.contains("label: \"Fever\""), "old options must be replaced; got:\n" + yaml);
+    assertFalse(yaml.contains("label: \"Cough\""), "old options must be replaced; got:\n" + yaml);
   }
 
   @Test void rejects_a_non_choice_field_with_a_redirect()
@@ -111,7 +111,7 @@ final class SetOptionsToolTest
 
     assertFalse(result.isError(), textOf(result));
     String yaml = textOf(result);
-    assertTrue(yaml.contains("label: alpha") && yaml.contains("label: beta"),
+    assertTrue(yaml.contains("label: \"alpha\"") && yaml.contains("label: \"beta\""),
         "inline options must reach the field; got:\n" + yaml);
   }
 

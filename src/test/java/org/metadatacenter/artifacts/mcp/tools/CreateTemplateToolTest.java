@@ -18,6 +18,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -137,14 +138,14 @@ final class CreateTemplateToolTest
     assertEquals(id, parseYaml(result).get("id"));
   }
 
-  @Test void createTemplate_mintsIdWhenOmitted() throws Exception
+  @Test void createTemplate_carriesNoIdWhenOmitted() throws Exception
   {
-    // Auto-mint convenience (DESIGN.md Principle 10): no id supplied -> a fresh CEDAR
-    // template IRI of the correct form.
+    // No identifier is invented (DESIGN.md Principle 10): CEDAR assigns one when the template is
+    // created on a server, and until then the template names nothing.
     McpSchema.CallToolResult result = invoke(Map.of("name", "No id supplied"));
 
     assertFalse(result.isError(), "omitting id should still succeed");
-    MintedIds.assertMintedId((String) parseYaml(result).get("id"), "templates");
+    assertNull(parseYaml(result).get("id"), "an unsaved template must name no artifact");
   }
 
   @Test void createTemplate_rejectsRelativeIri()

@@ -32,9 +32,9 @@ import java.util.Map;
  * every field its schema declares. When the optional {@code template_artifact} (the template or
  * element the instance is based on) is supplied, the instance is inflated against it via
  * {@link InstanceInflater} so the output is complete; otherwise only the fields the instance
- * actually carries are rendered. A missing top-level {@code @id} is minted with the matching IRI
- * prefix (DESIGN.md Principle 10). No validation runs here. Schema artifacts are redirected to
- * {@code render_schema_artifact}.
+ * actually carries are rendered. An instance that names no {@code @id} is rendered without one —
+ * CEDAR assigns identity on create (DESIGN.md Principle 10). No validation runs here. Schema
+ * artifacts are redirected to {@code render_schema_artifact}.
  */
 public final class RenderInstanceArtifactTool
 {
@@ -150,7 +150,6 @@ public final class RenderInstanceArtifactTool
     if (redirect != null)
       return redirect;
 
-    // JSON input carries its own @id; YAML input may need one minted (DESIGN.md Principle 10).
     boolean inputIsJson = instanceText.stripLeading().startsWith("{");
 
     org.metadatacenter.artifacts.model.core.Artifact instance;
@@ -205,33 +204,22 @@ public final class RenderInstanceArtifactTool
     return success(json);
   }
 
-  // Helpers reading the instance from its serialization, minting an @id when YAML omits one.
+  // Helpers reading the instance from its serialization.
 
   private static TemplateInstanceArtifact readTemplateInstance(String text, boolean inputIsJson)
   {
     if (inputIsJson)
       return ArtifactExchange.readInstance(text);
-    LinkedHashMap<String, Object> yamlMap = ArtifactExchange.parseYamlMap(text);
-    mintIdIfAbsent(yamlMap, false);
-    return ArtifactExchange.readTemplateInstanceYaml(yamlMap);
+    return ArtifactExchange.readTemplateInstanceYaml(ArtifactExchange.parseYamlMap(text));
   }
 
   private static ElementInstanceArtifact readElementInstance(String text, boolean inputIsJson)
   {
     if (inputIsJson)
       return ArtifactExchange.readElementInstance(text);
-    LinkedHashMap<String, Object> yamlMap = ArtifactExchange.parseYamlMap(text);
-    mintIdIfAbsent(yamlMap, true);
-    return ArtifactExchange.readElementInstanceYaml(yamlMap);
+    return ArtifactExchange.readElementInstanceYaml(ArtifactExchange.parseYamlMap(text));
   }
 
-  private static void mintIdIfAbsent(LinkedHashMap<String, Object> yamlMap, boolean isElement)
-  {
-    Object suppliedId = yamlMap.get(YamlConstants.ID);
-    if (suppliedId == null || suppliedId.toString().isBlank())
-      yamlMap.put(YamlConstants.ID,
-          (isElement ? IdMinter.mintElementInstanceId() : IdMinter.mintInstanceId()).toString());
-  }
 
   /**
    * Returns a redirect error when the input is a schema artifact (template/element/field) rather

@@ -86,7 +86,7 @@ final class ReplaceFieldToolTest
         "property_iri", "https://schema.org/name"));
 
     assertFalse(result.isError(), errorText(result));
-    assertTrue(textOf(result).contains("propertyIri: https://schema.org/name"),
+    assertTrue(textOf(result).contains("propertyIri: \"https://schema.org/name\""),
         "the property IRI must appear on the embedded replacement; got: " + textOf(result));
   }
 
