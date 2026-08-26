@@ -264,7 +264,7 @@ values:
 
 Under the hood the LLM looks up DOID and its `disease` root class (`DOID_4`)
 via `bioportal-term-mcp`, then calls `create_field` followed by
-`set_branch_constraint` on the CEDAR side. `maxDepth: 0` means unbounded —
+`set_branch_constraint` on the CEDAR side. `termMaxDepth: 0` means unbounded —
 every descendant of `disease` in DOID is permitted.
 
 *Create a new template called Study.*
