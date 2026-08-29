@@ -821,11 +821,8 @@ from a client. No library interaction.
 
 - Java 17 or newer
 - [Maven](https://maven.apache.org/) 3.9 or newer
-- A local install of `cedar-artifact-library` 2.8.1-SNAPSHOT (in `~/.m2/repository` or
-  a reachable Maven repository). Tracks the library's `develop` branch; the library is
-  not yet on Maven Central. Build the library locally with `mvn install` from a checkout
-  of [metadatacenter/cedar-artifact-library](https://github.com/metadatacenter/cedar-artifact-library)
-  on `develop`.
+- `cedar-artifact-library` 2.9.3, resolved from the anonymous-read BMIR Nexus releases
+  repository declared in `pom.xml`; no sibling checkout or local Maven install is required.
 
 ## Build
 

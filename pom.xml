@@ -22,7 +22,7 @@
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <cedar-artifact-library.version>2.9.2-SNAPSHOT</cedar-artifact-library.version>
+    <cedar-artifact-library.version>2.9.3</cedar-artifact-library.version>
     <mcp-sdk.version>1.1.3</mcp-sdk.version>
     <!--
       Jackson 3 (used by mcp-json-jackson3) deliberately keeps the annotations
@@ -36,6 +36,16 @@
     <junit.version>5.11.4</junit.version>
     <slf4j.version>2.0.16</slf4j.version>
   </properties>
+
+  <repositories>
+    <!-- Released CEDAR Java artifacts are published to the anonymous-read BMIR Nexus. -->
+    <repository>
+      <id>bmir-nexus-releases</id>
+      <url>https://nexus.bmir.stanford.edu/repository/releases</url>
+      <releases><enabled>true</enabled></releases>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+  </repositories>
 
   <dependencies>
     <!-- The CEDAR artifact library — the thing this MCP wraps. -->

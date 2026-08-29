@@ -390,11 +390,10 @@ final class EndToEndStdioIT
           "    datatype: iri",
           "    values:",
           "      - type: class",
-          "        label: disease",
-          "        acronym: DOID",
+          "        sourceAcronym: DOID",
+          "        termIri: http://purl.obolibrary.org/obo/DOID_4",
           "        termType: class",
-          "        termLabel: disease",
-          "        iri: http://purl.obolibrary.org/obo/DOID_4");
+          "        termLabel: disease");
 
       send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":"
           + "{\"name\":\"render_schema_artifact\",\"arguments\":{\"format\":\"json\",\"schema_artifact\":\""

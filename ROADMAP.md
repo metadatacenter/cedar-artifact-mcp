@@ -7,8 +7,8 @@ architectural principles see [DESIGN.md](./DESIGN.md).
 
 ### Scaffold
 
-- Maven scaffold with the official MCP Java SDK and `cedar-artifact-library:2.9.2-SNAPSHOT`
-  (tracking the library's `develop` branch).
+- Maven scaffold with the official MCP Java SDK and released `cedar-artifact-library:2.9.3`,
+  resolved from the anonymous-read BMIR Nexus releases repository.
 - Stdio transport server with a diagnostic `ping` tool.
 - Shaded executable jar (`mvn package` → `target/cedar-artifact-mcp-<v>-all.jar`); the
   Jackson 2.x / 3.x classpath conflict is resolved via explicit shade filters.
@@ -160,17 +160,8 @@ centralizes read (YAML or JSON, auto-detected) and render.
 
 ## Next
 
-- **Build without a locally installed library** — building this MCP requires
-  `cedar-artifact-library:2.9.2-SNAPSHOT` to have been `mvn install`ed from a local checkout
-  of the library's `develop` branch — and that library in turn sits atop `cedar-parent`,
-  `cedar-model-library`, and `cedar-model-validation-library`, so a fresh machine must clone
-  and install four repositories in dependency order; none of the snapshots resolve from any
-  public repository. `cedar-cee-mcp` pins the same library snapshot; the prebuilt shaded jars are
-  the distribution workaround for both library-backed MCPs. The fix lives on the library side —
-  publish released, non-SNAPSHOT artifacts to a public Maven repository and pin both consumers to
-  a released version. (`cedar-artifact-rest-mcp` has no artifact-library dependency.)
-
-  When that work gives the three Java MCPs a shared Maven build, add a small
+- **Shared MCP plumbing.** The released artifact library now lets the two library-backed MCPs
+  build without sibling checkouts. When the three Java MCPs gain a shared Maven build, add a small
   `cedar-mcp-common` module in the same reactor and move the plumbing they currently copy
   verbatim into it: version-resource loading, the `ping` tool and handler, `RegisteredTool`, and
   the success/error result helpers. Do the extraction in the shared-build change so the module is
