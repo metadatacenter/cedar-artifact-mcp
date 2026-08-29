@@ -832,18 +832,20 @@ cd cedar-artifact-mcp
 mvn package
 ```
 
-The build produces two jars in `target/`:
+The build produces three jar paths in `target/`:
 
 - `cedar-artifact-mcp-<version>.jar` — the thin jar, no dependencies bundled.
 - `cedar-artifact-mcp-<version>-all.jar` — an executable shaded jar with everything
-  bundled. This is what MCP clients launch.
+  bundled.
+- `cedar-artifact-mcp.jar` — a versionless copy of the shaded jar. This is what MCP clients launch
+  so their configuration survives a version bump.
 
 ## Running
 
 The server speaks MCP over stdio. Launch directly to confirm it starts:
 
 ```bash
-java -jar target/cedar-artifact-mcp-<version>-all.jar
+java -jar target/cedar-artifact-mcp.jar
 ```
 
 The server will sit waiting for JSON-RPC messages on stdin. `Ctrl-C` to exit.
@@ -858,7 +860,7 @@ client's MCP configuration. For Claude Code, edit `~/.claude.json`:
       "command": "/usr/bin/java",
       "args": [
         "-jar",
-        "/absolute/path/to/cedar-artifact-mcp/target/cedar-artifact-mcp-0.1.0-SNAPSHOT-all.jar"
+        "/absolute/path/to/cedar-artifact-mcp/target/cedar-artifact-mcp.jar"
       ]
     }
   }
@@ -877,7 +879,7 @@ Feed four JSON-RPC messages over stdio to confirm the server initializes, lists 
 and responds to a `ping` call:
 
 ```bash
-cat <<'EOF' | java -jar target/cedar-artifact-mcp-0.1.0-SNAPSHOT-all.jar
+cat <<'EOF' | java -jar target/cedar-artifact-mcp.jar
 {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"smoke","version":"0"}}}
 {"jsonrpc":"2.0","method":"notifications/initialized"}
 {"jsonrpc":"2.0","id":2,"method":"tools/list"}
