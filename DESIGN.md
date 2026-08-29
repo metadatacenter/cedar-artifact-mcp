@@ -141,15 +141,16 @@ threads **YAML**. The tool surface:
   returns the expanded, lossless YAML (`ArtifactExchange.exchangeYaml`): version, status,
   `modelVersion`, and value-less instance slots are always carried, so nothing set on an
   artifact — and nothing structural that `set_literal_field_value` needs — can be silently dropped
-  as it threads from tool to tool. `isCompact` is a rendering choice, not a creation
-  choice, so it lives only on the `*_to_yaml` rendering tools: `isCompact: true` drops the
-  provenance keys for a lean display of a finished artifact.
-- **JSON Schema is an export, produced only on demand.** The four `*_to_json` tools take
-  an artifact (YAML) and emit the JSON Schema for the rare tool that can't read YAML
+  as it threads from tool to tool. Compaction is a rendering choice, not a creation
+  choice, so the `compact` flag lives only on `render_schema_artifact` and
+  `render_instance_artifact`: `compact: true` drops the provenance keys for a lean display
+  of a finished artifact.
+- **JSON Schema is an export, produced only on demand.** The render tools take an artifact
+  (YAML) and emit the JSON Schema under `format: json`, for the rare tool that can't read YAML
   (cedar-server now takes YAML too). JSON is not threaded between tools.
-- **`*_to_yaml` renders any artifact (YAML or JSON) as YAML**, with an `isCompact`
-  flag — so it recompacts an expanded artifact for display and imports external JSON into
-  the YAML loop, with no JSON detour.
+- **The render tools read any artifact (YAML or JSON) and write YAML** under `format: yaml`,
+  with a `compact` flag — so they recompact an expanded artifact for display and import
+  external JSON into the YAML loop, with no JSON detour.
 
 The library's YAML reader/renderer must round-trip both forms losslessly — see
 `cedar-artifact-library`'s `YamlAsymmetryProbeTest` for the per-setting regression probes
@@ -157,9 +158,9 @@ that guard this (ext-* link fields, instance `@type` seeds, value-less and empty
 multi-instance slots, link/temporal defaults, etc.).
 
 A consequence: the LLM threads the expanded exchange YAML between tools, but shows the
-user the lean `*_to_yaml` (`isCompact: true`) view in interactive sessions — every mutating
+user the lean rendered (`compact: true`) view in interactive sessions — every mutating
 tool's description directs it to (`ArtifactExchange.DISPLAY_NOTICE`), and warns that the
-compacted display view drops provenance and must never be threaded onward. `*_to_json` is
+compacted display view drops provenance and must never be threaded onward. `format: json` is
 for when a JSON deliverable calls for it.
 
 ## Principle 9 — Test the MCP, not the library

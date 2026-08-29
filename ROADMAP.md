@@ -23,8 +23,8 @@ centralizes read (YAML or JSON, auto-detected) and render.
 
 - **Every mutating tool returns the expanded, lossless exchange form** — version, status,
   modelVersion, and value-less instance slots always carried, so nothing is silently
-  dropped between tool calls. `isCompact` is a display choice and lives only on the
-  `*_to_yaml` rendering tools (`isCompact: true` drops the provenance keys).
+  dropped between tool calls. Compaction is a display choice, and the `compact` flag lives
+  only on the render tools (`compact: true` drops the provenance keys).
 - The schema-artifact `create_*` tools take optional `version` and `status` (defaults
   `0.0.1` / `draft`).
 - Every returned artifact has round-tripped through the library and passed `CedarValidator`
@@ -186,9 +186,8 @@ centralizes read (YAML or JSON, auto-detected) and render.
   constraint tools.
 
 - **Render-if-present as the one YAML form** — idea, not yet decided. Mutating tools now
-  always return the expanded exchange form and `isCompact` survives only on the `*_to_yaml`
-  rendering tools; the remaining question is whether the compact/expanded distinction could
-  disappear entirely. A render-if-present form would emit provenance (status, version,
+  always return the expanded exchange form and `compact` survives only on the render tools; the
+  remaining question is whether the compact/expanded distinction could disappear entirely. A render-if-present form would emit provenance (status, version,
   modelVersion, created/modified, …) only when actually set — absent ⇒ omitted, present ⇒
   shown and round-tripped — making the default view naturally lean with no lossy compaction.
 
@@ -197,7 +196,7 @@ centralizes read (YAML or JSON, auto-detected) and render.
   and readers (which now default them deliberately). That has cross-consumer reach
   (cedar-server tooling, the CLI), so it needs coordinating, not just an MCP edit. Tradeoff
   to weigh: a single form can no longer *hide* provenance that does exist (e.g. a
-  server-loaded artifact's timestamps), which `isCompact: true` can.
+  server-loaded artifact's timestamps), which `compact: true` can.
 
 Library-side items that surface through this MCP but whose fix lives in
 [`cedar-artifact-library`](https://github.com/metadatacenter/cedar-artifact-library/blob/develop/ROADMAP.md)

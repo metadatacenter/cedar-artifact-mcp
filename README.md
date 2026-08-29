@@ -46,7 +46,7 @@ returns the **expanded exchange form** — provenance (`status`, `version`,
 and that is what threads from tool to tool, so nothing set on an artifact is
 ever dropped mid-chain. For *display*, the tool descriptions direct the LLM to
 show the user the lean **compact view** instead, produced by the matching
-`*_to_yaml` tool with `isCompact: true`. The blocks below show what the user
+render tool with `compact: true`. The blocks below show what the user
 sees: the compact view (the first step also shows the expanded form it was
 rendered from).
 
@@ -404,8 +404,8 @@ in and out of YAML, attaching constraints, populating instance values,
 validating, and so on, without the calling LLM ever needing to know any
 Java. Artifacts move between tools as **YAML** — the expanded exchange form (DESIGN.md
 Principle 8). The `create_*` / `add_*` / `set_*` / `remove_*` tools wrap the library's
-typed builders and return YAML; the `*_to_json` tools export the JSON Schema form
-(an escape hatch for the rare tool that can't read YAML) and `*_to_yaml` imports an external
+typed builders and return YAML; the render tools export the JSON Schema form with
+`format: json` (an escape hatch for the rare tool that can't read YAML) and import an external
 JSON Schema artifact back into the YAML loop; `validate_instance_artifact` calls the canonical
 CedarValidator. A non-error result from any tool is guaranteed to have round-tripped
 through the library and passed its structural validation.
@@ -426,10 +426,10 @@ through the library and passed its structural validation.
 `add_*`, `set_*`, `remove_child`) returns the **expanded, lossless YAML**: version, status,
 modelVersion, and any other provenance are always carried, so nothing set on an artifact can
 be silently dropped as it threads from tool to tool. Compaction is purely a display choice,
-and the `isCompact` flag therefore lives only on the `*_to_yaml` rendering tools
-(`isCompact: true` drops the provenance keys for a lean view). Each mutating tool's
-description directs the LLM to use exactly that for interactive display, while threading
-the expanded form onward. Instances are **sparse** in
+and the `compact` flag therefore lives only on `render_schema_artifact` and
+`render_instance_artifact` (`compact: true` drops the provenance keys for a lean view).
+Each mutating tool's description directs the LLM to use exactly that for interactive
+display, while threading the expanded form onward. Instances are **sparse** in
 either form — a field with no value is omitted entirely (no `null`, no `{}`, no empty `[]`);
 the empty slots the JSON form requires are reconstructed from the template at the
 JSON boundary (`validate_instance_artifact`, `render_instance_artifact` with `format: json`).
