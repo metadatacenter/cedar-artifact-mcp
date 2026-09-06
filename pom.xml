@@ -154,9 +154,10 @@
               </transformers>
               <!--
                 cedar-model-library and cedar-model-validation-library are uber-jars
-                that bundle Jackson 2.x annotation classes (com.fasterxml.jackson.annotation.*).
-                Those bundled classes lack JsonFormat.Shape.POJO, which Jackson 3 (used by
-                the MCP SDK) needs. Strip the bundled copies so the proper 3.x jar wins.
+                that bundle Jackson 2.x annotation classes (com.fasterxml.jackson.annotation.*),
+                frozen at whatever release each was built against. Strip the bundled copies so the
+                annotations jar the build resolved wins, which is the one databind and the MCP SDK
+                were both checked against.
               -->
               <filters>
                 <filter>
