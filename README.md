@@ -781,9 +781,9 @@ is an error. (A standalone template/element/field is redirected to `render_schem
 
 **Load an artifact from disk.** Read a CEDAR artifact (template, element, field, or instance)
 from an absolute `path` — JSON or YAML, auto-detected — and return it as **YAML by default**
-(the compact exchange form, ~10× smaller than the JSON) or as JSON with `format: "json"`. This
-is how you pull a large artifact file into the conversation without pasting it: a big JSON file
-comes back as compact YAML. `compact` (default `false`) selects the lean YAML form. The path
+(expanded and lossless) or as JSON with `format: "json"`. This is how you pull a large artifact
+file into the conversation without pasting it. `compact` (default `false`) selects a lean,
+read-only YAML view that retains the root ID but omits nested artifact IDs and repository metadata. The path
 must be absolute — a localhost MCP's working directory is rarely what you expect. No semantic
 validation is run (use `validate_schema_artifact` / `validate_instance_artifact`, or let the
 server validate on upload). To convert a file without bringing its content into the conversation

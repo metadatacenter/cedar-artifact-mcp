@@ -25,8 +25,8 @@ import java.util.Map;
  *
  * <p>{@code format} selects the output serialization: {@code yaml} (default) emits YAML;
  * {@code json} emits pretty-printed CEDAR JSON Schema. {@code compact} (YAML only, default true)
- * selects the lean display form (provenance, status, version, {@code modelVersion} omitted) versus
- * the expanded exchange form that round-trips losslessly.
+ * selects the read-only display form (nested artifact IDs, provenance, status, version, and
+ * {@code modelVersion} omitted) versus the expanded exchange form that round-trips losslessly.
  *
  * <p>An artifact that names no {@code @id} is rendered without one — CEDAR assigns identity on
  * create (DESIGN.md Principle 10). No CedarValidator step runs — rendering renders; validation lives in
@@ -59,17 +59,17 @@ public final class RenderSchemaArtifactTool
         "enum", List.of("yaml", "json"),
         "default", "yaml",
         "description",
-        "Output serialization. 'yaml' (default) renders YAML — the compact form these tools read, "
-            + "write, display, and exchange. 'json' renders pretty-printed CEDAR JSON Schema, the "
+        "Output serialization. 'yaml' (default) renders YAML; compact YAML is for read-only display "
+            + "and expanded YAML is for lossless exchange. 'json' renders pretty-printed CEDAR JSON Schema, the "
             + "export escape hatch for the narrow case where a downstream CEDAR tool or service "
             + "cannot consume YAML; JSON Schema is far larger than YAML."));
     properties.put("compact", Map.of(
         "type", "boolean",
         "default", Boolean.TRUE,
         "description",
-        "Whether to emit the lean, LLM-friendly compact form (YAML only). true (default) omits "
-            + "provenance, status, version, and modelVersion — the round-trip back to a model "
-            + "defaults the absent modelVersion, so it reads cleanly. false emits the expanded "
+        "Whether to emit the lean, read-only compact form (YAML only). true (default) retains only "
+            + "the document-root artifact ID and omits nested artifact IDs, provenance, status, "
+            + "version, and modelVersion. false emits the expanded "
             + "exchange form (every field the renderer can produce), which round-trips losslessly. "
             + "Applies only to YAML output; pairing compact: true with format: json is an error."));
 
@@ -82,8 +82,8 @@ public final class RenderSchemaArtifactTool
         .description(
             "Primary rendering path for CEDAR schema artifacts. Renders a CEDAR template, element, "
                 + "or field (a schema artifact; YAML or JSON Schema) to YAML (default) or JSON. The "
-                + "kind is auto-detected. 'format: yaml' produces the compact form these tools "
-                + "read, write, display, and exchange; 'compact' selects compact (lean, default) "
+                + "kind is auto-detected. 'format: yaml' produces compact read-only display YAML "
+                + "by default; 'compact' selects compact (lean, default) "
                 + "or expanded full-fidelity YAML. 'format: json' produces CEDAR JSON Schema — an "
                 + "export escape hatch for the narrow case where a downstream tool cannot consume "
                 + "YAML. No validation runs here; validate separately with validate_schema_artifact. "

@@ -11,7 +11,7 @@ import java.util.Map;
 
 /**
  * MCP tool {@code read_artifact_file} — reads a CEDAR artifact from an absolute file path (JSON or
- * YAML, auto-detected) and returns it as YAML (the compact exchange form, by default) or as JSON.
+ * YAML, auto-detected) and returns it as expanded YAML by default or as JSON.
  *
  * <p>The point is to pull a large artifact file into the conversation without pasting it: a big
  * JSON file comes back as YAML roughly a tenth the size. To convert a file without bringing the
@@ -33,12 +33,12 @@ public final class ReadArtifactFileTool
         "type", "string",
         "enum", List.of("yaml", "json"),
         "description",
-        "Output format: 'yaml' (the default) — the compact exchange form, an order of magnitude "
-            + "smaller than JSON — or 'json'."));
+        "Output format: 'yaml' (the default, expanded and lossless) or 'json'."));
     properties.put("compact", Map.of(
         "type", "boolean",
         "description",
-        "When rendering YAML, emit the lean compact form (drops provenance, version, status). "
+        "When rendering YAML, emit the lean read-only compact form (keeps the root ID but drops "
+            + "nested artifact IDs, provenance, version, and status). "
             + "Default false (expanded, lossless). YAML output only — an error with format: json."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
@@ -49,8 +49,8 @@ public final class ReadArtifactFileTool
         .title("Load a CEDAR artifact from a file")
         .description(
             "Reads a CEDAR artifact (template, element, field, or instance) from an absolute file "
-                + "path — JSON or YAML, auto-detected — and returns it as YAML (the compact "
-                + "exchange form, by default) or as JSON. Use this to pull a large artifact file "
+                + "path — JSON or YAML, auto-detected — and returns it as expanded YAML by default "
+                + "or as JSON. Set compact: true only for a lean read-only display. Use this to pull a large artifact file "
                 + "into the conversation without pasting it: a big JSON file comes back as YAML "
                 + "roughly a tenth the size. Path must be absolute. Does not validate (run "
                 + "validate_schema_artifact / validate_instance_artifact, or rely on the server "

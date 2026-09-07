@@ -27,7 +27,7 @@ public final class WriteArtifactFileTool
     properties.put("artifact", Map.of(
         "type", "string",
         "description",
-        "The CEDAR artifact to write, inline as YAML (the compact exchange form) or JSON."));
+        "The CEDAR artifact to write, inline as compact or expanded YAML, or as JSON."));
     properties.put("path", Map.of(
         "type", "string",
         "description",
@@ -41,7 +41,8 @@ public final class WriteArtifactFileTool
     properties.put("compact", Map.of(
         "type", "boolean",
         "description",
-        "When writing YAML, emit the lean compact form (drops provenance, version, status). "
+        "When writing YAML, emit the lean read-only compact form (keeps the root ID but drops "
+            + "nested artifact IDs, provenance, version, and status). "
             + "Default false (expanded, lossless). YAML output only — an error with JSON output."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(

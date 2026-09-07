@@ -85,8 +85,8 @@ final class ArtifactFiles
   }
 
   /**
-   * Reject {@code compact: true} paired with JSON output. Compaction drops provenance to produce
-   * the lean YAML exchange form — there is no analogous compact JSON, so the combination is a
+   * Reject {@code compact: true} paired with JSON output. Compaction drops nested artifact identity
+   * and provenance to produce the lean, read-only YAML form — there is no analogous compact JSON, so the combination is a
    * mistake rather than a silent no-op.
    */
   static void requireCompactCompatibleWith(boolean asYaml, boolean compact)

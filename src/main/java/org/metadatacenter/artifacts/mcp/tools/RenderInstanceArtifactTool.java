@@ -69,16 +69,17 @@ public final class RenderInstanceArtifactTool
         "enum", List.of("yaml", "json"),
         "default", "yaml",
         "description",
-        "Output serialization. 'yaml' (default) renders YAML — the compact form these tools read, "
-            + "write, display, and exchange. 'json' renders pretty-printed CEDAR JSON, the export "
+        "Output serialization. 'yaml' (default) renders YAML; compact YAML is for read-only display "
+            + "and expanded YAML is for lossless exchange. 'json' renders pretty-printed CEDAR JSON, the export "
             + "escape hatch for the narrow case where a downstream CEDAR tool or service cannot "
             + "consume YAML; JSON is far larger than YAML."));
     properties.put("compact", Map.of(
         "type", "boolean",
         "default", Boolean.TRUE,
         "description",
-        "Whether to emit the lean compact form (YAML only). true (default) is the lean display "
-            + "form; false emits the expanded, losslessly-round-tripping exchange form. Applies "
+        "Whether to emit the lean compact form (YAML only). true (default) retains only the root "
+            + "artifact ID and is a read-only display form; false emits the expanded, "
+            + "losslessly-round-tripping exchange form. Applies "
             + "only to YAML output; pairing compact: true with format: json is an error."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
@@ -90,8 +91,8 @@ public final class RenderInstanceArtifactTool
         .description(
             "Primary rendering path for CEDAR instances. Renders a CEDAR template instance or "
                 + "element instance (auto-detected; YAML or JSON) to YAML (default) or JSON. "
-                + "'format: yaml' produces the compact form these tools read, write, display, and "
-                + "exchange; 'compact' selects compact (lean, default) or expanded full-fidelity "
+                + "'format: yaml' produces compact read-only display YAML by default; 'compact' "
+                + "selects compact (lean, default) or expanded full-fidelity "
                 + "YAML. 'format: json' produces CEDAR JSON — an export escape hatch for the narrow "
                 + "case where a downstream tool cannot consume YAML. Supply the optional "
                 + "template_artifact (the template or element it is based on) to inflate the sparse "

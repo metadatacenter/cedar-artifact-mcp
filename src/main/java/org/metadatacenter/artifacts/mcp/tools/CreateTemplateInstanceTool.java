@@ -36,11 +36,10 @@ import java.util.Map;
  *
  * <p>The {@code isBasedOn} URI says which stored template the instance was filled from. It is taken
  * from the template's own {@code @id} when the supplied document has one, so an instance built from a
- * template fetched out of a repository points at exactly that template. A template in the compact form
- * carries no identifier — the form describes an artifact being authored rather than one already stored
- * — so an instance built from one needs the {@code isBasedOn} argument, naming the template as the
- * repository knows it. Without either, there is nothing to point at: an instance of a template that
- * was never saved refers to nothing, and the tool says so.
+ * template fetched out of a repository points at exactly that template. A compact rendering of a
+ * stored template retains that root identifier; a minimal, not-yet-stored template has none and
+ * therefore needs the {@code isBasedOn} argument. Without either, there is nothing to point at: an
+ * instance of a template that was never saved refers to nothing, and the tool says so.
  */
 public final class CreateTemplateInstanceTool
 {
@@ -72,9 +71,9 @@ public final class CreateTemplateInstanceTool
         "description",
         "IRI of the stored template this instance is filled from, written into the instance's "
             + "schema:isBasedOn. Required when the supplied template carries no @id of its own, "
-            + "which is the case for a template in the compact form: that form describes a template "
-            + "being authored, and only a repository can say which stored template an instance "
-            + "belongs to. Save the template first and pass the IRI the repository assigned. Must be "
+            + "as with a minimal template that has not been stored. Only a repository can say which "
+            + "stored template an instance belongs to. Save the template first and pass the IRI the "
+            + "repository assigned. Must be "
             + "an absolute IRI."));
     properties.put("id", Map.of(
         "type", "string",
@@ -167,8 +166,8 @@ public final class CreateTemplateInstanceTool
       isBasedOn = template.jsonLdId().get();
     } else {
       return error("the template carries no @id, so there is nothing for the instance's isBasedOn to "
-          + "point at. A template in the compact form never carries one: that form describes a "
-          + "template being authored, and an instance belongs to a template a repository has stored. "
+          + "point at. This is typical of a minimal template being authored; compact renderings of "
+          + "stored templates retain their root @id. An instance belongs to a stored template. "
           + "Save the template, then pass the IRI the repository assigned as isBasedOn.");
     }
 

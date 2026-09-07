@@ -40,7 +40,8 @@ public final class ConvertArtifactFileTool
     properties.put("compact", Map.of(
         "type", "boolean",
         "description",
-        "When writing YAML, emit the lean compact form (drops provenance, version, status). "
+        "When writing YAML, emit the lean read-only compact form (keeps the root ID but drops "
+            + "nested artifact IDs, provenance, version, and status). "
             + "Default false (expanded, lossless). YAML output only — an error with JSON output."));
 
     McpSchema.JsonSchema schema = new McpSchema.JsonSchema(

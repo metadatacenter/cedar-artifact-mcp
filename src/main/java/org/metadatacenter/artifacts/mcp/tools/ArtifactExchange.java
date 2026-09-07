@@ -42,12 +42,10 @@ import java.util.Map;
  *   <li><strong>render</strong> an outgoing model back to expanded YAML.</li>
  * </ul>
  *
- * <p>Two readers, chosen by what the document looks like. The compact form describes an artifact
- * being authored: it names neither the artifact nor what a repository records about it, and its
- * reader refuses a document that carries an identifier. The expanded form the tools emit between
- * calls does carry one — identity is what has to survive from one stateless call to the next — and
- * its reader wants the model version the compact form omits. {@link #readerFor} picks by inspecting
- * the document, so an author may hand in either.
+ * <p>Two readers are chosen by what the document looks like. Compact YAML is a read-only display
+ * form: it may retain the document-root identifier, but omits repository metadata and nested
+ * artifact identifiers. Expanded YAML is the lossless form the tools emit between calls and carries
+ * a model version. {@link #readerFor} selects on that model version, so callers may supply either.
  *
  * <p>JSON Schema is no longer an exchange format between tools; it is produced only by the
  * render tools ({@code render_schema_artifact} / {@code render_instance_artifact} with
@@ -68,10 +66,8 @@ final class ArtifactExchange
   /**
    * The reader the document asks for.
    *
-   * A document naming the artifact it describes, or stating a model version, is the expanded form the
-   * tools exchange; anything else is the compact form an author writes. Choosing wrongly is not a
-   * matter of tolerance: the compact reader refuses an identifier, and the expanded reader requires a
-   * model version.
+   * Expanded schema YAML states a model version; compact schema YAML does not. Root identity is not
+   * a discriminator because compact documents deliberately retain it.
    */
   private static YamlArtifactReader readerFor(LinkedHashMap<String, Object> document)
   {
@@ -114,14 +110,14 @@ final class ArtifactExchange
   /**
    * Display directive appended to every artifact-returning tool description. The consuming
    * LLM only sees the tool surface (DESIGN.md Principle 4), so the instruction not to mangle
-   * the result when relaying it to the user has to live here. The {@code @id} lines are the
-   * artifact's identity and are the most common casualty of "summarize for brevity".
+   * the result when relaying it to the user has to live here. Any {@code @id} line present is
+   * identity or semantic data and must not be silently removed.
    */
   static final String VERBATIM_NOTICE =
       " Whatever YAML you show the user — this result or a render_schema_artifact / "
           + "render_instance_artifact rendering of it — show it "
-          + "verbatim: never hand-edit, summarize, or reformat it, never drop the 'id:' (@id) "
-          + "lines or any other field, and do not replace the YAML with a table that omits "
+          + "verbatim: never hand-edit, summarize, or reformat it, never drop an 'id:' (@id) "
+          + "line that is present or any other field, and do not replace the YAML with a table that omits "
           + "content.";
 
   /**
@@ -137,7 +133,7 @@ final class ArtifactExchange
           + "(render_schema_artifact / render_instance_artifact) with compact: true and display "
           + "its output instead. But ALWAYS pass THIS returned YAML "
           + "into subsequent tool calls — the compacted display view drops provenance (version, "
-          + "status) and must never be threaded onward.";
+          + "status) and nested artifact identity, and must never be threaded onward.";
 
   /**
    * Extra directive for the {@code create_*} builders that return a standalone, reusable
