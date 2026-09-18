@@ -29,7 +29,7 @@ supply the IRI/acronym/name tuples that controlled-term constraints need; the
 calling LLM passes those tuples into this MCP's `set_*_constraint` tools.
 
 See [DESIGN.md](./DESIGN.md) for the architectural principles and
-[ROADMAP.md](./ROADMAP.md) for what's planned.
+the [CEDAR MCP Servers Roadmap](https://github.com/metadatacenter/cedar-development/blob/develop/ops/MCP-ROADMAP.md) for what's planned.
 
 ## Example workflow
 

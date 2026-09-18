@@ -206,6 +206,12 @@ Two consequences are worth stating.
   identifier a repository knows, and an instance based on a locally minted template IRI named a
   template that did not exist. Leaving identity to the server removes that class of artifact.
 
+The same rule governs everything else a repository assigns. Provenance — `pav:createdOn`,
+`pav:createdBy`, `oslc:modifiedBy` and the rest — is the server's, so a construction-side tool for
+it would fabricate history; version chains such as `pav:previousVersion` and `pav:derivedFrom`
+mean something only against a repository that holds the artifacts they point at. Both are
+preserved losslessly on round-trip and authored nowhere in this server.
+
 ## Principle 11 — Instances are sparse; the template reconstructs the rest
 
 CEDAR's JSON Schema marks every template field `required` in its instances, so the
@@ -245,7 +251,8 @@ required wherever JSON is produced. That is the deliberate trade for instances t
 `InstanceInflater` is an **interim, MCP-side stand-in**: the all-fields-present JSON rule is a
 library/CEDAR design decision, and generating those empty placeholders properly belongs **in the
 library** — completing its currently-stubbed `InstanceFixer(template, instance)`. That decision is
-disliked but retained until the next library iteration; see `cedar-artifact-library`'s ROADMAP.
+disliked but retained until the next library iteration; see the Shared Libraries section of the
+[CEDAR backend roadmap](https://github.com/metadatacenter/cedar-development/blob/develop/ops/BACKEND-ROADMAP.md).
 When the library owns placeholder generation, this inflater folds into it.
 
 ## Adding a new tool

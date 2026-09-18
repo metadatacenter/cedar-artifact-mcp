@@ -51,7 +51,7 @@ import java.util.Map;
  *
  * <p>Tools live one-per-class under the {@code tools} package and are registered here via
  * {@link #main(String[])}. See {@code DESIGN.md} for the architectural principles and
- * {@code ROADMAP.md} for the planned tool inventory.
+ * {@code README.md} for the tool inventory.
  */
 public final class ArtifactMcpServer
 {
