@@ -199,9 +199,10 @@ centralizes read (YAML or JSON, auto-detected) and render.
   server-loaded artifact's timestamps), which `compact: true` can.
 
 Library-side items that surface through this MCP but whose fix lives in
-[`cedar-artifact-library`](https://github.com/metadatacenter/cedar-artifact-library/blob/develop/ROADMAP.md)
-are tracked there — at time of writing, the reader-vs-builder `version` / `status` defaulting
-asymmetry the idea above depends on.
+`cedar-artifact-library` are tracked under "Shared Libraries" in the
+[CEDAR Backend Roadmap](https://github.com/metadatacenter/cedar-development/blob/develop/ops/BACKEND-ROADMAP.md).
+The reader-vs-builder `version` / `status` defaulting asymmetry the idea above depends on is
+recorded in neither place and needs writing up before it can be picked up.
 
 ## Known limitation
 
