@@ -99,6 +99,11 @@ final class AttributeValueEditing
       return error("attribute-value update failed: " + e.getClass().getSimpleName() + ": " + e.getMessage());
     }
 
+    // Validate (DESIGN.md Principle 6) against the template before returning.
+    String validationError = ArtifactExchange.validateInstance(updated, template);
+    if (validationError != null)
+      return error("updated instance failed CedarValidator: " + validationError);
+
     String yaml;
     try {
       ObjectNode rendered = RENDERER.renderTemplateInstanceArtifact(updated);

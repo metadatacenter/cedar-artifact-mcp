@@ -91,6 +91,11 @@ This is the contract the LLM relies on: a non-error result means the validator
 accepts the artifact. It also surfaces library regressions immediately rather than
 shipping subtly-wrong JSON downstream.
 
+An instance validates only against its template. A tool that edits an instance is given
+the template, and validates the result against it through
+`ArtifactExchange.validateInstance`. The annotation tools are not given one, so an annotated
+instance is the exception, and their descriptions say so.
+
 See `CreateTemplateTool.handler` for the canonical pattern.
 
 ## Principle 7 — Reader is the contract; lean on its compact mode

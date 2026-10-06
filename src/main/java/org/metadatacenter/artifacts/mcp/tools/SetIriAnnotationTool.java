@@ -52,7 +52,8 @@ public final class SetIriAnnotationTool
                 + "overwrites the property if already present. Returns the updated artifact as "
                 + "expanded YAML. Use set_literal_annotation for a string value, or "
                 + "remove_annotation to drop one. (Element instances do not carry annotations.)"
-                + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
+                + ArtifactExchange.ANNOTATION_VALIDATION_NOTICE + ArtifactExchange.VERBATIM_NOTICE
+                + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
   }

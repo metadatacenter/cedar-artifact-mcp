@@ -407,8 +407,12 @@ Principle 8). The `create_*` / `add_*` / `set_*` / `remove_*` tools wrap the lib
 typed builders and return YAML; the render tools export the JSON Schema form with
 `format: json` (an escape hatch for the rare tool that can't read YAML) and import an external
 JSON Schema artifact back into the YAML loop; `validate_instance_artifact` calls the canonical
-CedarValidator. A non-error result from any tool is guaranteed to have round-tripped
-through the library and passed its structural validation.
+CedarValidator. A non-error result from a tool that creates or changes an artifact has
+round-tripped through the library and passed CedarValidator: a template, element or field
+on its own, and an instance against the template the tool was given. Annotating an
+instance is the one exception, because those tools are not given its template. The render,
+read, write and convert tools change an artifact's form, not the artifact, and validate
+nothing.
 
 | Group | Tools |
 |---|---|
@@ -638,7 +642,8 @@ multi-instance element, which is otherwise impossible (a fresh instance seeds
 them as empty lists, and the value tools require entries to exist). After
 appending, fill the entry's fields at `addresses[N]/...` paths. The incoming
 element instance is inflated against the element schema on the way in, so every
-child slot is immediately addressable.
+child slot is immediately addressable. Its own name and description are dropped, because
+an element instance inside its parent carries neither.
 
 ### `unset_field_value(template, instance, field_path)`
 
@@ -714,7 +719,9 @@ template instance** (YAML or JSON; kind auto-detected) and return the updated
 artifact as expanded YAML. Annotations live at the artifact's root. To annotate
 a specific field or element inside a template, annotate the standalone artifact
 first, then `add_field` / `add_element` it. (Element *instances* do not carry
-annotations and are rejected.)
+annotations and are rejected.) A template, element or field is validated before it is
+returned. A template instance is not, because these tools are not given its template;
+validate it with `validate_instance_artifact`.
 
 ### `validate_instance_artifact(schema_artifact, instance_artifact)`
 
@@ -741,9 +748,10 @@ guidance.
 Validate a **standalone** schema artifact — template, element, or field — against the
 CEDAR model schema, built for checking artifacts obtained **from the wild** (e.g. fetched
 from a CEDAR server or sent by a colleague). Takes a single `artifact` as JSON Schema or
-YAML (auto-detected); JSON is validated **exactly as received** (no round-trip through the
-library, so the verdict reflects the artifact itself), while YAML is read through the
-library first. The report shape matches `validate_instance_artifact` — `{"valid": true}` or
+YAML (auto-detected); JSON is validated **exactly as received**, while YAML is read through
+the library first. Either way the library must also be able to read the artifact, as the
+CEDAR server requires before it stores one, so an artifact gets the same verdict in either
+form. The report shape matches `validate_instance_artifact` — `{"valid": true}` or
 `{"valid": false, "errors": [...]}`, returned as a successful tool call either way.
 
 The kind is **auto-detected** from the artifact's `@type` and dispatched to the matching

@@ -9,6 +9,7 @@ import org.metadatacenter.artifacts.model.core.ElementInstanceArtifact;
 import org.metadatacenter.artifacts.model.core.ElementSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.TemplateInstanceArtifact;
+import org.metadatacenter.artifacts.model.tools.InstanceInflater;
 import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
 import org.metadatacenter.artifacts.model.reader.JsonArtifactReader;
 import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
@@ -113,6 +114,15 @@ final class ArtifactExchange
    * the result when relaying it to the user has to live here. Any {@code @id} line present is
    * identity or semantic data and must not be silently removed.
    */
+  /** Said by every tool that edits an instance, which it validates against the template it is given. */
+  static final String INSTANCE_VALIDATION_NOTICE =
+      " The updated instance is validated against the template before it is returned.";
+
+  /** Said by the annotation tools, which validate a schema artifact but have no template for an instance. */
+  static final String ANNOTATION_VALIDATION_NOTICE =
+      " A template, element or field is validated before it is returned. A template instance is not, "
+          + "because its template is not given, so validate it with validate_instance_artifact.";
+
   static final String VERBATIM_NOTICE =
       " Whatever YAML you show the user — this result or a render_schema_artifact / "
           + "render_instance_artifact rendering of it — show it "
@@ -215,8 +225,10 @@ final class ArtifactExchange
   static boolean isElementInstance(String text)
   {
     if (looksLikeJson(text)) {
+      // Neither a schema artifact nor a template instance. Lacking schema:isBasedOn alone also
+      // described every template, element and field.
       try {
-        return !asObjectNode(text).has("schema:isBasedOn");
+        return ArtifactKinds.detect(asObjectNode(text)) == null;
       } catch (RuntimeException malformed) {
         return false;
       }
@@ -253,7 +265,7 @@ final class ArtifactExchange
   }
 
   /** A serialized artifact is JSON when its first non-whitespace character is '{'. */
-  private static boolean looksLikeJson(String text)
+  static boolean looksLikeJson(String text)
   {
     for (int i = 0; i < text.length(); i++) {
       char c = text.charAt(i);
@@ -263,7 +275,7 @@ final class ArtifactExchange
     return false;
   }
 
-  private static ObjectNode asObjectNode(String json)
+  static ObjectNode asObjectNode(String json)
   {
     JsonNode node;
     try {
@@ -396,22 +408,23 @@ final class ArtifactExchange
     };
   }
 
-  /** Render a CEDAR JSON-Schema {@code ObjectNode} (template, element, field, or instance) as YAML. */
+  /**
+   * Render a CEDAR JSON-Schema {@code ObjectNode} (template, element, field, or instance) as YAML. The
+   * kind is {@link ArtifactKinds#detect}'s, which every tool asks. This used to match a substring of
+   * {@code @type}, so a template instance typed with an IRI containing "Field" was read as a field.
+   */
   static String jsonNodeToYaml(ObjectNode node, boolean isCompact)
   {
-    JsonNode typeNode = node.get("@type");
-    String type = typeNode != null && typeNode.isTextual() ? typeNode.asText() : "";
-    Artifact artifact;
-    if (type.contains("Element"))
-      artifact = JSON_READER.readElementSchemaArtifact(node);
-    else if (type.contains("Field"))
-      artifact = JSON_READER.readFieldSchemaArtifact(node);
-    else if (type.contains("Template"))
-      artifact = JSON_READER.readTemplateSchemaArtifact(node);
-    else if (node.has("schema:isBasedOn"))
-      artifact = JSON_READER.readTemplateInstanceArtifact(node);
-    else
-      throw new IllegalArgumentException("cannot determine artifact kind from JSON @type \"" + type + "\"");
+    ArtifactKinds.Kind kind = ArtifactKinds.detect(node);
+    if (kind == null)
+      throw new IllegalArgumentException("cannot determine artifact kind from JSON @type \""
+          + node.path("@type") + "\"");
+    Artifact artifact = switch (kind) {
+      case TEMPLATE -> JSON_READER.readTemplateSchemaArtifact(node);
+      case ELEMENT -> JSON_READER.readElementSchemaArtifact(node);
+      case FIELD -> JSON_READER.readFieldSchemaArtifact(node);
+      case INSTANCE -> JSON_READER.readTemplateInstanceArtifact(node);
+    };
     return toYaml(artifact, isCompact);
   }
 
@@ -487,6 +500,21 @@ final class ArtifactExchange
       return report(VALIDATOR.validateTemplateField(JSON_RENDERER.renderFieldSchemaArtifact(field)));
     } catch (Exception e) {
       return "CedarValidator threw while validating field: " + e.getMessage();
+    }
+  }
+
+  /**
+   * Returns {@code null} when the instance validates against its template, otherwise a formatted
+   * error string. The instance is inflated against the template first, as validate_instance_artifact
+   * does, because a YAML instance leaves out the empty slots the JSON Schema requires.
+   */
+  static String validateInstance(TemplateInstanceArtifact instance, TemplateSchemaArtifact template)
+  {
+    try {
+      ObjectNode inflated = JSON_RENDERER.renderTemplateInstanceArtifact(InstanceInflater.inflate(template, instance));
+      return report(VALIDATOR.validateTemplateInstance(inflated, JSON_RENDERER.renderTemplateSchemaArtifact(template)));
+    } catch (Exception e) {
+      return "CedarValidator threw while validating instance: " + e.getMessage();
     }
   }
 

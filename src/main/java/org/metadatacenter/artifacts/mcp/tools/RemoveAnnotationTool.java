@@ -43,7 +43,8 @@ public final class RemoveAnnotationTool
                 + "element, field, or template instance (kind auto-detected). The inverse of "
                 + "set_literal_annotation / set_iri_annotation. Idempotent — removing an absent "
                 + "annotation succeeds. Returns the updated artifact as expanded YAML."
-                + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
+                + ArtifactExchange.ANNOTATION_VALIDATION_NOTICE + ArtifactExchange.VERBATIM_NOTICE
+                + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
   }

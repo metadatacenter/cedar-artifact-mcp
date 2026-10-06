@@ -51,7 +51,8 @@ public final class UnsetAttributeValueTool
             "Removes the named entry from an attribute-value field of a template instance — the "
                 + "inverse of set_attribute_value. Idempotent: removing an attribute that is not "
                 + "present succeeds. Returns the updated instance as expanded YAML."
-                + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
+                + ArtifactExchange.INSTANCE_VALIDATION_NOTICE + ArtifactExchange.VERBATIM_NOTICE
+                + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
   }

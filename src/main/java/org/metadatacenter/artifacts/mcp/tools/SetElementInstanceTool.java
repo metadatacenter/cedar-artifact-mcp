@@ -75,7 +75,8 @@ public final class SetElementInstanceTool
                 + "the current list size — the way to add entries to a multi-instance element. "
                 + "Fill the entry's fields afterwards with the set_*_field_value tools at "
                 + "'<path>[N]/<field>' paths. Returns the updated instance as expanded YAML."
-                + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
+                + ArtifactExchange.INSTANCE_VALIDATION_NOTICE + ArtifactExchange.VERBATIM_NOTICE
+                + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
   }
@@ -135,6 +136,10 @@ public final class SetElementInstanceTool
     } catch (RuntimeException e) {
       return error("element_instance parse failed: " + e.getMessage());
     }
+    // A standalone element instance has a name and a description of its own. Inside its parent it
+    // has neither, and the template's schema refuses them there. The YAML returned never wrote them,
+    // but the instance validated below would carry them.
+    entry = ElementInstanceArtifact.builder(entry).withName(null).withDescription(null).build();
 
     // A YAML instance is sparse — unset slots are omitted. Inflate against the template so
     // the addressed element slot (an empty list for a fresh multi-instance element) exists.
@@ -153,6 +158,11 @@ public final class SetElementInstanceTool
       return error("set_element_instance failed: " + e.getClass().getSimpleName()
           + ": " + e.getMessage());
     }
+
+    // Validate (DESIGN.md Principle 6) against the template before returning.
+    String validationError = ArtifactExchange.validateInstance(updated, template);
+    if (validationError != null)
+      return error("updated instance failed CedarValidator: " + validationError);
 
     ObjectNode rendered = RENDERER.renderTemplateInstanceArtifact(updated);
     String yaml;

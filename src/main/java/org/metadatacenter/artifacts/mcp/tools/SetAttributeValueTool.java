@@ -60,7 +60,8 @@ public final class SetAttributeValueTool
                 + "string value. field_path locates the attribute-value field; the attribute name "
                 + "is the separate attribute_name argument. Attribute values are literal-only "
                 + "(no IRI form). Returns the updated instance as expanded YAML. Remove an entry "
-                + "with unset_attribute_value." + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
+                + "with unset_attribute_value." + ArtifactExchange.INSTANCE_VALIDATION_NOTICE + ArtifactExchange.VERBATIM_NOTICE
+                + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
   }

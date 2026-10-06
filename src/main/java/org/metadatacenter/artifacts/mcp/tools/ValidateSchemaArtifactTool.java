@@ -3,8 +3,11 @@ package org.metadatacenter.artifacts.mcp.tools;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import io.modelcontextprotocol.spec.McpSchema;
+import org.metadatacenter.artifacts.model.reader.JsonArtifactReader;
 import org.metadatacenter.model.validation.CedarValidator;
 import org.metadatacenter.model.validation.ModelValidator;
+import org.metadatacenter.model.validation.report.CedarValidationReport;
+import org.metadatacenter.model.validation.report.ErrorItem;
 import org.metadatacenter.model.validation.report.ValidationReport;
 
 import java.util.LinkedHashMap;
@@ -29,6 +32,7 @@ import java.util.Map;
 public final class ValidateSchemaArtifactTool
 {
   private static final ModelValidator VALIDATOR = new CedarValidator();
+  private static final JsonArtifactReader READER = new JsonArtifactReader();
 
   private ValidateSchemaArtifactTool() {}
 
@@ -53,8 +57,10 @@ public final class ValidateSchemaArtifactTool
                 + "schema — built for checking artifacts from the wild (fetched from a server or "
                 + "sent by a colleague). The kind is detected from the artifact's @type and "
                 + "dispatched to the right validator, so you need not say which it is. Accepts "
-                + "JSON Schema (validated exactly as received) or YAML (read through the library "
-                + "first). Returns {\"valid\": true} or {\"valid\": false, \"errors\": [...]} — a "
+                + "JSON Schema (validated exactly as received) or YAML. Either way the artifact "
+                + "library must also be able to read it, as the CEDAR server requires before it "
+                + "stores one, so the same artifact gets the same verdict in either form. Returns "
+                + "{\"valid\": true} or {\"valid\": false, \"errors\": [...]} — a "
                 + "non-error result either way, so read the verdict from the report. A template "
                 + "instance is detected but must be validated with validate_instance_artifact "
                 + "(which also needs its template)." + ArtifactExchange.VERBATIM_INPUT_NOTICE)
@@ -71,11 +77,30 @@ public final class ValidateSchemaArtifactTool
     if (text == null || text.isBlank())
       return error("artifact is required and must not be blank");
 
+    // Syntax first: an artifact that is not JSON or YAML at all is an error, not a verdict.
+    boolean json = ArtifactExchange.looksLikeJson(text);
     ObjectNode node;
     try {
-      node = ArtifactExchange.toObjectNode(text);
+      if (json) {
+        node = ArtifactExchange.asObjectNode(text);
+      } else {
+        Object type = ArtifactExchange.parseYamlMap(text).get("type");
+        if ("instance".equals(type) || "element-instance".equals(type))
+          return error("this is an instance — use validate_instance_artifact, which validates it "
+              + "against the template it is based on");
+        node = null;
+      }
     } catch (RuntimeException e) {
       return error("artifact could not be parsed as JSON or YAML: " + e.getMessage());
+    }
+    // The YAML is read through the library on the way to JSON, so a refusal there is the verdict.
+    if (!json) {
+      try {
+        node = ArtifactExchange.toObjectNode(text);
+      } catch (RuntimeException refused) {
+        return success(ArtifactExchange.validationReportJson(
+            withReaderRefusal(CedarValidationReport.newEmptyReport(), refused)));
+      }
     }
 
     ArtifactKinds.Kind kind = ArtifactKinds.detect(node);
@@ -100,7 +125,33 @@ public final class ValidateSchemaArtifactTool
           + ": " + e.getMessage());
     }
 
+    // JSON reaches the validator as received, so the reader is asked separately, as the server asks
+    // it. Without this a JSON artifact passed where the same artifact in YAML was refused.
+    if (json) {
+      try {
+        switch (kind) {
+          case TEMPLATE -> READER.readTemplateSchemaArtifact(node.deepCopy());
+          case ELEMENT -> READER.readElementSchemaArtifact(node.deepCopy());
+          case FIELD -> READER.readFieldSchemaArtifact(node.deepCopy());
+          case INSTANCE -> throw new IllegalStateException("unreachable");
+        }
+      } catch (RuntimeException refused) {
+        report = withReaderRefusal(report, refused);
+      }
+    }
+
     return success(ArtifactExchange.validationReportJson(report));
+  }
+
+  /** The report, with the artifact library's refusal to read the artifact added as an error. */
+  private static ValidationReport withReaderRefusal(ValidationReport report, RuntimeException refused)
+  {
+    CedarValidationReport combined = CedarValidationReport.newEmptyReport();
+    report.getErrors().forEach(combined::addError);
+    report.getWarnings().forEach(combined::addWarning);
+    combined.addError(new ErrorItem("The CEDAR artifact library cannot read this artifact, so nothing "
+        + "could open it once stored: " + refused.getMessage()));
+    return combined;
   }
 
   private static String stringArg(Map<String, Object> args, String key)

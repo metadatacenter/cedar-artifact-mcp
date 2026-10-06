@@ -92,7 +92,8 @@ public final class SetIriFieldValueTool
                 + "field_path. label (rdfs:label) is optional for plain IRI fields and "
                 + "required for controlled-term fields. Returns the updated instance as "
                 + "expanded YAML."
-                + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
+                + ArtifactExchange.INSTANCE_VALIDATION_NOTICE + ArtifactExchange.VERBATIM_NOTICE
+                + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
   }
@@ -213,6 +214,11 @@ public final class SetIriFieldValueTool
       return error("set_iri_field_value failed: " + e.getClass().getSimpleName()
           + ": " + e.getMessage());
     }
+
+    // Validate (DESIGN.md Principle 6) against the template before returning.
+    String validationError = ArtifactExchange.validateInstance(updated, template);
+    if (validationError != null)
+      return error("updated instance failed CedarValidator: " + validationError);
 
     ObjectNode rendered = RENDERER.renderTemplateInstanceArtifact(updated);
     String yaml;
