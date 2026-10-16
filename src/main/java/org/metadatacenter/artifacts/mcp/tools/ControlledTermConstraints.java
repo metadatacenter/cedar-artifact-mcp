@@ -134,6 +134,17 @@ final class ControlledTermConstraints
     field.createdOn().ifPresent(b::withCreatedOn);
     field.lastUpdatedOn().ifPresent(b::withLastUpdatedOn);
     field.annotations().ifPresent(b::withAnnotations);
+    if (!field.alternateLabels().isEmpty()) b.withAlternateLabels(field.alternateLabels());
+    // The fresh builder starts from default UI and constraint settings, so a promotion that
+    // copied only the metadata above would silently make a required or hidden field optional
+    // and visible, and the result would still validate.
+    b.withHidden(field.fieldUi().hidden());
+    b.withContinuePreviousLine(field.fieldUi().continuePreviousLine());
+    b.withValueRecommendationEnabled(field.fieldUi().valueRecommendationEnabled());
+    field.valueConstraints().ifPresent(constraints -> {
+      b.withRequiredValue(constraints.requiredValue());
+      b.withRecommendedValue(constraints.recommendedValue());
+    });
     return b;
   }
 
