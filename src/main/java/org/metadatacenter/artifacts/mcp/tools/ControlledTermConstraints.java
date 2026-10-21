@@ -60,11 +60,8 @@ final class ControlledTermConstraints
       return error("field reader threw " + e.getClass().getSimpleName() + ": " + e.getMessage());
     }
 
-    // An *empty* controlled-term-field renders to JSON that's indistinguishable from a
-    // text-field (the library's reader only classifies a TEXTFIELD as ControlledTermField
-    // once it carries a controlled-term value constraint). So we accept any TEXTFIELD-shape
-    // input — text-field or controlled-term-field — and (re-)build it as a controlled-term
-    // field with the new constraint attached.
+    // A text field and a controlled-term field share the TEXTFIELD input type, so accept
+    // either and (re-)build it as a controlled-term field with the new constraint attached.
     if (field.fieldUi().inputType() != FieldInputType.TEXTFIELD)
       return error("field must be a text-field or controlled-term-field (got input type "
           + field.fieldUi().inputType() + ")");

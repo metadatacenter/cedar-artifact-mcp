@@ -38,9 +38,7 @@ import java.util.Map;
  * controlled-term — anything whose instance carries an {@code @id} URI rather than a
  * literal {@code @value}. The controlled-term case additionally requires the label
  * ({@code rdfs:label}); the schema
- * must already declare the field controlled-term (it carries a class/ontology/branch/
- * value-set constraint), because a TEXTFIELD without a constraint isn't classified as
- * ControlledTermField on JSON round-trip.
+ * must declare the field controlled-term.
  */
 public final class SetIriFieldValueTool
 {

@@ -2,10 +2,16 @@ package org.metadatacenter.artifacts.mcp.tools;
 
 import io.modelcontextprotocol.spec.McpSchema;
 import org.junit.jupiter.api.Test;
+import org.metadatacenter.artifacts.model.core.TemplateInstanceArtifact;
+import org.metadatacenter.artifacts.model.reader.ArtifactSourceParser;
+import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -114,6 +120,45 @@ final class ArtifactInputRobustnessTest
     assertFalse(result.isError(), textOf(result));
     assertTrue(textOf(result).contains("\"valid\" : true") || textOf(result).contains("\"valid\": true"),
         "JSON template + YAML instance must validate; got: " + textOf(result));
+  }
+
+  // ---------------------------------------------------------------- scalar resolution
+
+  private static String instanceWithValue(String spelling)
+  {
+    return "type: instance\nname: X\nisBasedOn: \"" + STORED_TEMPLATE_IRI + "\"\n"
+        + "children:\n  Answer:\n    value: " + spelling + "\n";
+  }
+
+  /**
+   * An unquoted instance value is read as CEDAR's parser reads it. SnakeYAML's YAML 1.1 resolver
+   * took yes, on, no and off for booleans, 1_000 and 0b1010 for integers and 1:20 for the
+   * sexagesimal 80. Under the YAML 1.2 core schema none of them is a number or a boolean.
+   */
+  @Test void an_unquoted_instance_value_is_resolved_as_yaml_1_2_core()
+  {
+    for (String spelling : List.of("yes", "on", "no", "off", "1_000", "0b1010", "1:20")) {
+      TemplateInstanceArtifact instance = ArtifactExchange.readInstance(instanceWithValue(spelling));
+      assertEquals(spelling, instance.singleInstanceFieldInstances().get("Answer").jsonLdValue().orElseThrow(),
+          spelling);
+    }
+  }
+
+  /**
+   * Every unquoted spelling is read as the library's own parser and reader read it, so an instance
+   * value keeps whatever source text the library keeps: 010 is the octal 8 to YAML 1.1 and 10 to
+   * YAML 1.2, and a library that keeps the text keeps 010.
+   */
+  @Test void an_unquoted_instance_value_is_read_as_the_library_reads_it() throws IOException
+  {
+    YamlArtifactReader reader = new YamlArtifactReader(false);
+    for (String spelling : List.of("007", "010", "0x1F", "0o17", "1e3", "+1", ".5", "-0", "True", "FALSE",
+        "2026-01-02")) {
+      String yaml = instanceWithValue(spelling);
+      TemplateInstanceArtifact expected = reader.readTemplateInstanceArtifact(ArtifactSourceParser.yaml(yaml));
+      assertEquals(expected.singleInstanceFieldInstances().get("Answer").jsonLdValue(),
+          ArtifactExchange.readInstance(yaml).singleInstanceFieldInstances().get("Answer").jsonLdValue(), spelling);
+    }
   }
 
   // ---------------------------------------------------------------- garbage tolerance

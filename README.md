@@ -558,9 +558,8 @@ Pins a controlled-term field to a curated value set hosted in BioPortal (e.g.
 in `CEDARVS` or `HRAVS`).
 
 All four constraint tools accept either an empty controlled-term field or a
-plain text-field as input — the library only classifies a field as
-controlled-term once it carries at least one constraint, so the two are wire-
-indistinguishable until then. Constraints accumulate: a field may carry
+plain text-field as input, and either one comes back as a controlled-term
+field carrying the constraint. Constraints accumulate: a field may carry
 several, mixing kinds.
 
 ### `remove_constraint(field, iri)`
@@ -570,10 +569,9 @@ ontology IRI, branch root IRI, or value-set IRI it was attached with. One
 tool for all four kinds. Setting is split because the input tuples differ,
 but removal needs only identity, and an unknown IRI errors with a
 kind-labelled listing of the field's current constraints. Removing the
-*last* constraint is allowed but consequential — an unconstrained
-controlled-term field is wire-identical to a plain text field, so that is
-what comes back — and is refused while a controlled-term default value would
-be orphaned (unset or change the default first). Literal options are not
+*last* constraint is allowed, and leaves a controlled-term field with no
+constraints. It is refused while a controlled-term default value would be
+orphaned (unset or change the default first). Literal options are not
 constraints in this sense — `set_options` has replace semantics, so removing
 an option is restating the list.
 
@@ -599,9 +597,9 @@ Attaches a default URI to any IRI-valued field. For link, ROR, ORCID, PFAS,
 RRID, PubMed, NIH-grant-ID, and DOI fields the schema-level default is a bare
 URI — `label` is not accepted (a labelled IRI value belongs on the instance
 side, via `set_iri_field_value`). For controlled-term fields the default is
-the class IRI plus a human label, so `label` is required; the field must
-already carry at least one `set_*_constraint` constraint, and a plain
-text-field is refused with a redirect to the constraint tools.
+the class IRI plus a human label, so `label` is required. A plain text-field
+is refused with a redirect to the constraint tools, which turn it into a
+controlled-term field.
 
 ### `create_element_instance(element, name?, description?, id?)`
 

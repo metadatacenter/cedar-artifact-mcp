@@ -24,10 +24,9 @@ import java.util.Map;
  * points at (class, ontology, branch root, or value set). The tool searches all four
  * constraint lists for that IRI.
  *
- * <p>Removing the <em>last</em> constraint is allowed but consequential — a
- * constraint-less controlled-term field is wire-indistinguishable from a plain text
- * field, so that is what the result reads back as. It is refused when it would orphan a
- * controlled-term default value — unset or change the default first (no silent drops).
+ * <p>Removing the <em>last</em> constraint is allowed, and leaves a controlled-term field
+ * with no constraints. It is refused when it would orphan a controlled-term default
+ * value — unset or change the default first (no silent drops).
  *
  * <p>Literal options are not constraints in this sense: {@code set_options} has replace
  * semantics, so removing an option is restating the list.
@@ -67,11 +66,10 @@ public final class RemoveConstraintTool
         .description(
             "Detaches a controlled-term constraint (class, ontology, branch, or value set) "
                 + "from a CEDAR field by the IRI it points at — the inverse of the "
-                + "set_*_constraint tools. Removing the last constraint leaves a plain "
-                + "text-field-shaped field (an unconstrained controlled-term field is "
-                + "wire-indistinguishable from one), and is refused while a controlled-term "
-                + "default value would be orphaned. Returns the updated field as expanded "
-                + "YAML, re-validated with CedarValidator."
+                + "set_*_constraint tools. Removing the last constraint leaves a "
+                + "controlled-term field with no constraints, and is refused while a "
+                + "controlled-term default value would be orphaned. Returns the updated "
+                + "field as expanded YAML, re-validated with CedarValidator."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)
         .build();
@@ -111,8 +109,8 @@ public final class RemoveConstraintTool
       return error("field reader threw " + e.getClass().getSimpleName() + ": " + e.getMessage());
     }
     if (!(incoming instanceof ControlledTermField))
-      return error("field carries no controlled-term constraints (an unconstrained field "
-          + "is a plain text field) — nothing to remove");
+      return error("field is not a controlled-term field, so it carries no controlled-term "
+          + "constraints — nothing to remove");
 
     ObjectNode valueConstraints = fieldNode.withObject("_valueConstraints");
 

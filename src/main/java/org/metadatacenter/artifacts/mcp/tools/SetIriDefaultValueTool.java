@@ -35,11 +35,9 @@ import java.util.Map;
  * from instance-level IRI values, which take an optional rdfs:label via
  * {@code set_iri_field_value}.
  *
- * <p>The controlled-term branch requires the schema to already declare the field as
- * controlled-term — at least one class/ontology/branch/value-set constraint must be
- * attached. Same wire collision as the rest of the controlled-term tooling: a
- * TEXTFIELD without a constraint isn't classified as ControlledTermField on JSON
- * round-trip.
+ * <p>The controlled-term branch requires the schema to declare the field as
+ * controlled-term, with or without a constraint attached. A text field given a label is
+ * refused with a pointer to the constraint tools, which make it a controlled-term field.
  */
 public final class SetIriDefaultValueTool
 {
@@ -57,8 +55,7 @@ public final class SetIriDefaultValueTool
         "description",
         "CEDAR IRI field as YAML — link, ROR, ORCID, PFAS, RRID, PubMed, "
             + "NIH-grant-ID, or DOI (the kind 'create_field' with one of those types "
-            + "returns) — or a controlled-term field already carrying at least one "
-            + "constraint. JSON Schema is also accepted."));
+            + "returns) — or a controlled-term field. JSON Schema is also accepted."));
     properties.put("label", Map.of(
         "type", "string",
         "description",
@@ -77,8 +74,7 @@ public final class SetIriDefaultValueTool
         .title("Set an IRI default value on a field")
         .description(
             "Attaches a default URI value to an IRI-valued CEDAR field schema — "
-                + "link/ROR/ORCID/etc. (bare URI) or controlled-term (URI + label, "
-                + "requires the field to already carry a constraint). "
+                + "link/ROR/ORCID/etc. (bare URI) or controlled-term (URI + label). "
                 + "Returns the updated field as expanded YAML, re-validated with "
                 + "CedarValidator." + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
         .inputSchema(schema)

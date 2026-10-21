@@ -12,8 +12,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Tests for {@code remove_constraint} — the inverse of the {@code set_*_constraint}
  * family, addressed by the IRI a constraint points at, kind-blind. Removing the last
- * constraint deliberately yields a text-field-shaped field (the wire collision), and is
- * refused while a controlled-term default would be orphaned.
+ * constraint leaves a controlled-term field with no constraints, and is refused while a
+ * controlled-term default would be orphaned.
  */
 final class RemoveConstraintToolTest
 {
@@ -40,15 +40,15 @@ final class RemoveConstraintToolTest
         "a still-constrained field stays controlled-term; got: " + yaml);
   }
 
-  @Test void removing_the_last_constraint_yields_a_text_shaped_field()
+  @Test void removing_the_last_constraint_leaves_a_controlled_term_field()
   {
     McpSchema.CallToolResult result = invoke(Map.of(
         "field", constrainedField(), "iri", DISEASE_CLASS));
 
     assertFalse(result.isError(), errorText(result));
     String yaml = textOf(result);
-    assertTrue(yaml.contains("type: text-field"),
-        "an unconstrained controlled-term field is wire-identical to a text field; got: " + yaml);
+    assertTrue(yaml.contains("type: controlled-term-field"),
+        "the library tells an unconstrained controlled-term field from a text field; got: " + yaml);
     assertFalse(yaml.contains(DISEASE_CLASS), yaml);
   }
 

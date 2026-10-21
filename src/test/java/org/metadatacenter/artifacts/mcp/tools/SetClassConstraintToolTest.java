@@ -56,10 +56,8 @@ final class SetClassConstraintToolTest
 
   @Test void promotes_text_shaped_field_when_constraint_added() throws Exception
   {
-    // An empty controlled-term-field is JSON-indistinguishable from a text-field; the
-    // library only classifies a TEXTFIELD as controlled-term once it carries a constraint.
-    // So feeding a text-field here is the same call path as feeding a freshly-created
-    // controlled-term-field, and both must produce a valid constrained field.
+    // A text field and a freshly created controlled-term field share the TEXTFIELD input
+    // type and take the same call path here, and both must produce a valid constrained field.
     String textFieldJson = createField("Some IRI", "text-field");
 
     McpSchema.CallToolResult result = invoke(Map.of(

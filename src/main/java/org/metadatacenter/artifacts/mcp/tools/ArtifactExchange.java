@@ -11,6 +11,7 @@ import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
 import org.metadatacenter.artifacts.model.core.TemplateInstanceArtifact;
 import org.metadatacenter.artifacts.model.tools.InstanceInflater;
 import org.metadatacenter.artifacts.model.core.TemplateSchemaArtifact;
+import org.metadatacenter.artifacts.model.reader.ArtifactSourceParser;
 import org.metadatacenter.artifacts.model.reader.JsonArtifactReader;
 import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
 import org.metadatacenter.artifacts.model.renderer.JsonArtifactRenderer;
@@ -19,14 +20,8 @@ import org.metadatacenter.model.validation.CedarValidator;
 import org.metadatacenter.model.validation.ModelValidator;
 import org.metadatacenter.model.validation.report.ErrorItem;
 import org.metadatacenter.model.validation.report.ValidationReport;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.LoaderOptions;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.SafeConstructor;
-import org.yaml.snakeyaml.nodes.Tag;
-import org.yaml.snakeyaml.representer.Representer;
-import org.yaml.snakeyaml.resolver.Resolver;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -236,34 +231,6 @@ final class ArtifactExchange
     return "element-instance".equals(String.valueOf(parseYamlMap(text).get("type")));
   }
 
-  /**
-   * A SnakeYAML parser that does NOT auto-resolve date-like scalars to {@code java.util.Date}.
-   * CEDAR temporal values and defaults (e.g. {@code 2026-01-01}) are lexical strings; letting
-   * YAML coerce them to Date breaks the round trip (the reader expects strings). Every other
-   * implicit type (bool/int/float/null/merge) resolves as usual.
-   */
-  private static Yaml newYaml()
-  {
-    LoaderOptions loaderOptions = new LoaderOptions();
-    DumperOptions dumperOptions = new DumperOptions();
-    return new Yaml(new SafeConstructor(loaderOptions), new Representer(dumperOptions),
-      dumperOptions, loaderOptions, new NoTimestampResolver());
-  }
-
-  private static final class NoTimestampResolver extends Resolver
-  {
-    @Override protected void addImplicitResolvers()
-    {
-      addImplicitResolver(Tag.BOOL, BOOL, "yYnNtTfFoO");
-      addImplicitResolver(Tag.INT, INT, "-+0123456789");
-      addImplicitResolver(Tag.FLOAT, FLOAT, "-+0123456789.");
-      addImplicitResolver(Tag.MERGE, MERGE, "<");
-      addImplicitResolver(Tag.NULL, NULL, "~nN\0");
-      addImplicitResolver(Tag.NULL, EMPTY, null);
-      // Tag.TIMESTAMP intentionally not registered — keep date-like scalars as strings.
-    }
-  }
-
   /** A serialized artifact is JSON when its first non-whitespace character is '{'. */
   static boolean looksLikeJson(String text)
   {
@@ -289,20 +256,19 @@ final class ArtifactExchange
   }
 
   /**
-   * Parse a YAML document into the {@code LinkedHashMap} the reader expects. SnakeYAML throws
-   * a {@link RuntimeException} for malformed input; a non-mapping top level is rejected with a
-   * clear message rather than a class-cast surprise downstream.
+   * Parse a YAML document with the library's parser, which the CEDAR server also reads YAML with.
+   * It resolves YAML 1.2 core scalars, keeps date-like values as strings, and refuses duplicate
+   * keys, unknown tags and a top level that is not a mapping. The mapping it returns goes to the
+   * reader unchanged, because it also holds the text each unquoted number and boolean was written
+   * as, and an instance value keeps that text.
    */
   static LinkedHashMap<String, Object> parseYamlMap(String yamlText)
   {
-    Object parsed = newYaml().load(yamlText);
-    if (!(parsed instanceof Map<?, ?>))
-      throw new IllegalArgumentException("YAML must parse to a mapping at the top level (got "
-          + (parsed == null ? "null" : parsed.getClass().getSimpleName()) + ")");
-    LinkedHashMap<String, Object> map = new LinkedHashMap<>();
-    for (Map.Entry<?, ?> entry : ((Map<?, ?>) parsed).entrySet())
-      map.put(String.valueOf(entry.getKey()), entry.getValue());
-    return map;
+    try {
+      return ArtifactSourceParser.yaml(yamlText);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(e.getMessage(), e);
+    }
   }
 
   // ---------------------------------------------------------------------
