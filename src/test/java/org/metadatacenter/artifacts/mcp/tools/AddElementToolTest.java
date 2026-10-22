@@ -227,8 +227,27 @@ final class AddElementToolTest
         "child", elementYaml));
     assertTrue(second.isError(),
         "duplicate key (default) must produce isError=true; got: " + second);
-    assertTrue(errorText(second).toLowerCase().contains("address"),
-        "error should mention the conflicting key; got: " + errorText(second));
+    assertTrue(errorText(second).contains("Template already has a child address"),
+        "error should name the parent's kind and the conflicting key; got: " + errorText(second));
+  }
+
+  @Test void rejects_a_key_an_element_parent_already_holds()
+  {
+    String outerYaml = createElement("Person");
+    String innerYaml = createElement("address");
+
+    McpSchema.CallToolResult first = invoke(Map.of(
+        "parent", outerYaml,
+        "child", innerYaml));
+    assertFalse(first.isError(), errorText(first));
+
+    McpSchema.CallToolResult second = invoke(Map.of(
+        "parent", textOf(first),
+        "child", innerYaml));
+    assertTrue(second.isError(),
+        "duplicate key (default) must produce isError=true; got: " + second);
+    assertTrue(errorText(second).contains("Element already has a child address"),
+        "error should name the parent's kind and the conflicting key; got: " + errorText(second));
   }
 
   @Test void rejects_child_that_is_not_an_element()

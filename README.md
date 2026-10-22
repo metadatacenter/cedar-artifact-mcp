@@ -827,7 +827,7 @@ from a client. No library interaction.
 
 - Java 17 or newer
 - [Maven](https://maven.apache.org/) 3.9 or newer
-- `cedar-artifact-library` 2.9.3, resolved from the anonymous-read BMIR Nexus releases
+- `cedar-artifact-library` 2.9.28, resolved from the anonymous-read BMIR Nexus releases
   repository declared in `pom.xml`; no sibling checkout or local Maven install is required.
 
 ## Build

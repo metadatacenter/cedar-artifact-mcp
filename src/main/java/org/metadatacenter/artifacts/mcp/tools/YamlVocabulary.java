@@ -58,7 +58,7 @@ final class YamlVocabulary
     "                                    (e.g. default: 42, default: 3.14). The library renders",
     "                                    plain integers and plain decimals unquoted, and reserves",
     "                                    quoting for forms YAML's auto-typing would otherwise change",
-    "                                    on a subsequent read — leading zeros ('010' → 8 in octal),",
+    "                                    on a subsequent read — leading zeros ('010' → 10),",
     "                                    exponential notation ('1e3' → 1000.0), or values that match",
     "                                    YAML reserved keywords. The library accepts either form on",
     "                                    read; the datatype line stays authoritative for the type.",

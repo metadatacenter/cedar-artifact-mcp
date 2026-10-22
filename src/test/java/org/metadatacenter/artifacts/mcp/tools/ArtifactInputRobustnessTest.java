@@ -3,10 +3,7 @@ package org.metadatacenter.artifacts.mcp.tools;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.junit.jupiter.api.Test;
 import org.metadatacenter.artifacts.model.core.TemplateInstanceArtifact;
-import org.metadatacenter.artifacts.model.reader.ArtifactSourceParser;
-import org.metadatacenter.artifacts.model.reader.YamlArtifactReader;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -145,19 +142,17 @@ final class ArtifactInputRobustnessTest
   }
 
   /**
-   * Every unquoted spelling is read as the library's own parser and reader read it, so an instance
-   * value keeps whatever source text the library keeps: 010 is the octal 8 to YAML 1.1 and 10 to
-   * YAML 1.2, and a library that keeps the text keeps 010.
+   * An unquoted instance value keeps the text it was written as. The YAML 1.2 core schema reads 007
+   * and 010 as integers, 1e3 as a float and True as a boolean, but a field's value is a string, so
+   * the reader takes the source text of each. A ZIP code of 007 is not 7.
    */
-  @Test void an_unquoted_instance_value_is_read_as_the_library_reads_it() throws IOException
+  @Test void an_unquoted_instance_value_keeps_the_text_it_was_written_as()
   {
-    YamlArtifactReader reader = new YamlArtifactReader(false);
     for (String spelling : List.of("007", "010", "0x1F", "0o17", "1e3", "+1", ".5", "-0", "True", "FALSE",
         "2026-01-02")) {
-      String yaml = instanceWithValue(spelling);
-      TemplateInstanceArtifact expected = reader.readTemplateInstanceArtifact(ArtifactSourceParser.yaml(yaml));
-      assertEquals(expected.singleInstanceFieldInstances().get("Answer").jsonLdValue(),
-          ArtifactExchange.readInstance(yaml).singleInstanceFieldInstances().get("Answer").jsonLdValue(), spelling);
+      TemplateInstanceArtifact instance = ArtifactExchange.readInstance(instanceWithValue(spelling));
+      assertEquals(spelling, instance.singleInstanceFieldInstances().get("Answer").jsonLdValue().orElseThrow(),
+          spelling);
     }
   }
 
