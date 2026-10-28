@@ -300,13 +300,13 @@ final class AddElementToolTest
   private static McpSchema.CallToolResult invoke(Map<String, Object> arguments)
   {
     return AddElementTool.handler(null,
-        new McpSchema.CallToolRequest("add_element", arguments));
+        ToolCalls.request("add_element", arguments));
   }
 
   private String createTemplate(String name)
   {
     McpSchema.CallToolResult result = CreateTemplateTool.handler(null,
-        new McpSchema.CallToolRequest("create_template", Map.of("name", name)));
+        ToolCalls.request("create_template", Map.of("name", name)));
     assertFalse(result.isError(),
         "fixture template must build cleanly; got: " + errorText(result));
     return textOf(result);
@@ -315,7 +315,7 @@ final class AddElementToolTest
   private String createElement(String name)
   {
     McpSchema.CallToolResult result = CreateElementTool.handler(null,
-        new McpSchema.CallToolRequest("create_element", Map.of("name", name)));
+        ToolCalls.request("create_element", Map.of("name", name)));
     assertFalse(result.isError(),
         "fixture element must build cleanly; got: " + errorText(result));
     return textOf(result);
@@ -324,7 +324,7 @@ final class AddElementToolTest
   private String createFieldYaml(String name, String type)
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of("name", name, "type", type)));
+        ToolCalls.request("create_field", Map.of("name", name, "type", type)));
     assertFalse(result.isError(),
         "fixture field must build cleanly; got: " + errorText(result));
     return textOf(result);

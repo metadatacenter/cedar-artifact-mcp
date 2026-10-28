@@ -52,11 +52,9 @@ public final class CreateElementInstanceTool
         "Optional @id for the element instance. Normally omitted: CEDAR mints an "
             + "artifact's identifier when it is created on a server."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("element"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("element"));
 
-    return McpSchema.Tool.builder()
-        .name("create_element_instance")
+    return McpSchema.Tool.builder("create_element_instance", schema)
         .title("Create an empty element instance from a CEDAR element")
         .description(
             "Walks a CEDAR element and produces an empty element instance — the "
@@ -67,7 +65,6 @@ public final class CreateElementInstanceTool
                 + "YAML; validate it against its element with validate_instance_artifact, or in "
                 + "context once attached to a parent instance."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -128,7 +125,7 @@ public final class CreateElementInstanceTool
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, yaml)))
+        .content(List.of(McpSchema.TextContent.builder(yaml).build()))
         .isError(false)
         .build();
   }
@@ -142,7 +139,7 @@ public final class CreateElementInstanceTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

@@ -69,7 +69,7 @@ final class SetValueSetConstraintToolTest
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
     return SetValueSetConstraintTool.handler(null,
-        new McpSchema.CallToolRequest("set_valueset_constraint", args));
+        ToolCalls.request("set_valueset_constraint", args));
   }
 
   private String createControlledTermField(String name) { return createField(name, "controlled-term-field"); }
@@ -77,7 +77,7 @@ final class SetValueSetConstraintToolTest
   private String createField(String name, String type)
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of("name", name, "type", type)));
+        ToolCalls.request("create_field", Map.of("name", name, "type", type)));
     assertFalse(result.isError(),
         "fixture field must build cleanly; got: " + errorText(result));
     return textOf(result);

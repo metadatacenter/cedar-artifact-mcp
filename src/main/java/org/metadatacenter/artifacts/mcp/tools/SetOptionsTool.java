@@ -54,11 +54,9 @@ public final class SetOptionsTool
         "Optionally names the one option that is pre-selected (selectedByDefault). Must be a "
             + "member of options. Omit for no pre-selection."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("field", "options"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("field", "options"));
 
-    return McpSchema.Tool.builder()
-        .name("set_options")
+    return McpSchema.Tool.builder("set_options", schema)
         .title("Set the option list of a radio / checkbox / list field")
         .description(
             "Replaces the literal option list of a choice field — radio, checkbox, or "
@@ -67,7 +65,6 @@ public final class SetOptionsTool
                 + "ontology-backed values use the set_*_constraint tools instead. Returns the "
                 + "updated field as expanded YAML, re-validated with CedarValidator."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -135,7 +132,8 @@ public final class SetOptionsTool
       return error("updated field failed CedarValidator: " + validationError);
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, ArtifactExchange.exchangeYaml(field))))
+        .content(List.of(
+            McpSchema.TextContent.builder(ArtifactExchange.exchangeYaml(field)).build()))
         .isError(false)
         .build();
   }
@@ -143,7 +141,7 @@ public final class SetOptionsTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

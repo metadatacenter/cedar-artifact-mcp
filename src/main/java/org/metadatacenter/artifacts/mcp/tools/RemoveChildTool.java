@@ -51,17 +51,14 @@ public final class RemoveChildTool
             + "names a field or element child by looking it up in the parent's "
             + "fieldSchemas / elementSchemas."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("parent", "key"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("parent", "key"));
 
-    return McpSchema.Tool.builder()
-        .name("remove_child")
+    return McpSchema.Tool.builder("remove_child", schema)
         .title("Remove a field or element child from a template or element")
         .description(
             "Removes a child (field or element) from a CEDAR template or element parent. "
                 + "Returns the updated parent as expanded YAML, re-validated with CedarValidator."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -148,7 +145,7 @@ public final class RemoveChildTool
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, yaml)))
+        .content(List.of(McpSchema.TextContent.builder(yaml).build()))
         .isError(false)
         .build();
   }
@@ -177,7 +174,7 @@ public final class RemoveChildTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

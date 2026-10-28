@@ -42,7 +42,7 @@ final class ToolFormatMatrixTest
   private static String call(BiFunction<Object, McpSchema.CallToolRequest, McpSchema.CallToolResult> handler,
                              String tool, Map<String, Object> args)
   {
-    McpSchema.CallToolResult result = handler.apply(null, new McpSchema.CallToolRequest(tool, args));
+    McpSchema.CallToolResult result = handler.apply(null, ToolCalls.request(tool, args));
     String text = textOf(result);
     if (Boolean.TRUE.equals(result.isError()))
       throw new AssertionError("fixture step '" + tool + "' failed: " + text);
@@ -58,7 +58,7 @@ final class ToolFormatMatrixTest
       BiFunction<Object, McpSchema.CallToolRequest, McpSchema.CallToolResult> handler, String tool,
       Map<String, Object> args)
   {
-    return handler.apply(null, new McpSchema.CallToolRequest(tool, args));
+    return handler.apply(null, ToolCalls.request(tool, args));
   }
 
   private static String template()

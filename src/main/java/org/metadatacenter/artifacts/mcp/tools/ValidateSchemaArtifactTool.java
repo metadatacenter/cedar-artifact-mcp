@@ -46,11 +46,9 @@ public final class ValidateSchemaArtifactTool
             + "kind (template / element / field) is detected from its @type and validated with "
             + "the matching validator. JSON is validated exactly as received."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("artifact"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("artifact"));
 
-    return McpSchema.Tool.builder()
-        .name("validate_schema_artifact")
+    return McpSchema.Tool.builder("validate_schema_artifact", schema)
         .title("Validate a CEDAR schema artifact (auto-detect kind)")
         .description(
             "Validates a standalone CEDAR template, element, or field against the CEDAR model "
@@ -64,7 +62,6 @@ public final class ValidateSchemaArtifactTool
                 + "non-error result either way, so read the verdict from the report. A template "
                 + "instance is detected but must be validated with validate_instance_artifact "
                 + "(which also needs its template)." + ArtifactExchange.VERBATIM_INPUT_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -163,7 +160,7 @@ public final class ValidateSchemaArtifactTool
   private static McpSchema.CallToolResult success(String json)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, json)))
+        .content(List.of(McpSchema.TextContent.builder(json).build()))
         .isError(false)
         .build();
   }
@@ -171,7 +168,7 @@ public final class ValidateSchemaArtifactTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

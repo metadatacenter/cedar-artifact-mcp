@@ -171,11 +171,9 @@ public final class CreateFieldTool
         "type", "string",
         "description", "text-field / text-area-field validation regex. Optional."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("type", "name"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("type", "name"));
 
-    return McpSchema.Tool.builder()
-        .name("create_field")
+    return McpSchema.Tool.builder("create_field", schema)
         .title("Create CEDAR field")
         .description(
             "Builds a CEDAR field schema artifact of the supplied kebab-case type "
@@ -199,7 +197,6 @@ public final class CreateFieldTool
                 + "'set_branch_constraint', 'set_ontology_constraint', "
                 + "'set_valueset_constraint', 'set_literal_default_value', and "
                 + "'set_iri_default_value'.")
-        .inputSchema(schema)
         .build();
   }
 
@@ -273,8 +270,8 @@ public final class CreateFieldTool
       return error("rendered field failed CedarValidator: " + validationError);
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null,
-            ArtifactExchange.exchangeYaml(field))))
+        .content(List.of(
+            McpSchema.TextContent.builder(ArtifactExchange.exchangeYaml(field)).build()))
         .isError(false)
         .build();
   }
@@ -387,7 +384,7 @@ public final class CreateFieldTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

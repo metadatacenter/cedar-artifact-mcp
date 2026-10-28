@@ -38,11 +38,10 @@ public final class SetLiteralAnnotationTool
         "The literal (string) value of the annotation. For an IRI-valued annotation use "
             + "set_iri_annotation instead."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("artifact", "annotation", "value"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties,
+        List.of("artifact", "annotation", "value"));
 
-    return McpSchema.Tool.builder()
-        .name("set_literal_annotation")
+    return McpSchema.Tool.builder("set_literal_annotation", schema)
         .title("Attach a literal annotation to a CEDAR artifact")
         .description(
             "Attaches a literal (string-valued) annotation to a CEDAR template, element, field, "
@@ -52,7 +51,6 @@ public final class SetLiteralAnnotationTool
                 + "remove_annotation to drop one. (Element instances do not carry annotations.)"
                 + ArtifactExchange.ANNOTATION_VALIDATION_NOTICE + ArtifactExchange.VERBATIM_NOTICE
                 + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 

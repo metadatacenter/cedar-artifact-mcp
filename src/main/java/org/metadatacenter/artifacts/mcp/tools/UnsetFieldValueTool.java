@@ -55,13 +55,10 @@ public final class UnsetFieldValueTool
             + "entry and shifts later entries down; an unindexed multi-instance path "
             + "('emails') clears the whole list."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties,
-        List.of("template", "instance", "field_path"),
-        Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties,
+        List.of("template", "instance", "field_path"));
 
-    return McpSchema.Tool.builder()
-        .name("unset_field_value")
+    return McpSchema.Tool.builder("unset_field_value", schema)
         .title("Unset a field value on an instance")
         .description(
             "Clears or deletes a value on a CEDAR template instance at a slash-separated "
@@ -74,7 +71,6 @@ public final class UnsetFieldValueTool
                 + "here. Returns the updated instance as expanded YAML."
                 + ArtifactExchange.INSTANCE_VALIDATION_NOTICE + ArtifactExchange.VERBATIM_NOTICE
                 + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -160,7 +156,7 @@ public final class UnsetFieldValueTool
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, yaml)))
+        .content(List.of(McpSchema.TextContent.builder(yaml).build()))
         .isError(false)
         .build();
   }
@@ -174,7 +170,7 @@ public final class UnsetFieldValueTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

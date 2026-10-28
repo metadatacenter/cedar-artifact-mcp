@@ -165,7 +165,7 @@ final class CreateTemplateToolTest
 
   private static McpSchema.CallToolResult invoke(Map<String, Object> arguments)
   {
-    McpSchema.CallToolRequest request = new McpSchema.CallToolRequest("create_template", arguments);
+    McpSchema.CallToolRequest request = ToolCalls.request("create_template", arguments);
     return CreateTemplateTool.handler(null, request);
   }
 

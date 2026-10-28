@@ -118,7 +118,7 @@ final class ReplaceFieldToolTest
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
     return ReplaceFieldTool.handler(null,
-        new McpSchema.CallToolRequest("replace_field", args));
+        ToolCalls.request("replace_field", args));
   }
 
   private interface Handler
@@ -129,7 +129,7 @@ final class ReplaceFieldToolTest
 
   private static McpSchema.CallToolResult invokeTool(Handler handler, String name, Map<String, Object> args)
   {
-    McpSchema.CallToolResult result = handler.handle(null, new McpSchema.CallToolRequest(name, args));
+    McpSchema.CallToolResult result = handler.handle(null, ToolCalls.request(name, args));
     assertFalse(result.isError(), "fixture step '" + name + "' must succeed; got: " + errorText(result));
     return result;
   }

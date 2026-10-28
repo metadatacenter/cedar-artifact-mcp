@@ -39,7 +39,7 @@ final class InstanceChildOrderTest
     instance = setValue(template, instance, "c", "vc");
 
     McpSchema.CallToolResult result = ValidateInstanceArtifactTool.handler(null,
-        new McpSchema.CallToolRequest("validate_instance_artifact", Map.of(
+        ToolCalls.request("validate_instance_artifact", Map.of(
             "schema_artifact", template, "instance_artifact", reverseChildren(instance))));
 
     assertFalse(result.isError(), errorText(result));
@@ -109,7 +109,7 @@ final class InstanceChildOrderTest
 
   private static McpSchema.CallToolResult invokeTool(Handler handler, String name, Map<String, Object> args)
   {
-    McpSchema.CallToolResult result = handler.handle(null, new McpSchema.CallToolRequest(name, args));
+    McpSchema.CallToolResult result = handler.handle(null, ToolCalls.request(name, args));
     assertFalse(result.isError(), "fixture step '" + name + "' must succeed; got: " + errorText(result));
     return result;
   }

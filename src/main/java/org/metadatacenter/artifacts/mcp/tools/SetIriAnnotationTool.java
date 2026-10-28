@@ -40,11 +40,10 @@ public final class SetIriAnnotationTool
         "The IRI value of the annotation (an absolute IRI, written as @id). For a literal "
             + "string value use set_literal_annotation instead."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("artifact", "annotation", "iri"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties,
+        List.of("artifact", "annotation", "iri"));
 
-    return McpSchema.Tool.builder()
-        .name("set_iri_annotation")
+    return McpSchema.Tool.builder("set_iri_annotation", schema)
         .title("Attach an IRI annotation to a CEDAR artifact")
         .description(
             "Attaches an IRI-valued annotation to a CEDAR template, element, field, or template "
@@ -54,7 +53,6 @@ public final class SetIriAnnotationTool
                 + "remove_annotation to drop one. (Element instances do not carry annotations.)"
                 + ArtifactExchange.ANNOTATION_VALIDATION_NOTICE + ArtifactExchange.VERBATIM_NOTICE
                 + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 

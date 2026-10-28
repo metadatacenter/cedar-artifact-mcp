@@ -93,20 +93,15 @@ public final class AddElementTool
             + "already carries is preserved. Per-add-site, since the same reusable element "
             + "may map to different properties in different parents."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties,
-        List.of("parent", "child"),
-        Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("parent", "child"));
 
-    return McpSchema.Tool.builder()
-        .name("add_element")
+    return McpSchema.Tool.builder("add_element", schema)
         .title("Add a CEDAR element to a template or element parent")
         .description(
             "Adds an existing CEDAR element (as YAML) as a child of a CEDAR template or "
                 + "element. Parent kind is inferred from the artifact. Returns the "
                 + "updated parent as expanded YAML, re-validated with CedarValidator."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -245,7 +240,7 @@ public final class AddElementTool
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, yaml)))
+        .content(List.of(McpSchema.TextContent.builder(yaml).build()))
         .isError(false)
         .build();
   }
@@ -306,7 +301,7 @@ public final class AddElementTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

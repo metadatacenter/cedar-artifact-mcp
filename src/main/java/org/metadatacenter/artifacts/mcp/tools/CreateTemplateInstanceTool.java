@@ -84,11 +84,9 @@ public final class CreateTemplateInstanceTool
             + "repository already assigned. Must be an absolute IRI. Distinct from isBasedOn, "
             + "which names the template rather than the instance."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("template"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("template"));
 
-    return McpSchema.Tool.builder()
-        .name("create_template_instance")
+    return McpSchema.Tool.builder("create_template_instance", schema)
         .title("Create an empty CEDAR template instance")
         .description(
             "Builds a CEDAR template instance from a template. The returned YAML is sparse — it "
@@ -101,7 +99,6 @@ public final class CreateTemplateInstanceTool
                 + "the template) inflate them. "
                 + "Fill values with set_literal_field_value / set_iri_field_value."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -218,7 +215,7 @@ public final class CreateTemplateInstanceTool
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, yaml)))
+        .content(List.of(McpSchema.TextContent.builder(yaml).build()))
         .isError(false)
         .build();
   }
@@ -295,7 +292,7 @@ public final class CreateTemplateInstanceTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

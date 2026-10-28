@@ -57,11 +57,9 @@ public final class RemoveConstraintTool
             + "IRI, or value-set IRI it was attached with. All constraint kinds are "
             + "searched; no kind needs to be named."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("field", "iri"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("field", "iri"));
 
-    return McpSchema.Tool.builder()
-        .name("remove_constraint")
+    return McpSchema.Tool.builder("remove_constraint", schema)
         .title("Remove a controlled-term constraint from a field")
         .description(
             "Detaches a controlled-term constraint (class, ontology, branch, or value set) "
@@ -71,7 +69,6 @@ public final class RemoveConstraintTool
                 + "controlled-term default value would be orphaned. Returns the updated "
                 + "field as expanded YAML, re-validated with CedarValidator."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -155,7 +152,8 @@ public final class RemoveConstraintTool
       return error("updated field failed CedarValidator: " + validationError);
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, ArtifactExchange.exchangeYaml(updated))))
+        .content(List.of(
+            McpSchema.TextContent.builder(ArtifactExchange.exchangeYaml(updated)).build()))
         .isError(false)
         .build();
   }
@@ -197,7 +195,7 @@ public final class RemoveConstraintTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

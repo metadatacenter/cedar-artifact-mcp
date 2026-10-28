@@ -47,12 +47,10 @@ public final class SetAttributeValueTool
         "description",
         "The literal (string) value for the attribute, stored as @value."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("template", "instance", "field_path", "attribute_name", "value"),
-        Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties,
+        List.of("template", "instance", "field_path", "attribute_name", "value"));
 
-    return McpSchema.Tool.builder()
-        .name("set_attribute_value")
+    return McpSchema.Tool.builder("set_attribute_value", schema)
         .title("Set an attribute on an attribute-value field")
         .description(
             "Adds or overwrites a dynamic name→value entry on an attribute-value field of a "
@@ -62,7 +60,6 @@ public final class SetAttributeValueTool
                 + "(no IRI form). Returns the updated instance as expanded YAML. Remove an entry "
                 + "with unset_attribute_value." + ArtifactExchange.INSTANCE_VALIDATION_NOTICE + ArtifactExchange.VERBATIM_NOTICE
                 + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 

@@ -102,7 +102,7 @@ final class ReorderChildrenToolTest
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
     return ReorderChildrenTool.handler(null,
-        new McpSchema.CallToolRequest("reorder_children", args));
+        ToolCalls.request("reorder_children", args));
   }
 
   private interface Handler
@@ -113,7 +113,7 @@ final class ReorderChildrenToolTest
 
   private static McpSchema.CallToolResult invokeTool(Handler handler, String name, Map<String, Object> args)
   {
-    McpSchema.CallToolResult result = handler.handle(null, new McpSchema.CallToolRequest(name, args));
+    McpSchema.CallToolResult result = handler.handle(null, ToolCalls.request(name, args));
     assertFalse(result.isError(), "fixture step '" + name + "' must succeed; got: " + errorText(result));
     return result;
   }

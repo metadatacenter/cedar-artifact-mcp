@@ -59,13 +59,10 @@ public final class SetElementInstanceTool
         "Element instance as YAML — the kind 'create_element_instance' returns "
             + "(type: element-instance). JSON is also accepted."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties,
-        List.of("template", "instance", "field_path", "element_instance"),
-        Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties,
+        List.of("template", "instance", "field_path", "element_instance"));
 
-    return McpSchema.Tool.builder()
-        .name("set_element_instance")
+    return McpSchema.Tool.builder("set_element_instance", schema)
         .title("Set an element instance on a template instance")
         .description(
             "Grafts an element instance (from create_element_instance) into a "
@@ -77,7 +74,6 @@ public final class SetElementInstanceTool
                 + "'<path>[N]/<field>' paths. Returns the updated instance as expanded YAML."
                 + ArtifactExchange.INSTANCE_VALIDATION_NOTICE + ArtifactExchange.VERBATIM_NOTICE
                 + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -173,7 +169,7 @@ public final class SetElementInstanceTool
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, yaml)))
+        .content(List.of(McpSchema.TextContent.builder(yaml).build()))
         .isError(false)
         .build();
   }
@@ -187,7 +183,7 @@ public final class SetElementInstanceTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

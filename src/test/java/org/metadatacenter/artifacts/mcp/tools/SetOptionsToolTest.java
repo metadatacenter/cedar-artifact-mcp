@@ -18,12 +18,12 @@ final class SetOptionsToolTest
   private static String createField(String type, String name)
   {
     return textOf(CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of("type", type, "name", name))));
+        ToolCalls.request("create_field", Map.of("type", type, "name", name))));
   }
 
   private static McpSchema.CallToolResult setOptions(Map<String, Object> args)
   {
-    return SetOptionsTool.handler(null, new McpSchema.CallToolRequest("set_options", args));
+    return SetOptionsTool.handler(null, ToolCalls.request("set_options", args));
   }
 
   @Test void sets_options_on_a_radio_field_in_order()
@@ -105,7 +105,7 @@ final class SetOptionsToolTest
   @Test void create_field_accepts_inline_options_for_choice_fields()
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of(
+        ToolCalls.request("create_field", Map.of(
             "type", "multi-select-list-field", "name", "Tags",
             "options", List.of("alpha", "beta"))));
 
@@ -118,7 +118,7 @@ final class SetOptionsToolTest
   @Test void create_field_rejects_options_on_a_non_choice_type()
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of(
+        ToolCalls.request("create_field", Map.of(
             "type", "numeric-field", "name", "Age", "options", List.of("1", "2"))));
 
     assertTrue(result.isError());

@@ -41,11 +41,9 @@ public final class ReadArtifactFileTool
             + "nested artifact IDs, provenance, version, and status). "
             + "Default false (expanded, lossless). YAML output only — an error with format: json."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("path"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("path"));
 
-    return McpSchema.Tool.builder()
-        .name("read_artifact_file")
+    return McpSchema.Tool.builder("read_artifact_file", schema)
         .title("Load a CEDAR artifact from a file")
         .description(
             "Reads a CEDAR artifact (template, element, field, or instance) from an absolute file "
@@ -56,7 +54,6 @@ public final class ReadArtifactFileTool
                 + "validate_schema_artifact / validate_instance_artifact, or rely on the server "
                 + "on upload). To convert a file without bringing its content into the conversation "
                 + "at all, use convert_artifact_file." + ArtifactExchange.VERBATIM_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -115,12 +112,12 @@ public final class ReadArtifactFileTool
   private static McpSchema.CallToolResult success(String text)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, text))).isError(false).build();
+        .content(List.of(McpSchema.TextContent.builder(text).build())).isError(false).build();
   }
 
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message))).isError(true).build();
+        .content(List.of(McpSchema.TextContent.builder(message).build())).isError(true).build();
   }
 }

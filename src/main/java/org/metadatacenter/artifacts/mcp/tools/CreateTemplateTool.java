@@ -44,18 +44,15 @@ public final class CreateTemplateTool
             + "template built here carries none until then. Supply one only to repeat an id a "
             + "CEDAR repository already assigned. Must be an absolute IRI."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("name"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("name"));
 
-    return McpSchema.Tool.builder()
-        .name("create_template")
+    return McpSchema.Tool.builder("create_template", schema)
         .title("Create CEDAR template")
         .description(
             "Builds an empty CEDAR template schema artifact with the supplied name, description, "
                 + "version, and status. Returns the artifact as expanded YAML — the exchange form threaded "
                 + "into follow-up tools (add_field, add_element, ...) to compose larger templates."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -122,8 +119,8 @@ public final class CreateTemplateTool
       return error("rendered template failed CedarValidator: " + validationError);
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null,
-            ArtifactExchange.exchangeYaml(template))))
+        .content(List.of(
+            McpSchema.TextContent.builder(ArtifactExchange.exchangeYaml(template)).build()))
         .isError(false)
         .build();
   }
@@ -143,7 +140,7 @@ public final class CreateTemplateTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

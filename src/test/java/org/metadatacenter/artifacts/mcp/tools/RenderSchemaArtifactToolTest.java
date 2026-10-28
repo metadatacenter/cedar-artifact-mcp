@@ -115,7 +115,7 @@ final class RenderSchemaArtifactToolTest
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
     return RenderSchemaArtifactTool.handler(null,
-        new McpSchema.CallToolRequest("render_schema_artifact", args));
+        ToolCalls.request("render_schema_artifact", args));
   }
 
   private static String createTemplate(String name)
@@ -141,7 +141,7 @@ final class RenderSchemaArtifactToolTest
 
   private static McpSchema.CallToolResult invokeTool(Handler handler, String name, Map<String, Object> args)
   {
-    McpSchema.CallToolResult result = handler.handle(null, new McpSchema.CallToolRequest(name, args));
+    McpSchema.CallToolResult result = handler.handle(null, ToolCalls.request(name, args));
     assertFalse(result.isError(), "fixture '" + name + "' must succeed; got: " + errorText(result));
     return result;
   }

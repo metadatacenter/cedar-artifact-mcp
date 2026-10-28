@@ -142,13 +142,13 @@ final class SetLiteralDefaultValueToolTest
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
     return SetLiteralDefaultValueTool.handler(null,
-        new McpSchema.CallToolRequest("set_literal_default_value", args));
+        ToolCalls.request("set_literal_default_value", args));
   }
 
   private static String createField(String name, String type)
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of("name", name, "type", type)));
+        ToolCalls.request("create_field", Map.of("name", name, "type", type)));
     assertFalse(result.isError(),
         "fixture field must build cleanly; got: " + errorText(result));
     return textOf(result);
@@ -159,7 +159,7 @@ final class SetLiteralDefaultValueToolTest
   {
     String empty = createField("Diagnosis", "controlled-term-field");
     McpSchema.CallToolResult result = SetClassConstraintTool.handler(null,
-        new McpSchema.CallToolRequest("set_class_constraint", Map.of(
+        ToolCalls.request("set_class_constraint", Map.of(
             "field", empty,
             "class_iri", "http://purl.obolibrary.org/obo/DOID_4",
             "ontology_acronym", "DOID",

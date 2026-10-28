@@ -35,26 +35,28 @@ final class ArtifactInputRobustnessTest
   private static String templateYaml()
   {
     return textOf(CreateTemplateTool.handler(null,
-        new McpSchema.CallToolRequest("create_template", Map.of("name", "Robustness", "id", STORED_TEMPLATE_IRI))));
+        ToolCalls.request("create_template",
+            Map.of("name", "Robustness", "id", STORED_TEMPLATE_IRI))));
   }
 
   private static String templateJson(String templateYaml)
   {
     return textOf(RenderSchemaArtifactTool.handler(null,
-        new McpSchema.CallToolRequest("render_schema_artifact", Map.of("schema_artifact", templateYaml, "format", "json"))));
+        ToolCalls.request("render_schema_artifact",
+            Map.of("schema_artifact", templateYaml, "format", "json"))));
   }
 
   private static String fieldYaml()
   {
     return textOf(CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field",
-            Map.of("type", "text-field", "name", "Probe"))));
+        ToolCalls.request("create_field", Map.of("type", "text-field", "name", "Probe"))));
   }
 
   private static String fieldJson(String fieldYaml)
   {
     return textOf(RenderSchemaArtifactTool.handler(null,
-        new McpSchema.CallToolRequest("render_schema_artifact", Map.of("schema_artifact", fieldYaml, "format", "json"))));
+        ToolCalls.request("render_schema_artifact",
+            Map.of("schema_artifact", fieldYaml, "format", "json"))));
   }
 
   // ---------------------------------------------------------------- auto-detection
@@ -65,7 +67,7 @@ final class ArtifactInputRobustnessTest
     String field = fieldJson(fieldYaml());
 
     McpSchema.CallToolResult result = AddFieldTool.handler(null,
-        new McpSchema.CallToolRequest("add_field", Map.of("parent", template, "child", field)));
+        ToolCalls.request("add_field", Map.of("parent", template, "child", field)));
 
     assertFalse(result.isError(), textOf(result));
     assertTrue(textOf(result).contains("key: \"Probe\""),
@@ -78,7 +80,7 @@ final class ArtifactInputRobustnessTest
     String field = fieldYaml();
 
     McpSchema.CallToolResult result = AddFieldTool.handler(null,
-        new McpSchema.CallToolRequest("add_field", Map.of("parent", template, "child", field)));
+        ToolCalls.request("add_field", Map.of("parent", template, "child", field)));
 
     assertFalse(result.isError(), textOf(result));
     assertTrue(textOf(result).contains("key: \"Probe\""),
@@ -91,9 +93,9 @@ final class ArtifactInputRobustnessTest
     String jsonForm = templateJson(yamlForm);
 
     String fromYaml = textOf(CreateTemplateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_template_instance", Map.of("template", yamlForm))));
+        ToolCalls.request("create_template_instance", Map.of("template", yamlForm))));
     String fromJson = textOf(CreateTemplateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_template_instance", Map.of("template", jsonForm))));
+        ToolCalls.request("create_template_instance", Map.of("template", jsonForm))));
 
     // Identity (@id) is freshly minted per call; the derived isBasedOn line must agree.
     String basedOnFromYaml = lineStartingWith(fromYaml, "isBasedOn:");
@@ -108,10 +110,10 @@ final class ArtifactInputRobustnessTest
     String templateYaml = templateYaml();
     String templateJson = templateJson(templateYaml);
     String instanceYaml = textOf(CreateTemplateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_template_instance", Map.of("template", templateYaml))));
+        ToolCalls.request("create_template_instance", Map.of("template", templateYaml))));
 
     McpSchema.CallToolResult result = ValidateInstanceArtifactTool.handler(null,
-        new McpSchema.CallToolRequest("validate_instance_artifact",
+        ToolCalls.request("validate_instance_artifact",
             Map.of("schema_artifact", templateJson, "instance_artifact", instanceYaml)));
 
     assertFalse(result.isError(), textOf(result));
@@ -177,7 +179,7 @@ final class ArtifactInputRobustnessTest
     for (String garbage : GARBAGE) {
       McpSchema.CallToolResult result;
       try {
-        result = handler.apply(null, new McpSchema.CallToolRequest(toolName, Map.of(argName, garbage)));
+        result = handler.apply(null, ToolCalls.request(toolName, Map.of(argName, garbage)));
       } catch (RuntimeException e) {
         throw new AssertionError(toolName + " threw instead of returning an error result for "
             + "input <" + garbage.replace("\n", "\\n") + ">: " + e, e);
@@ -192,7 +194,7 @@ final class ArtifactInputRobustnessTest
   {
     assertCleanErrors("add_field",
         (exchange, request) -> AddFieldTool.handler(null,
-            new McpSchema.CallToolRequest("add_field",
+            ToolCalls.request("add_field",
                 Map.of("parent", request.arguments().get("parent").toString(), "child", fieldYaml()))),
         "parent");
   }
@@ -231,7 +233,7 @@ final class ArtifactInputRobustnessTest
   {
     assertCleanErrors("set_literal_default_value",
         (exchange, request) -> SetLiteralDefaultValueTool.handler(null,
-            new McpSchema.CallToolRequest("set_literal_default_value",
+            ToolCalls.request("set_literal_default_value",
                 Map.of("field", request.arguments().get("field").toString(), "value", "x"))),
         "field");
   }
@@ -246,10 +248,10 @@ final class ArtifactInputRobustnessTest
     // An instance handed to a template parameter must be rejected, not half-read.
     String templateYaml = templateYaml();
     String instanceYaml = textOf(CreateTemplateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_template_instance", Map.of("template", templateYaml))));
+        ToolCalls.request("create_template_instance", Map.of("template", templateYaml))));
 
     McpSchema.CallToolResult result = CreateTemplateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_template_instance", Map.of("template", instanceYaml)));
+        ToolCalls.request("create_template_instance", Map.of("template", instanceYaml)));
 
     assertTrue(result.isError(), "an instance is not a template; got: " + textOf(result));
   }

@@ -79,13 +79,10 @@ public final class SetLiteralFieldValueTool
             + "list fields; number for numeric fields. Type must match the schema's "
             + "input type at the resolved path."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties,
-        List.of("template", "instance", "field_path", "value"),
-        Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties,
+        List.of("template", "instance", "field_path", "value"));
 
-    return McpSchema.Tool.builder()
-        .name("set_literal_field_value")
+    return McpSchema.Tool.builder("set_literal_field_value", schema)
         .title("Set a literal-valued field on an instance")
         .description(
             "Sets the @value of a literal-valued field instance (text, numeric, "
@@ -95,7 +92,6 @@ public final class SetLiteralFieldValueTool
                 + "controlled-term fields."
                 + ArtifactExchange.INSTANCE_VALIDATION_NOTICE + ArtifactExchange.VERBATIM_NOTICE
                 + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -207,7 +203,7 @@ public final class SetLiteralFieldValueTool
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, yaml)))
+        .content(List.of(McpSchema.TextContent.builder(yaml).build()))
         .isError(false)
         .build();
   }
@@ -288,7 +284,7 @@ public final class SetLiteralFieldValueTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

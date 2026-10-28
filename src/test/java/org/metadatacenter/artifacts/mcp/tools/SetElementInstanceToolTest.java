@@ -29,8 +29,7 @@ final class SetElementInstanceToolTest
   @Test void create_element_instance_returns_a_typed_skeleton_that_names_no_artifact()
   {
     McpSchema.CallToolResult result = CreateElementInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_element_instance",
-            Map.of("element", addressElement())));
+        ToolCalls.request("create_element_instance", Map.of("element", addressElement())));
 
     assertFalse(result.isError(), errorText(result));
     Map<String, Object> entry = parseYaml(result, "element-instance");
@@ -41,7 +40,7 @@ final class SetElementInstanceToolTest
   @Test void create_element_instance_honours_explicit_identity()
   {
     McpSchema.CallToolResult result = CreateElementInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_element_instance", Map.of(
+        ToolCalls.request("create_element_instance", Map.of(
             "element", addressElement(),
             "name", "Home address",
             "description", "Where the patient lives",
@@ -226,7 +225,7 @@ final class SetElementInstanceToolTest
   @Test void rejects_an_index_gap()
   {
     McpSchema.CallToolResult result = SetElementInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("set_element_instance", Map.of(
+        ToolCalls.request("set_element_instance", Map.of(
             "template", multiAddressTemplate(), "instance", createInstance(multiAddressTemplate()),
             "field_path", "addresses[2]", "element_instance", createEntry())));
 
@@ -238,7 +237,7 @@ final class SetElementInstanceToolTest
   {
     String template = multiAddressTemplate();
     McpSchema.CallToolResult result = SetElementInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("set_element_instance", Map.of(
+        ToolCalls.request("set_element_instance", Map.of(
             "template", template, "instance", createInstance(template),
             "field_path", "addresses", "element_instance", createEntry())));
 
@@ -254,7 +253,7 @@ final class SetElementInstanceToolTest
         "child", createField("Name", "text-field"),
         "key", "name")));
     McpSchema.CallToolResult result = SetElementInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("set_element_instance", Map.of(
+        ToolCalls.request("set_element_instance", Map.of(
             "template", template, "instance", createInstance(template),
             "field_path", "name", "element_instance", createEntry())));
 
@@ -275,7 +274,7 @@ final class SetElementInstanceToolTest
 
   private static McpSchema.CallToolResult invokeTool(Handler handler, String name, Map<String, Object> args)
   {
-    McpSchema.CallToolResult result = handler.handle(null, new McpSchema.CallToolRequest(name, args));
+    McpSchema.CallToolResult result = handler.handle(null, ToolCalls.request(name, args));
     assertFalse(result.isError(), "fixture step '" + name + "' must succeed; got: " + errorText(result));
     return result;
   }

@@ -139,7 +139,7 @@ final class CreateElementToolTest
   private static McpSchema.CallToolResult invoke(Map<String, Object> arguments)
   {
     return CreateElementTool.handler(null,
-        new McpSchema.CallToolRequest("create_element", arguments));
+        ToolCalls.request("create_element", arguments));
   }
 
   @SuppressWarnings("unchecked")

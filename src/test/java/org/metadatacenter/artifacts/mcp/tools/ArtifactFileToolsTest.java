@@ -89,17 +89,17 @@ final class ArtifactFileToolsTest
 
   private static McpSchema.CallToolResult fromFile(Map<String, Object> args)
   {
-    return ReadArtifactFileTool.handler(null, new McpSchema.CallToolRequest("read_artifact_file", args));
+    return ReadArtifactFileTool.handler(null, ToolCalls.request("read_artifact_file", args));
   }
 
   private static McpSchema.CallToolResult toFile(Map<String, Object> args)
   {
-    return WriteArtifactFileTool.handler(null, new McpSchema.CallToolRequest("write_artifact_file", args));
+    return WriteArtifactFileTool.handler(null, ToolCalls.request("write_artifact_file", args));
   }
 
   private static McpSchema.CallToolResult convert(Map<String, Object> args)
   {
-    return ConvertArtifactFileTool.handler(null, new McpSchema.CallToolRequest("convert_artifact_file", args));
+    return ConvertArtifactFileTool.handler(null, ToolCalls.request("convert_artifact_file", args));
   }
 
   private static McpSchema.CallToolResult toJson(String artifact)
@@ -120,7 +120,7 @@ final class ArtifactFileToolsTest
 
   private static McpSchema.CallToolResult invokeTool(Handler handler, String name, Map<String, Object> args)
   {
-    McpSchema.CallToolResult result = handler.handle(null, new McpSchema.CallToolRequest(name, args));
+    McpSchema.CallToolResult result = handler.handle(null, ToolCalls.request(name, args));
     assertFalse(result.isError(), "fixture '" + name + "' must succeed; got: " + errorText(result));
     return result;
   }

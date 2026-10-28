@@ -309,7 +309,7 @@ final class CreateFieldToolTest
   @Test void static_rich_text_accepts_content()
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of(
+        ToolCalls.request("create_field", Map.of(
             "type", "static-rich-text", "name", "Intro",
             "content", "<p>Welcome to the study</p>")));
 
@@ -321,7 +321,7 @@ final class CreateFieldToolTest
   @Test void static_image_accepts_content_and_dimensions()
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of(
+        ToolCalls.request("create_field", Map.of(
             "type", "static-image", "name", "Logo",
             "content", "https://example.org/logo.png",
             "width", 640, "height", 480)));
@@ -335,7 +335,7 @@ final class CreateFieldToolTest
   @Test void static_youtube_accepts_content_and_dimensions()
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of(
+        ToolCalls.request("create_field", Map.of(
             "type", "static-youtube-video", "name", "Intro video",
             "content", "https://youtube.com/watch?v=xyz",
             "width", 1280, "height", 720)));
@@ -349,7 +349,7 @@ final class CreateFieldToolTest
   @Test void static_section_break_and_page_break_accept_content()
   {
     McpSchema.CallToolResult sectionBreak = CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of(
+        ToolCalls.request("create_field", Map.of(
             "type", "static-section-break", "name", "Demographics section",
             "content", "Questions about the patient")));
     assertFalse(sectionBreak.isError(), errorText(sectionBreak));
@@ -357,7 +357,7 @@ final class CreateFieldToolTest
         "the section text must reach the field; got: " + errorText(sectionBreak));
 
     McpSchema.CallToolResult pageBreak = CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of(
+        ToolCalls.request("create_field", Map.of(
             "type", "static-page-break", "name", "Page two",
             "content", "Continued")));
     assertFalse(pageBreak.isError(), errorText(pageBreak));
@@ -370,15 +370,15 @@ final class CreateFieldToolTest
     // The graft path rebuilds the child through the copy builders — the place where
     // static configuration historically got scrubbed.
     String video = errorText(CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of(
+        ToolCalls.request("create_field", Map.of(
             "type", "static-youtube-video", "name", "Intro video",
             "content", "https://youtube.com/watch?v=xyz",
             "width", 1280, "height", 720))));
     String template = errorText(CreateTemplateTool.handler(null,
-        new McpSchema.CallToolRequest("create_template", Map.of("name", "Fixture"))));
+        ToolCalls.request("create_template", Map.of("name", "Fixture"))));
 
     McpSchema.CallToolResult result = AddFieldTool.handler(null,
-        new McpSchema.CallToolRequest("add_field", Map.of(
+        ToolCalls.request("add_field", Map.of(
             "parent", template, "child", video, "key", "intro")));
 
     assertFalse(result.isError(), errorText(result));
@@ -392,7 +392,7 @@ final class CreateFieldToolTest
   @Test void rejects_content_on_a_non_static_type()
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of(
+        ToolCalls.request("create_field", Map.of(
             "type", "text-field", "name", "Name", "content", "nope")));
 
     assertTrue(result.isError());
@@ -402,7 +402,7 @@ final class CreateFieldToolTest
   @Test void rejects_dimensions_on_rich_text()
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of(
+        ToolCalls.request("create_field", Map.of(
             "type", "static-rich-text", "name", "Intro",
             "content", "<p>x</p>", "width", 640)));
 
@@ -417,7 +417,7 @@ final class CreateFieldToolTest
   private static McpSchema.CallToolResult invoke(Map<String, Object> arguments)
   {
     return CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", arguments));
+        ToolCalls.request("create_field", arguments));
   }
 
   @SuppressWarnings("unchecked")

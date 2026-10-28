@@ -47,7 +47,7 @@ final class AttributeValueToolsTest
     String withAttr = textOf(set(template, instanceOf(template), "Custom Properties", "color", "red"));
 
     McpSchema.CallToolResult validation = ValidateInstanceArtifactTool.handler(null,
-        new McpSchema.CallToolRequest("validate_instance_artifact",
+        ToolCalls.request("validate_instance_artifact",
             Map.of("schema_artifact", template, "instance_artifact", withAttr)));
     assertFalse(validation.isError(), errorText(validation));
     assertTrue(textOf(validation).contains("\"valid\" : true"),
@@ -90,7 +90,7 @@ final class AttributeValueToolsTest
   {
     String template = templateWithAttributeValueField();
     McpSchema.CallToolResult result = SetAttributeValueTool.handler(null,
-        new McpSchema.CallToolRequest("set_attribute_value", Map.of(
+        ToolCalls.request("set_attribute_value", Map.of(
             "template", template, "instance", instanceOf(template),
             "field_path", "Custom Properties", "attribute_name", "color")));
     assertTrue(result.isError());
@@ -104,7 +104,7 @@ final class AttributeValueToolsTest
   private static McpSchema.CallToolResult set(String template, String instance, String fieldPath,
       String attributeName, String value)
   {
-    return SetAttributeValueTool.handler(null, new McpSchema.CallToolRequest("set_attribute_value", Map.of(
+    return SetAttributeValueTool.handler(null, ToolCalls.request("set_attribute_value", Map.of(
         "template", template, "instance", instance, "field_path", fieldPath,
         "attribute_name", attributeName, "value", value)));
   }
@@ -112,7 +112,7 @@ final class AttributeValueToolsTest
   private static McpSchema.CallToolResult unset(String template, String instance, String fieldPath,
       String attributeName)
   {
-    return UnsetAttributeValueTool.handler(null, new McpSchema.CallToolRequest("unset_attribute_value", Map.of(
+    return UnsetAttributeValueTool.handler(null, ToolCalls.request("unset_attribute_value", Map.of(
         "template", template, "instance", instance, "field_path", fieldPath, "attribute_name", attributeName)));
   }
 
@@ -139,7 +139,7 @@ final class AttributeValueToolsTest
 
   private static McpSchema.CallToolResult invokeTool(Handler handler, String name, Map<String, Object> args)
   {
-    McpSchema.CallToolResult result = handler.handle(null, new McpSchema.CallToolRequest(name, args));
+    McpSchema.CallToolResult result = handler.handle(null, ToolCalls.request(name, args));
     assertFalse(result.isError(), "fixture '" + name + "' must succeed; got: " + errorText(result));
     return result;
   }

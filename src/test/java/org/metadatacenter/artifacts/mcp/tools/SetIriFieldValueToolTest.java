@@ -134,7 +134,7 @@ final class SetIriFieldValueToolTest
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
     return SetIriFieldValueTool.handler(null,
-        new McpSchema.CallToolRequest("set_iri_field_value", args));
+        ToolCalls.request("set_iri_field_value", args));
   }
 
   private interface Handler
@@ -145,7 +145,7 @@ final class SetIriFieldValueToolTest
 
   private static McpSchema.CallToolResult invokeTool(Handler handler, String name, Map<String, Object> args)
   {
-    McpSchema.CallToolResult result = handler.handle(null, new McpSchema.CallToolRequest(name, args));
+    McpSchema.CallToolResult result = handler.handle(null, ToolCalls.request(name, args));
     assertFalse(result.isError(), "fixture step '" + name + "' must succeed; got: " + errorText(result));
     return result;
   }

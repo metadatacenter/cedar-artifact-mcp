@@ -91,9 +91,10 @@ public final class ReplaceFieldTool
         "type", "boolean",
         "description",
         "Whether a value for this field is required in instances of the parent (the field's "
-            + "requiredValue constraint). Optional; when omitted, whatever the replacement "
-            + "child already carries is preserved. Applies to the copy embedded in THIS "
-            + "parent — the standalone child artifact is unchanged."));
+            + "requiredValue constraint). Optional; when omitted, the embedded copy is not "
+            + "required, because a standalone field carries no requirement of its own. "
+            + "Applies to the copy embedded in THIS parent — the standalone child artifact "
+            + "is unchanged."));
     properties.put("isHidden", Map.of(
         "type", "boolean",
         "description",
@@ -109,13 +110,9 @@ public final class ReplaceFieldTool
             + "already carries is preserved. Per-add-site, since the same reusable field "
             + "may map to different properties in different parents."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties,
-        List.of("parent", "child", "key"),
-        Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("parent", "child", "key"));
 
-    return McpSchema.Tool.builder()
-        .name("replace_field")
+    return McpSchema.Tool.builder("replace_field", schema)
         .title("Replace a child of a template or element with a CEDAR field")
         .description(
             "Replaces the child at 'key' in a CEDAR template or element with the supplied "
@@ -125,7 +122,6 @@ public final class ReplaceFieldTool
                 + "parent. Returns the updated parent as expanded YAML, re-validated with "
                 + "CedarValidator."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -232,7 +228,8 @@ public final class ReplaceFieldTool
       if (minItems != null) rebuild.withMinItems(minItems);
       if (maxItems != null) rebuild.withMaxItems(maxItems);
       // Tri-state: only override when supplied, so replacing a field never silently strips
-      // a required/hidden setting the replacement child already carries.
+      // the hidden setting the replacement child already carries. A standalone child carries
+      // no requirement, so an omitted isRequired leaves the copy optional.
       if (isRequired != null) rebuild.withRequiredValue(isRequired);
       if (isHidden != null) rebuild.withHidden(isHidden);
       if (propertyIri != null) rebuild.withPropertyUri(propertyIri);
@@ -314,7 +311,7 @@ public final class ReplaceFieldTool
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, yaml)))
+        .content(List.of(McpSchema.TextContent.builder(yaml).build()))
         .isError(false)
         .build();
   }
@@ -375,7 +372,7 @@ public final class ReplaceFieldTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

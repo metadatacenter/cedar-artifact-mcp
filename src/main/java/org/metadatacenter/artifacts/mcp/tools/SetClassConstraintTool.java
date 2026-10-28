@@ -62,19 +62,15 @@ public final class SetClassConstraintTool
             + "the BioPortal/get_class case. 'value' — a permissible-value entry from a "
             + "value-set or similar enumeration."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties,
-        List.of("field", "class_iri", "ontology_acronym", "pref_label"),
-        Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties,
+        List.of("field", "class_iri", "ontology_acronym", "pref_label"));
 
-    return McpSchema.Tool.builder()
-        .name("set_class_constraint")
+    return McpSchema.Tool.builder("set_class_constraint", schema)
         .title("Pin a controlled-term field to an ontology class")
         .description(
             "Attaches a class-level value constraint to a CEDAR controlled-term field, "
                 + "pinning it to a single ontology class. Returns the updated field as "
                 + "expanded YAML, re-validated with CedarValidator." + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -134,7 +130,7 @@ public final class SetClassConstraintTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

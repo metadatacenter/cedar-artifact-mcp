@@ -28,9 +28,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * <p>Each constraint suite builds its fixture from a bare name and type, so a promotion that dropped
  * every setting a stored field carries would pass all of them, and the reduced field would still
- * validate. This fixture sets every one of those settings to a non-default value. Multiplicity and
- * the property IRI are not among them: a parent template states those for its child, and a
- * standalone field carries neither.
+ * validate. This fixture sets every one of those settings to a non-default value. Requirement,
+ * recommendation, multiplicity and the property IRI are not among them: a parent template states
+ * those for its child, and a standalone field carries none of them.
  */
 final class ConstraintPromotionTest
 {
@@ -42,22 +42,22 @@ final class ConstraintPromotionTest
     return Stream.of(
         Arguments.of("set_class_constraint", (Function<Map<String, Object>, McpSchema.CallToolResult>)
             arguments -> SetClassConstraintTool.handler(null,
-                new McpSchema.CallToolRequest("set_class_constraint", arguments)),
+                ToolCalls.request("set_class_constraint", arguments)),
             Map.of("class_iri", "http://purl.obolibrary.org/obo/DOID_4", "ontology_acronym", "DOID",
                 "label", "disease", "pref_label", "disease")),
         Arguments.of("set_ontology_constraint", (Function<Map<String, Object>, McpSchema.CallToolResult>)
             arguments -> SetOntologyConstraintTool.handler(null,
-                new McpSchema.CallToolRequest("set_ontology_constraint", arguments)),
+                ToolCalls.request("set_ontology_constraint", arguments)),
             Map.of("ontology_iri", "https://data.bioontology.org/ontologies/DOID", "ontology_acronym", "DOID",
                 "ontology_name", "Human Disease Ontology")),
         Arguments.of("set_branch_constraint", (Function<Map<String, Object>, McpSchema.CallToolResult>)
             arguments -> SetBranchConstraintTool.handler(null,
-                new McpSchema.CallToolRequest("set_branch_constraint", arguments)),
+                ToolCalls.request("set_branch_constraint", arguments)),
             Map.of("branch_iri", "http://purl.obolibrary.org/obo/DOID_4", "ontology_name", "Human Disease Ontology",
                 "ontology_acronym", "DOID", "branch_label", "Disease")),
         Arguments.of("set_valueset_constraint", (Function<Map<String, Object>, McpSchema.CallToolResult>)
             arguments -> SetValueSetConstraintTool.handler(null,
-                new McpSchema.CallToolRequest("set_valueset_constraint", arguments)),
+                ToolCalls.request("set_valueset_constraint", arguments)),
             Map.of("value_set_iri", "https://example.org/cedarvs/area-units", "vs_collection", "CEDARVS",
                 "name", "Area units")));
   }
@@ -74,8 +74,6 @@ final class ConstraintPromotionTest
         .withVersion(Version.fromString("2.0.0"))
         .withPreferredLabel("Disease name")
         .withAlternateLabels(List.of("Condition", "Illness"))
-        .withRequiredValue(true)
-        .withRecommendedValue(true)
         .withHidden(true)
         .withContinuePreviousLine(true)
         .withValueRecommendationEnabled(true)
@@ -96,8 +94,6 @@ final class ConstraintPromotionTest
         () -> assertEquals("2.0.0", promoted.version().map(Version::toString).orElse(null)),
         () -> assertEquals("Disease name", promoted.preferredLabel().orElse(null)),
         () -> assertEquals(List.of("Condition", "Illness"), promoted.alternateLabels()),
-        () -> assertTrue(constraints.requiredValue(), "required"),
-        () -> assertTrue(constraints.recommendedValue(), "recommended"),
         () -> assertTrue(promoted.fieldUi().hidden(), "hidden"),
         () -> assertTrue(promoted.fieldUi().continuePreviousLine(), "continuePreviousLine"),
         () -> assertTrue(promoted.fieldUi().valueRecommendationEnabled(), "valueRecommendationEnabled"),

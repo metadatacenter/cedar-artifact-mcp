@@ -326,13 +326,13 @@ final class AddFieldToolTest
   private static McpSchema.CallToolResult invoke(Map<String, Object> arguments)
   {
     return AddFieldTool.handler(null,
-        new McpSchema.CallToolRequest("add_field", arguments));
+        ToolCalls.request("add_field", arguments));
   }
 
   private String createTemplate(String name)
   {
     McpSchema.CallToolResult result = CreateTemplateTool.handler(null,
-        new McpSchema.CallToolRequest("create_template", Map.of("name", name)));
+        ToolCalls.request("create_template", Map.of("name", name)));
     assertFalse(result.isError(),
         "fixture template must build cleanly; got: " + errorText(result));
     return textOf(result);
@@ -341,7 +341,7 @@ final class AddFieldToolTest
   private String createElement(String name)
   {
     McpSchema.CallToolResult result = CreateElementTool.handler(null,
-        new McpSchema.CallToolRequest("create_element", Map.of("name", name)));
+        ToolCalls.request("create_element", Map.of("name", name)));
     assertFalse(result.isError(),
         "fixture element must build cleanly; got: " + errorText(result));
     return textOf(result);
@@ -350,7 +350,7 @@ final class AddFieldToolTest
   private String createField(String name, String type)
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of("name", name, "type", type)));
+        ToolCalls.request("create_field", Map.of("name", name, "type", type)));
     assertFalse(result.isError(),
         "fixture field must build cleanly; got: " + errorText(result));
     return textOf(result);
@@ -424,12 +424,12 @@ final class AddFieldToolTest
   @Test void isRequired_and_isHidden_apply_to_the_embedded_copy()
   {
     String parent = textOf(CreateTemplateTool.handler(null,
-        new McpSchema.CallToolRequest("create_template", Map.of("name", "Flags"))));
+        ToolCalls.request("create_template", Map.of("name", "Flags"))));
     String child = textOf(CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of("type", "text-field", "name", "P"))));
+        ToolCalls.request("create_field", Map.of("type", "text-field", "name", "P"))));
 
     McpSchema.CallToolResult result = AddFieldTool.handler(null,
-        new McpSchema.CallToolRequest("add_field",
+        ToolCalls.request("add_field",
             Map.of("parent", parent, "child", child, "isRequired", true, "isHidden", true)));
 
     assertFalse(result.isError(), textOf(result));
@@ -441,30 +441,51 @@ final class AddFieldToolTest
   @Test void omitted_flags_preserve_what_the_child_carries()
   {
     String parent = textOf(CreateTemplateTool.handler(null,
-        new McpSchema.CallToolRequest("create_template", Map.of("name", "Preserve"))));
-    String child = "type: text-field\nname: Already Required\nconfiguration:\n  required: true\n";
+        ToolCalls.request("create_template", Map.of("name", "Preserve"))));
+    String child = "type: text-field\nname: Already Hidden\nhidden: true\n";
 
     McpSchema.CallToolResult result = AddFieldTool.handler(null,
-        new McpSchema.CallToolRequest("add_field", Map.of("parent", parent, "child", child)));
+        ToolCalls.request("add_field", Map.of("parent", parent, "child", child)));
 
     assertFalse(result.isError(), textOf(result));
-    assertTrue(textOf(result).contains("required: true"),
-        "an already-required child must stay required when the flag is omitted; got:\n" + textOf(result));
+    assertTrue(textOf(result).contains("hidden: true"),
+        "an already-hidden child must stay hidden when the flag is omitted; got:\n"
+            + textOf(result));
+    assertFalse(textOf(result).contains("required: true"),
+        "a standalone child carries no requirement, so the copy must not be required; got:\n"
+            + textOf(result));
   }
 
-  @Test void isRequired_false_clears_a_required_child()
+  @Test void isHidden_false_clears_a_hidden_child()
   {
     String parent = textOf(CreateTemplateTool.handler(null,
-        new McpSchema.CallToolRequest("create_template", Map.of("name", "Clear"))));
-    String child = "type: text-field\nname: Was Required\nconfiguration:\n  required: true\n";
+        ToolCalls.request("create_template", Map.of("name", "Clear"))));
+    String child = "type: text-field\nname: Was Hidden\nhidden: true\n";
 
     McpSchema.CallToolResult result = AddFieldTool.handler(null,
-        new McpSchema.CallToolRequest("add_field",
-            Map.of("parent", parent, "child", child, "isRequired", false)));
+        ToolCalls.request("add_field",
+            Map.of("parent", parent, "child", child, "isHidden", false)));
 
     assertFalse(result.isError(), textOf(result));
-    assertFalse(textOf(result).contains("required: true"),
-        "isRequired: false must clear the embedded copy's flag; got:\n" + textOf(result));
+    assertFalse(textOf(result).contains("hidden: true"),
+        "isHidden: false must clear the embedded copy's flag; got:\n" + textOf(result));
+  }
+
+  @Test void a_standalone_child_that_states_a_requirement_is_refused()
+  {
+    String parent = textOf(CreateTemplateTool.handler(null,
+        ToolCalls.request("create_template", Map.of("name", "Refuse"))));
+    String child = "type: text-field\nname: Claims Required\nconfiguration:\n  required: true\n";
+
+    McpSchema.CallToolResult result = AddFieldTool.handler(null,
+        ToolCalls.request("add_field",
+            Map.of("parent", parent, "child", child, "isRequired", true)));
+
+    assertTrue(result.isError(),
+        "a standalone field has no configuration, so add_field must refuse one; got:\n"
+            + textOf(result));
+    assertTrue(errorText(result).contains("configuration"),
+        "the refusal must name the configuration block; got: " + errorText(result));
   }
 
 }

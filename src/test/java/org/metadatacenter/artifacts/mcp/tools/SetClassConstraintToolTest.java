@@ -148,7 +148,7 @@ final class SetClassConstraintToolTest
   private static McpSchema.CallToolResult invoke(Map<String, Object> arguments)
   {
     return SetClassConstraintTool.handler(null,
-        new McpSchema.CallToolRequest("set_class_constraint", arguments));
+        ToolCalls.request("set_class_constraint", arguments));
   }
 
   private String createControlledTermField(String name)
@@ -159,7 +159,7 @@ final class SetClassConstraintToolTest
   private String createField(String name, String type)
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of("name", name, "type", type)));
+        ToolCalls.request("create_field", Map.of("name", name, "type", type)));
     assertFalse(result.isError(),
         "fixture field must build cleanly; got: " + errorText(result));
     return textOf(result);

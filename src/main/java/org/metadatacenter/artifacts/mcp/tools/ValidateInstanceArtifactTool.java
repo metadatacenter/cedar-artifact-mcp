@@ -59,12 +59,10 @@ public final class ValidateInstanceArtifactTool
             + "element instance (the kind 'create_element_instance' returns) when it is an "
             + "element. YAML or JSON."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("schema_artifact", "instance_artifact"),
-        Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties,
+        List.of("schema_artifact", "instance_artifact"));
 
-    return McpSchema.Tool.builder()
-        .name("validate_instance_artifact")
+    return McpSchema.Tool.builder("validate_instance_artifact", schema)
         .title("Validate a CEDAR instance against its schema (auto-detect template/element)")
         .description(
             "Validates a CEDAR template instance or element instance against the schema artifact "
@@ -77,7 +75,6 @@ public final class ValidateInstanceArtifactTool
                 + "diagnostics — a non-error result either way, so read the verdict from the "
                 + "report. (To validate a standalone template, element, or field — a schema, not "
                 + "an instance — use validate_schema_artifact.)")
-        .inputSchema(schema)
         .build();
   }
 
@@ -177,7 +174,7 @@ public final class ValidateInstanceArtifactTool
       return error("failed to serialize validation report: " + e.getMessage());
     }
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, json)))
+        .content(List.of(McpSchema.TextContent.builder(json).build()))
         .isError(false)
         .build();
   }
@@ -191,7 +188,7 @@ public final class ValidateInstanceArtifactTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

@@ -101,7 +101,7 @@ final class AnnotationToolsTest
   @Test void rejects_missing_arguments()
   {
     McpSchema.CallToolResult result = SetLiteralAnnotationTool.handler(null,
-        new McpSchema.CallToolRequest("set_literal_annotation", Map.of("artifact", createTemplate("X"))));
+        ToolCalls.request("set_literal_annotation", Map.of("artifact", createTemplate("X"))));
     assertTrue(result.isError());
     assertTrue(errorText(result).contains("annotation"));
   }
@@ -112,20 +112,20 @@ final class AnnotationToolsTest
 
   private static McpSchema.CallToolResult setLiteral(String artifact, String annotation, String value)
   {
-    return SetLiteralAnnotationTool.handler(null, new McpSchema.CallToolRequest(
-        "set_literal_annotation", Map.of("artifact", artifact, "annotation", annotation, "value", value)));
+    return SetLiteralAnnotationTool.handler(null, ToolCalls.request("set_literal_annotation",
+        Map.of("artifact", artifact, "annotation", annotation, "value", value)));
   }
 
   private static McpSchema.CallToolResult setIri(String artifact, String annotation, String iri)
   {
-    return SetIriAnnotationTool.handler(null, new McpSchema.CallToolRequest(
-        "set_iri_annotation", Map.of("artifact", artifact, "annotation", annotation, "iri", iri)));
+    return SetIriAnnotationTool.handler(null, ToolCalls.request("set_iri_annotation",
+        Map.of("artifact", artifact, "annotation", annotation, "iri", iri)));
   }
 
   private static McpSchema.CallToolResult remove(String artifact, String annotation)
   {
-    return RemoveAnnotationTool.handler(null, new McpSchema.CallToolRequest(
-        "remove_annotation", Map.of("artifact", artifact, "annotation", annotation)));
+    return RemoveAnnotationTool.handler(null, ToolCalls.request("remove_annotation",
+        Map.of("artifact", artifact, "annotation", annotation)));
   }
 
   private static String createTemplate(String name)
@@ -161,7 +161,7 @@ final class AnnotationToolsTest
 
   private static McpSchema.CallToolResult invokeTool(Handler handler, String name, Map<String, Object> args)
   {
-    McpSchema.CallToolResult result = handler.handle(null, new McpSchema.CallToolRequest(name, args));
+    McpSchema.CallToolResult result = handler.handle(null, ToolCalls.request(name, args));
     assertFalse(result.isError(), "fixture '" + name + "' must succeed; got: " + errorText(result));
     return result;
   }

@@ -32,11 +32,9 @@ public final class RemoveAnnotationTool
         "The annotation property (IRI or CURIE) to remove, e.g. skos:prefLabel. Idempotent: a "
             + "property that is not present is a no-op."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("artifact", "annotation"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("artifact", "annotation"));
 
-    return McpSchema.Tool.builder()
-        .name("remove_annotation")
+    return McpSchema.Tool.builder("remove_annotation", schema)
         .title("Remove an annotation from a CEDAR artifact")
         .description(
             "Removes the annotation with the given property (IRI/CURIE) from a CEDAR template, "
@@ -45,7 +43,6 @@ public final class RemoveAnnotationTool
                 + "annotation succeeds. Returns the updated artifact as expanded YAML."
                 + ArtifactExchange.ANNOTATION_VALIDATION_NOTICE + ArtifactExchange.VERBATIM_NOTICE
                 + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 

@@ -116,13 +116,13 @@ final class RemoveChildToolTest
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
     return RemoveChildTool.handler(null,
-        new McpSchema.CallToolRequest("remove_child", args));
+        ToolCalls.request("remove_child", args));
   }
 
   private static String createTemplate(String name)
   {
     McpSchema.CallToolResult result = CreateTemplateTool.handler(null,
-        new McpSchema.CallToolRequest("create_template", Map.of("name", name)));
+        ToolCalls.request("create_template", Map.of("name", name)));
     assertFalse(result.isError(),
         "fixture template must build cleanly; got: " + errorText(result));
     return textOf(result);
@@ -131,7 +131,7 @@ final class RemoveChildToolTest
   private static String createElement(String name)
   {
     McpSchema.CallToolResult result = CreateElementTool.handler(null,
-        new McpSchema.CallToolRequest("create_element", Map.of("name", name)));
+        ToolCalls.request("create_element", Map.of("name", name)));
     assertFalse(result.isError(),
         "fixture element must build cleanly; got: " + errorText(result));
     return textOf(result);
@@ -140,7 +140,7 @@ final class RemoveChildToolTest
   private static String createField(String name, String type)
   {
     McpSchema.CallToolResult result = CreateFieldTool.handler(null,
-        new McpSchema.CallToolRequest("create_field", Map.of("name", name, "type", type)));
+        ToolCalls.request("create_field", Map.of("name", name, "type", type)));
     assertFalse(result.isError(),
         "fixture field must build cleanly; got: " + errorText(result));
     return textOf(result);
@@ -149,7 +149,7 @@ final class RemoveChildToolTest
   private static String addField(String parentYaml, String fieldYaml, String key)
   {
     McpSchema.CallToolResult result = AddFieldTool.handler(null,
-        new McpSchema.CallToolRequest("add_field", Map.of(
+        ToolCalls.request("add_field", Map.of(
             "parent", parentYaml,
             "child", fieldYaml,
             "key", key)));
@@ -161,7 +161,7 @@ final class RemoveChildToolTest
   private static String addElement(String parentYaml, String elementYaml, String key)
   {
     McpSchema.CallToolResult result = AddElementTool.handler(null,
-        new McpSchema.CallToolRequest("add_element", Map.of(
+        ToolCalls.request("add_element", Map.of(
             "parent", parentYaml,
             "child", elementYaml,
             "key", key)));

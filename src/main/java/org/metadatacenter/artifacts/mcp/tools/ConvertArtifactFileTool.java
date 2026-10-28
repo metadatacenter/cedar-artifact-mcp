@@ -44,11 +44,10 @@ public final class ConvertArtifactFileTool
             + "nested artifact IDs, provenance, version, and status). "
             + "Default false (expanded, lossless). YAML output only — an error with JSON output."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("source_path", "dest_path"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties,
+        List.of("source_path", "dest_path"));
 
-    return McpSchema.Tool.builder()
-        .name("convert_artifact_file")
+    return McpSchema.Tool.builder("convert_artifact_file", schema)
         .title("Convert a CEDAR artifact file (file to file)")
         .description(
             "Reads a CEDAR artifact from source_path and writes it to dest_path in the requested "
@@ -58,7 +57,6 @@ public final class ConvertArtifactFileTool
                 + "inferred from dest_path's extension (.json → JSON, otherwise YAML) unless "
                 + "'format' overrides it. Both paths must be absolute. Returns only a summary. "
                 + "Overwrites dest_path and creates parent directories. Does not validate.")
-        .inputSchema(schema)
         .build();
   }
 
@@ -115,12 +113,12 @@ public final class ConvertArtifactFileTool
   private static McpSchema.CallToolResult success(String text)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, text))).isError(false).build();
+        .content(List.of(McpSchema.TextContent.builder(text).build())).isError(false).build();
   }
 
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message))).isError(true).build();
+        .content(List.of(McpSchema.TextContent.builder(message).build())).isError(true).build();
   }
 }

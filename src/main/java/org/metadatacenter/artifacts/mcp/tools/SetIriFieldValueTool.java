@@ -76,13 +76,10 @@ public final class SetIriFieldValueTool
             + "(commonly supplied alongside the URI when the LLM has resolved both); "
             + "required for controlled-term fields."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties,
-        List.of("template", "instance", "field_path", "iri"),
-        Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties,
+        List.of("template", "instance", "field_path", "iri"));
 
-    return McpSchema.Tool.builder()
-        .name("set_iri_field_value")
+    return McpSchema.Tool.builder("set_iri_field_value", schema)
         .title("Set an IRI-valued field on an instance")
         .description(
             "Sets the @id of an IRI-valued field instance (link, ROR, ORCID, PFAS, "
@@ -92,7 +89,6 @@ public final class SetIriFieldValueTool
                 + "expanded YAML."
                 + ArtifactExchange.INSTANCE_VALIDATION_NOTICE + ArtifactExchange.VERBATIM_NOTICE
                 + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -227,7 +223,7 @@ public final class SetIriFieldValueTool
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, yaml)))
+        .content(List.of(McpSchema.TextContent.builder(yaml).build()))
         .isError(false)
         .build();
   }
@@ -289,7 +285,7 @@ public final class SetIriFieldValueTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

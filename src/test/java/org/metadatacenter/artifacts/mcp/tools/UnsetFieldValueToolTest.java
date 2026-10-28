@@ -187,7 +187,7 @@ final class UnsetFieldValueToolTest
   private static McpSchema.CallToolResult invoke(Map<String, Object> args)
   {
     return UnsetFieldValueTool.handler(null,
-        new McpSchema.CallToolRequest("unset_field_value", args));
+        ToolCalls.request("unset_field_value", args));
   }
 
   private interface Handler
@@ -198,7 +198,7 @@ final class UnsetFieldValueToolTest
 
   private static McpSchema.CallToolResult invokeTool(Handler handler, String name, Map<String, Object> args)
   {
-    McpSchema.CallToolResult result = handler.handle(null, new McpSchema.CallToolRequest(name, args));
+    McpSchema.CallToolResult result = handler.handle(null, ToolCalls.request(name, args));
     assertFalse(result.isError(), "fixture step '" + name + "' must succeed; got: " + errorText(result));
     return result;
   }

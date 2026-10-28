@@ -44,11 +44,9 @@ public final class CreateElementTool
             + "element built here carries none until then. Supply one only to repeat an id a "
             + "CEDAR repository already assigned. Must be an absolute IRI."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("name"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("name"));
 
-    return McpSchema.Tool.builder()
-        .name("create_element")
+    return McpSchema.Tool.builder("create_element", schema)
         .title("Create CEDAR element")
         .description(
             "Builds an empty CEDAR element schema artifact with the supplied name, description, "
@@ -57,7 +55,6 @@ public final class CreateElementTool
                 + "templates (add_element) or composed via other tools."
                 + ArtifactExchange.STANDALONE_NOTICE
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -122,8 +119,8 @@ public final class CreateElementTool
       return error("rendered element failed CedarValidator: " + validationError);
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null,
-            ArtifactExchange.exchangeYaml(element))))
+        .content(List.of(
+            McpSchema.TextContent.builder(ArtifactExchange.exchangeYaml(element)).build()))
         .isError(false)
         .build();
   }
@@ -143,7 +140,7 @@ public final class CreateElementTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

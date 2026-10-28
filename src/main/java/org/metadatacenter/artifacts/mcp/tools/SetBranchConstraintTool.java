@@ -45,20 +45,16 @@ public final class SetBranchConstraintTool
         "Maximum depth from the branch root to include. Optional; defaults to 0 "
             + "(matches the library's convention for unbounded depth)."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties,
-        List.of("field", "ontology_name", "ontology_acronym", "branch_iri", "branch_label"),
-        Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties,
+        List.of("field", "ontology_name", "ontology_acronym", "branch_iri", "branch_label"));
 
-    return McpSchema.Tool.builder()
-        .name("set_branch_constraint")
+    return McpSchema.Tool.builder("set_branch_constraint", schema)
         .title("Pin a controlled-term field to an ontology branch")
         .description(
             "Attaches a branch-level value constraint to a CEDAR controlled-term field, "
                 + "scoping its permissible values to a subtree rooted at the named class. "
                 + "Returns the updated field as expanded YAML, re-validated with CedarValidator."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -111,7 +107,7 @@ public final class SetBranchConstraintTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

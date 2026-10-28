@@ -73,11 +73,9 @@ public final class RenderSchemaArtifactTool
             + "exchange form (every field the renderer can produce), which round-trips losslessly. "
             + "Applies only to YAML output; pairing compact: true with format: json is an error."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("schema_artifact"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("schema_artifact"));
 
-    return McpSchema.Tool.builder()
-        .name("render_schema_artifact")
+    return McpSchema.Tool.builder("render_schema_artifact", schema)
         .title("Render a CEDAR schema artifact as YAML or JSON (auto-detect template/element/field)")
         .description(
             "Primary rendering path for CEDAR schema artifacts. Renders a CEDAR template, element, "
@@ -90,7 +88,6 @@ public final class RenderSchemaArtifactTool
                 + "(To render a template instance or element instance — an instance, not a schema — "
                 + "use render_instance_artifact.)"
                 + ArtifactExchange.VERBATIM_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -247,7 +244,7 @@ public final class RenderSchemaArtifactTool
   private static McpSchema.CallToolResult success(String text)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, text)))
+        .content(List.of(McpSchema.TextContent.builder(text).build()))
         .isError(false)
         .build();
   }
@@ -255,7 +252,7 @@ public final class RenderSchemaArtifactTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

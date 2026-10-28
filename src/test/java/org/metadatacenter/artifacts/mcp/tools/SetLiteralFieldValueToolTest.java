@@ -257,7 +257,7 @@ final class SetLiteralFieldValueToolTest
   private static McpSchema.CallToolResult invoke(Map<String, Object> arguments)
   {
     return SetLiteralFieldValueTool.handler(null,
-        new McpSchema.CallToolRequest("set_literal_field_value", arguments));
+        ToolCalls.request("set_literal_field_value", arguments));
   }
 
   private interface Handler
@@ -268,7 +268,7 @@ final class SetLiteralFieldValueToolTest
 
   private static McpSchema.CallToolResult invokeTool(Handler handler, String name, Map<String, Object> args)
   {
-    McpSchema.CallToolResult result = handler.handle(null, new McpSchema.CallToolRequest(name, args));
+    McpSchema.CallToolResult result = handler.handle(null, ToolCalls.request(name, args));
     assertFalse(result.isError(), "fixture step '" + name + "' must succeed; got: " + errorText(result));
     return result;
   }

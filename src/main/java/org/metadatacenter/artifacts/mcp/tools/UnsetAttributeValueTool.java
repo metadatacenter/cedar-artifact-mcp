@@ -40,12 +40,10 @@ public final class UnsetAttributeValueTool
         "The name of the attribute to remove from that field. Idempotent: a name that is not "
             + "present is a no-op."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("template", "instance", "field_path", "attribute_name"),
-        Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties,
+        List.of("template", "instance", "field_path", "attribute_name"));
 
-    return McpSchema.Tool.builder()
-        .name("unset_attribute_value")
+    return McpSchema.Tool.builder("unset_attribute_value", schema)
         .title("Remove an attribute from an attribute-value field")
         .description(
             "Removes the named entry from an attribute-value field of a template instance — the "
@@ -53,7 +51,6 @@ public final class UnsetAttributeValueTool
                 + "present succeeds. Returns the updated instance as expanded YAML."
                 + ArtifactExchange.INSTANCE_VALIDATION_NOTICE + ArtifactExchange.VERBATIM_NOTICE
                 + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 

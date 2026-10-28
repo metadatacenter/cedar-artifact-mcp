@@ -366,13 +366,13 @@ final class CreateTemplateInstanceToolTest
   private static McpSchema.CallToolResult invoke(Map<String, Object> arguments)
   {
     return CreateTemplateInstanceTool.handler(null,
-        new McpSchema.CallToolRequest("create_template_instance", arguments));
+        ToolCalls.request("create_template_instance", arguments));
   }
 
   private static String createTemplate(String name)
   {
     McpSchema.CallToolResult result = CreateTemplateTool.handler(null,
-        new McpSchema.CallToolRequest("create_template", Map.of("name", name, "id", STORED_TEMPLATE_IRI)));
+        ToolCalls.request("create_template", Map.of("name", name, "id", STORED_TEMPLATE_IRI)));
     assertFalse(result.isError(),
         "fixture template must build cleanly; got: " + errorText(result));
     return textOf(result);
@@ -381,7 +381,8 @@ final class CreateTemplateInstanceToolTest
   private static String compileTemplate(String yaml)
   {
     McpSchema.CallToolResult result = RenderSchemaArtifactTool.handler(null,
-        new McpSchema.CallToolRequest("render_schema_artifact", Map.of("schema_artifact", yaml, "format", "json")));
+        ToolCalls.request("render_schema_artifact",
+            Map.of("schema_artifact", yaml, "format", "json")));
     assertFalse(result.isError(),
         "fixture template YAML must compile cleanly; got: " + errorText(result));
     return textOf(result);
@@ -390,7 +391,7 @@ final class CreateTemplateInstanceToolTest
   private void assertValidatesAgainst(JsonNode instanceJson, String templateJson) throws Exception
   {
     McpSchema.CallToolResult result = ValidateInstanceArtifactTool.handler(null,
-        new McpSchema.CallToolRequest("validate_instance_artifact", Map.of(
+        ToolCalls.request("validate_instance_artifact", Map.of(
             "schema_artifact", templateJson,
             "instance_artifact", jackson.writeValueAsString(instanceJson))));
     assertFalse(result.isError(), errorText(result));
@@ -413,7 +414,7 @@ final class CreateTemplateInstanceToolTest
   private ObjectNode inflatedJson(McpSchema.CallToolResult result, String templateJson) throws Exception
   {
     McpSchema.CallToolResult json = RenderInstanceArtifactTool.handler(null,
-        new McpSchema.CallToolRequest("render_instance_artifact", Map.of(
+        ToolCalls.request("render_instance_artifact", Map.of(
             "instance_artifact", textOf(result), "template_artifact", templateJson, "format", "json")));
     assertFalse(json.isError(), errorText(json));
     return (ObjectNode) jackson.readTree(textOf(json));

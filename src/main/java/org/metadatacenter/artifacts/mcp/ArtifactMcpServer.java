@@ -1,5 +1,6 @@
 package org.metadatacenter.artifacts.mcp;
 
+import org.metadatacenter.artifacts.mcp.tools.ToolSchemas;
 import io.modelcontextprotocol.json.McpJsonDefaults;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServer;
@@ -142,15 +143,12 @@ public final class ArtifactMcpServer
     Map<String, Object> properties = new LinkedHashMap<>();
     properties.put("message", Map.of("type", "string", "description", "Arbitrary string to echo back."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("message"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("message"));
 
-    return McpSchema.Tool.builder()
-        .name("ping")
+    return McpSchema.Tool.builder("ping", schema)
         .title("ping")
         .description("Echoes the supplied message, with the server name and version appended. "
             + "Used to verify the MCP server is reachable and to report which build is running.")
-        .inputSchema(schema)
         .build();
   }
 
@@ -162,8 +160,8 @@ public final class ArtifactMcpServer
     String message = raw == null ? "" : raw.toString();
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null,
-            "pong: " + message + " (" + SERVER_NAME + " " + SERVER_VERSION + ")")))
+        .content(List.of(McpSchema.TextContent.builder(
+            "pong: " + message + " (" + SERVER_NAME + " " + SERVER_VERSION + ")").build()))
         .isError(false)
         .build();
   }

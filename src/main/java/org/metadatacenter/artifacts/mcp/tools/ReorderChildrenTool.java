@@ -58,11 +58,9 @@ public final class ReorderChildrenTool
             + "existing key exactly once. A partial list is rejected — omitting a key would "
             + "delete the child, not just leave it unordered."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("parent", "keys"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("parent", "keys"));
 
-    return McpSchema.Tool.builder()
-        .name("reorder_children")
+    return McpSchema.Tool.builder("reorder_children", schema)
         .title("Reorder the children of a template or element")
         .description(
             "Sets the display order of a CEDAR template or element's children — the order "
@@ -71,7 +69,6 @@ public final class ReorderChildrenTool
                 + "Returns the updated parent as expanded YAML, re-validated with "
                 + "CedarValidator."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -155,7 +152,7 @@ public final class ReorderChildrenTool
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, yaml)))
+        .content(List.of(McpSchema.TextContent.builder(yaml).build()))
         .isError(false)
         .build();
   }
@@ -212,7 +209,7 @@ public final class ReorderChildrenTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

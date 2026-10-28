@@ -561,6 +561,41 @@ final class EndToEndStdioIT
     }
   }
 
+  /**
+   * The SDK checks every call's arguments against the tool's input schema before the handler
+   * runs, using this server's own validator. An argument the tool does not declare is refused.
+   */
+  @Test void server_refuses_an_argument_the_tool_does_not_declare() throws Exception
+  {
+    Path jar = locateShadedJar();
+    Process server = new ProcessBuilder("java", "-jar", jar.toString())
+        .redirectErrorStream(false).start();
+    StringBuilder stderr = drainStderr(server);
+    BufferedReader stdout = new BufferedReader(
+        new InputStreamReader(server.getInputStream(), StandardCharsets.UTF_8));
+
+    try (Writer stdin = new OutputStreamWriter(server.getOutputStream(), StandardCharsets.UTF_8)) {
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":"
+          + "{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},"
+          + "\"clientInfo\":{\"name\":\"e2e\",\"version\":\"0\"}}}");
+      readResponse(stdout, stderr);
+
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
+
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":"
+          + "{\"name\":\"create_template\",\"arguments\":{\"name\":\"Study\",\"colour\":\"red\"}}}");
+      JsonNode response = readResponse(stdout, stderr);
+
+      assertEquals(2, response.path("id").asInt());
+      assertTrue(response.path("result").path("isError").asBoolean(),
+          "an undeclared argument should produce isError=true; got " + response);
+      assertTrue(response.path("result").path("content").toString().contains("colour"),
+          "the refusal should name the undeclared argument; got " + response);
+    } finally {
+      shutdown(server, stderr);
+    }
+  }
+
   @Test void server_inflates_sparse_instance_to_placeholder_json_over_stdio() throws Exception
   {
     // End-to-end over real stdio: a sparse instance plus its template, run through

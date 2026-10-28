@@ -94,13 +94,9 @@ public final class ReplaceElementTool
             + "already carries is preserved. Per-add-site, since the same reusable element "
             + "may map to different properties in different parents."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties,
-        List.of("parent", "child", "key"),
-        Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("parent", "child", "key"));
 
-    return McpSchema.Tool.builder()
-        .name("replace_element")
+    return McpSchema.Tool.builder("replace_element", schema)
         .title("Replace a child of a template or element with a CEDAR element")
         .description(
             "Replaces the child at 'key' in a CEDAR template or element with the supplied "
@@ -108,7 +104,6 @@ public final class ReplaceElementTool
                 + "(remove_child + add_element would move it to the end). Returns the updated "
                 + "parent as expanded YAML, re-validated with CedarValidator."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -273,7 +268,7 @@ public final class ReplaceElementTool
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, yaml)))
+        .content(List.of(McpSchema.TextContent.builder(yaml).build()))
         .isError(false)
         .build();
   }
@@ -334,7 +329,7 @@ public final class ReplaceElementTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

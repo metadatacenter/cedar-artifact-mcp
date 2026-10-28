@@ -92,9 +92,10 @@ public final class AddFieldTool
         "type", "boolean",
         "description",
         "Whether a value for this field is required in instances of the parent (the field's "
-            + "requiredValue constraint). Optional; when omitted, whatever the child already "
-            + "carries is preserved. Applies to the copy embedded in THIS parent — the "
-            + "standalone child artifact is unchanged."));
+            + "requiredValue constraint). Optional; when omitted, the embedded copy is not "
+            + "required, because a standalone field carries no requirement of its own. "
+            + "Applies to the copy embedded in THIS parent — the standalone child artifact "
+            + "is unchanged."));
     properties.put("isHidden", Map.of(
         "type", "boolean",
         "description",
@@ -110,13 +111,9 @@ public final class AddFieldTool
             + "already carries is preserved. Per-add-site, since the same reusable field "
             + "may map to different properties in different parents."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties,
-        List.of("parent", "child"),
-        Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("parent", "child"));
 
-    return McpSchema.Tool.builder()
-        .name("add_field")
+    return McpSchema.Tool.builder("add_field", schema)
         .title("Add a CEDAR field to a template or element parent")
         .description(
             "Adds an existing CEDAR field (as YAML) as a child of a CEDAR template or "
@@ -125,7 +122,6 @@ public final class AddFieldTool
                 + "flag for this parent. Returns the updated parent as expanded YAML, "
                 + "re-validated with CedarValidator."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -228,8 +224,9 @@ public final class AddFieldTool
           .withIsMultiple(isMultiInstance);
       if (minItems != null) rebuild.withMinItems(minItems);
       if (maxItems != null) rebuild.withMaxItems(maxItems);
-      // Tri-state: only override when supplied, so adding a field never silently strips a
-      // required/hidden setting the child already carries.
+      // Tri-state: only override when supplied, so adding a field never silently strips the
+      // hidden setting the child already carries. A standalone child carries no requirement,
+      // so an omitted isRequired leaves the copy optional.
       if (isRequired != null) rebuild.withRequiredValue(isRequired);
       if (isHidden != null) rebuild.withHidden(isHidden);
       if (propertyIri != null) rebuild.withPropertyUri(propertyIri);
@@ -288,7 +285,7 @@ public final class AddFieldTool
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, yaml)))
+        .content(List.of(McpSchema.TextContent.builder(yaml).build()))
         .isError(false)
         .build();
   }
@@ -349,7 +346,7 @@ public final class AddFieldTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

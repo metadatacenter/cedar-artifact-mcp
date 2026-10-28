@@ -45,11 +45,9 @@ public final class WriteArtifactFileTool
             + "nested artifact IDs, provenance, version, and status). "
             + "Default false (expanded, lossless). YAML output only — an error with JSON output."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("artifact", "path"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("artifact", "path"));
 
-    return McpSchema.Tool.builder()
-        .name("write_artifact_file")
+    return McpSchema.Tool.builder("write_artifact_file", schema)
         .title("Write a CEDAR artifact to a file")
         .description(
             "Writes a CEDAR artifact (supplied inline as YAML or JSON) to an absolute file path. "
@@ -59,7 +57,6 @@ public final class WriteArtifactFileTool
                 + "on the rare occasion a non-YAML tool needs the JSON form. Path must be "
                 + "absolute. Overwrites an existing file and creates parent directories. Does not "
                 + "validate.")
-        .inputSchema(schema)
         .build();
   }
 
@@ -111,12 +108,12 @@ public final class WriteArtifactFileTool
   private static McpSchema.CallToolResult success(String text)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, text))).isError(false).build();
+        .content(List.of(McpSchema.TextContent.builder(text).build())).isError(false).build();
   }
 
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message))).isError(true).build();
+        .content(List.of(McpSchema.TextContent.builder(message).build())).isError(true).build();
   }
 }

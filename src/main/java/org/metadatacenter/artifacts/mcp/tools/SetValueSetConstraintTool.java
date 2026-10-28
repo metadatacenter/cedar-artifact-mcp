@@ -39,20 +39,16 @@ public final class SetValueSetConstraintTool
         "type", "string",
         "description", "Human-readable name of the value set (skos:prefLabel)."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties,
-        List.of("field", "value_set_iri", "vs_collection", "name"),
-        Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties,
+        List.of("field", "value_set_iri", "vs_collection", "name"));
 
-    return McpSchema.Tool.builder()
-        .name("set_valueset_constraint")
+    return McpSchema.Tool.builder("set_valueset_constraint", schema)
         .title("Pin a controlled-term field to a value set")
         .description(
             "Attaches a value-set constraint to a CEDAR controlled-term field, scoping "
                 + "its permissible values to a curated value set hosted in BioPortal. "
                 + "Returns the updated field as expanded YAML, re-validated with CedarValidator."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -92,7 +88,7 @@ public final class SetValueSetConstraintTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

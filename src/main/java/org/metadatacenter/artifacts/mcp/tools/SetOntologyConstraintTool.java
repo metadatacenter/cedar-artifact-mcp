@@ -37,20 +37,16 @@ public final class SetOntologyConstraintTool
         "type", "string",
         "description", "Human-readable ontology name (e.g. 'Human Disease Ontology')."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties,
-        List.of("field", "ontology_iri", "ontology_acronym", "ontology_name"),
-        Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties,
+        List.of("field", "ontology_iri", "ontology_acronym", "ontology_name"));
 
-    return McpSchema.Tool.builder()
-        .name("set_ontology_constraint")
+    return McpSchema.Tool.builder("set_ontology_constraint", schema)
         .title("Pin a controlled-term field to an ontology")
         .description(
             "Attaches an ontology-level value constraint to a CEDAR controlled-term field, "
                 + "scoping its permissible values to all classes from a named ontology. "
                 + "Returns the updated field as expanded YAML, re-validated with CedarValidator."
                 + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -90,7 +86,7 @@ public final class SetOntologyConstraintTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }

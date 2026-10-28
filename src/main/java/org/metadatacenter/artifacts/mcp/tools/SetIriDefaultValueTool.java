@@ -66,18 +66,15 @@ public final class SetIriDefaultValueTool
         "type", "string",
         "description", "Default URI value."));
 
-    McpSchema.JsonSchema schema = new McpSchema.JsonSchema(
-        "object", properties, List.of("field", "iri"), Boolean.FALSE, null, null);
+    Map<String, Object> schema = ToolSchemas.object(properties, List.of("field", "iri"));
 
-    return McpSchema.Tool.builder()
-        .name("set_iri_default_value")
+    return McpSchema.Tool.builder("set_iri_default_value", schema)
         .title("Set an IRI default value on a field")
         .description(
             "Attaches a default URI value to an IRI-valued CEDAR field schema — "
                 + "link/ROR/ORCID/etc. (bare URI) or controlled-term (URI + label). "
                 + "Returns the updated field as expanded YAML, re-validated with "
                 + "CedarValidator." + ArtifactExchange.VERBATIM_NOTICE + ArtifactExchange.DISPLAY_NOTICE)
-        .inputSchema(schema)
         .build();
   }
 
@@ -158,7 +155,7 @@ public final class SetIriDefaultValueTool
     }
 
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, yaml)))
+        .content(List.of(McpSchema.TextContent.builder(yaml).build()))
         .isError(false)
         .build();
   }
@@ -202,7 +199,7 @@ public final class SetIriDefaultValueTool
   private static McpSchema.CallToolResult error(String message)
   {
     return McpSchema.CallToolResult.builder()
-        .content(List.of(new McpSchema.TextContent(null, message)))
+        .content(List.of(McpSchema.TextContent.builder(message).build()))
         .isError(true)
         .build();
   }
