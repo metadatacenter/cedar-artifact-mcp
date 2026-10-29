@@ -38,6 +38,20 @@
     </repository>
   </repositories>
 
+  <!--
+    slf4j-simple binds to the API of its own release. Managing the API keeps a dependency that names
+    another release, json-schema-validator among them, from putting that one beside the binding.
+  -->
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <!--
       The CEDAR artifact library — the thing this MCP wraps. It also settles Jackson for the whole
