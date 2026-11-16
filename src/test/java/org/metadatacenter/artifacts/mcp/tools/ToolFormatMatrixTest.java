@@ -144,14 +144,23 @@ final class ToolFormatMatrixTest
     assertEquals(List.of(), differences);
   }
 
-  @Test void an_artifact_the_library_cannot_read_is_invalid_in_either_form()
+  @Test void an_artifact_the_library_cannot_read_is_invalid_in_either_form() throws Exception
   {
-    // A static field whose version is not one. The validator this server is built on states no
-    // version for a static field, and the reader refuses one, so only asking the reader catches it
-    // in JSON.
+    // A static field whose identifier is a number. The validator states no type for a static
+    // field's schema:identifier, and the reader refuses anything but text there, so only asking
+    // the reader catches it in JSON. That premise depends on the pinned library, so it is checked
+    // first: a library that lets the validator refuse the field too fails here, and the test then
+    // needs another artifact that only the reader refuses.
     Kind section = new Kind("static field", true, call((e, r) -> CreateFieldTool.handler(null, r), "create_field",
         Map.of("type", "static-section-break", "name", "Section")));
-    String refusedJson = render(section, Form.JSON).replaceFirst("(\"pav:version\"\\s*:\\s*)\"[^\"]*\"", "$1\"banana\"");
+    com.fasterxml.jackson.databind.ObjectMapper jackson = new com.fasterxml.jackson.databind.ObjectMapper();
+    com.fasterxml.jackson.databind.node.ObjectNode numbered =
+        (com.fasterxml.jackson.databind.node.ObjectNode) jackson.readTree(render(section, Form.JSON));
+    numbered.put("schema:identifier", 3);
+    assertEquals(List.of(), List.copyOf(new org.metadatacenter.model.validation.CedarValidator()
+            .validateTemplateField(numbered.deepCopy()).getErrors()),
+        "the premise: the validator alone accepts the field");
+    String refusedJson = jackson.writeValueAsString(numbered);
     String refusedYaml = section.yaml().replaceFirst("(?m)^version: .*$", "version: \"banana\"");
     assertEquals(List.of("invalid", "invalid"), List.of(schemaVerdict(refusedJson), schemaVerdict(refusedYaml)),
         refusedJson + "\n" + refusedYaml);
