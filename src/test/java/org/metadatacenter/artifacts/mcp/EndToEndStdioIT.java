@@ -670,6 +670,64 @@ final class EndToEndStdioIT
     return jackson.writeValueAsString(request);
   }
 
+  /** The bioportal-term-mcp tools this server's descriptions send a model to. */
+  private static final java.util.Set<String> SIBLING_TOOLS = java.util.Set.of("get_class");
+
+  /** A word shaped like a tool name, such as create_field or set_class_constraint. */
+  private static final java.util.regex.Pattern TOOL_NAME = java.util.regex.Pattern.compile(
+      "\\b(?:get|find|create|set|unset|add|remove|replace|reorder|validate|render|read|write|convert|show|fill"
+          + "|collect|list|update|delete)_[a-z_]+\\b");
+
+  /**
+   * A tool's description and its parameters' descriptions are the only documentation the calling
+   * model reads. Every listed tool must have one, every parameter must be described, every required
+   * parameter must be declared, and every tool a description names must exist, here or in the
+   * BioPortal server the constraint tools point to.
+   */
+  @Test void every_listed_tool_is_described_and_names_only_tools_that_exist() throws Exception
+  {
+    Path jar = locateShadedJar();
+    Process server = new ProcessBuilder("java", "-jar", jar.toString()).redirectErrorStream(false).start();
+    StringBuilder stderr = drainStderr(server);
+    BufferedReader stdout = new BufferedReader(new InputStreamReader(server.getInputStream(), StandardCharsets.UTF_8));
+    try (Writer stdin = new OutputStreamWriter(server.getOutputStream(), StandardCharsets.UTF_8)) {
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":"
+          + "{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},"
+          + "\"clientInfo\":{\"name\":\"e2e\",\"version\":\"0\"}}}");
+      readResponse(stdout, stderr);
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
+      send(stdin, "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\"}");
+      JsonNode tools = readResponse(stdout, stderr).path("result").path("tools");
+
+      java.util.Set<String> names = new java.util.TreeSet<>();
+      tools.forEach(tool -> names.add(tool.path("name").asText()));
+      assertEquals(36, names.size(), names.toString());
+
+      List<String> problems = new ArrayList<>();
+      for (JsonNode tool : tools) {
+        String name = tool.path("name").asText();
+        if (tool.path("description").asText().isBlank())
+          problems.add(name + " has no description");
+        JsonNode properties = tool.path("inputSchema").path("properties");
+        properties.fieldNames().forEachRemaining(parameter -> {
+          if (properties.path(parameter).path("description").asText().isBlank())
+            problems.add(name + "." + parameter + " has no description");
+        });
+        tool.path("inputSchema").path("required").forEach(required -> {
+          if (!properties.has(required.asText()))
+            problems.add(name + " requires " + required.asText() + ", which it does not declare");
+        });
+        java.util.regex.Matcher named = TOOL_NAME.matcher(tool.toString());
+        while (named.find())
+          if (!names.contains(named.group()) && !SIBLING_TOOLS.contains(named.group()))
+            problems.add(name + " names " + named.group() + ", which is no tool");
+      }
+      assertEquals(List.of(), problems);
+    } finally {
+      shutdown(server, stderr);
+    }
+  }
+
   private static Path locateShadedJar() throws IOException
   {
     Path targetDir = Paths.get("target").toAbsolutePath();
