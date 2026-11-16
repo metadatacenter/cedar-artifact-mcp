@@ -52,6 +52,27 @@ final class ValidateSchemaArtifactToolTest
     assertTrue(jackson.readTree(textOf(result)).path("valid").asBoolean());
   }
 
+  @Test void a_literal_field_whose_properties_declare_no_value_is_invalid() throws Exception
+  {
+    // The server refuses a literal field whose properties declare neither @value nor @id, as its
+    // validator has since 2.9.35. An older pinned library called the field valid.
+    String fieldJson = textOf(RenderSchemaArtifactTool.handler(null,
+        ToolCalls.request("render_schema_artifact",
+            Map.of("schema_artifact", createField("Name", "text-field"), "format", "json"))));
+    com.fasterxml.jackson.databind.node.ObjectNode field =
+        (com.fasterxml.jackson.databind.node.ObjectNode) jackson.readTree(fieldJson);
+    com.fasterxml.jackson.databind.node.ObjectNode properties =
+        (com.fasterxml.jackson.databind.node.ObjectNode) field.get("properties");
+    properties.remove("@value");
+    properties.remove("@id");
+
+    McpSchema.CallToolResult result = invoke(Map.of("artifact", jackson.writeValueAsString(field)));
+
+    assertFalse(result.isError(), errorText(result));
+    assertFalse(jackson.readTree(textOf(result)).path("valid").asBoolean(), textOf(result));
+    assertTrue(textOf(result).contains("@value"), textOf(result));
+  }
+
   @Test void validates_yaml_input() throws Exception
   {
     // YAML is read through the library, then validated — must reach the same verdict as JSON.
