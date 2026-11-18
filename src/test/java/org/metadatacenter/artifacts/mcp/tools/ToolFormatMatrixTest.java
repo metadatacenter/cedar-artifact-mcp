@@ -1,6 +1,9 @@
 package org.metadatacenter.artifacts.mcp.tools;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.modelcontextprotocol.spec.McpSchema;
+import org.metadatacenter.artifacts.model.core.FieldSchemaArtifact;
+import org.metadatacenter.artifacts.model.reader.JsonArtifactReader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -13,6 +16,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Every kind of artifact, in each form a tool takes it in, through the tools that take any kind.
@@ -122,8 +126,12 @@ final class ToolFormatMatrixTest
   /** What validate_schema_artifact says, reduced to what may not depend on the form. */
   private static String schemaVerdict(String artifact)
   {
-    McpSchema.CallToolResult result = tool((e, r) -> ValidateSchemaArtifactTool.handler(null, r),
-        "validate_schema_artifact", Map.of("artifact", artifact));
+    return verdictOf(tool((e, r) -> ValidateSchemaArtifactTool.handler(null, r),
+        "validate_schema_artifact", Map.of("artifact", artifact)));
+  }
+
+  private static String verdictOf(McpSchema.CallToolResult result)
+  {
     String text = textOf(result);
     if (Boolean.TRUE.equals(result.isError()))
       return text.contains("validate_instance_artifact") ? "an instance" : "error: " + text;
@@ -146,24 +154,27 @@ final class ToolFormatMatrixTest
 
   @Test void an_artifact_the_library_cannot_read_is_invalid_in_either_form() throws Exception
   {
-    // A static field whose identifier is a number. The validator states no type for a static
-    // field's schema:identifier, and the reader refuses anything but text there, so only asking
-    // the reader catches it in JSON. That premise depends on the pinned library, so it is checked
-    // first: a library that lets the validator refuse the field too fails here, and the test then
-    // needs another artifact that only the reader refuses.
+    // JSON reaches the validator as received, so the tool also asks the reader. The validator and the
+    // reader agree on every artifact known, so a reader that refuses stands in for a disagreement.
+    // YAML is read through the library on the way to JSON, so a version it cannot read is refused there.
     Kind section = new Kind("static field", true, call((e, r) -> CreateFieldTool.handler(null, r), "create_field",
         Map.of("type", "static-section-break", "name", "Section")));
-    com.fasterxml.jackson.databind.ObjectMapper jackson = new com.fasterxml.jackson.databind.ObjectMapper();
-    com.fasterxml.jackson.databind.node.ObjectNode numbered =
-        (com.fasterxml.jackson.databind.node.ObjectNode) jackson.readTree(render(section, Form.JSON));
-    numbered.put("schema:identifier", 3);
-    assertEquals(List.of(), List.copyOf(new org.metadatacenter.model.validation.CedarValidator()
-            .validateTemplateField(numbered.deepCopy()).getErrors()),
-        "the premise: the validator alone accepts the field");
-    String refusedJson = jackson.writeValueAsString(numbered);
+    String json = render(section, Form.JSON);
+    assertEquals("valid", schemaVerdict(json), "the premise: the library's own reader reads the field");
+    JsonArtifactReader refusing = new JsonArtifactReader()
+    {
+      @Override public FieldSchemaArtifact readFieldSchemaArtifact(ObjectNode field)
+      {
+        throw new IllegalArgumentException("the test's reader refuses every field");
+      }
+    };
+    McpSchema.CallToolResult refusedJson =
+        ValidateSchemaArtifactTool.validate(ToolCalls.request("validate_schema_artifact", Map.of("artifact", json)),
+            refusing);
     String refusedYaml = section.yaml().replaceFirst("(?m)^version: .*$", "version: \"banana\"");
-    assertEquals(List.of("invalid", "invalid"), List.of(schemaVerdict(refusedJson), schemaVerdict(refusedYaml)),
-        refusedJson + "\n" + refusedYaml);
+    assertEquals(List.of("invalid", "invalid"), List.of(verdictOf(refusedJson), schemaVerdict(refusedYaml)),
+        textOf(refusedJson) + "\n" + refusedYaml);
+    assertTrue(textOf(refusedJson).contains("the test's reader refuses every field"), textOf(refusedJson));
   }
 
   @Test void the_file_tools_read_every_kind_the_same_from_either_form(@TempDir Path dir) throws Exception

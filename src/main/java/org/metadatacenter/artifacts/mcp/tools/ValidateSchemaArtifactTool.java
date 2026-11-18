@@ -68,6 +68,15 @@ public final class ValidateSchemaArtifactTool
   public static McpSchema.CallToolResult handler(
       McpSyncServerExchange exchange, McpSchema.CallToolRequest request)
   {
+    return validate(request, READER);
+  }
+
+  /**
+   * The handler's work, with the reader that JSON must also pass. The libraries' validator and reader
+   * agree on every artifact known, so a test supplies a reader that refuses to reach the reader check.
+   */
+  static McpSchema.CallToolResult validate(McpSchema.CallToolRequest request, JsonArtifactReader reader)
+  {
     Map<String, Object> args = request.arguments() == null ? Map.of() : request.arguments();
 
     String text = stringArg(args, "artifact");
@@ -127,9 +136,9 @@ public final class ValidateSchemaArtifactTool
     if (json) {
       try {
         switch (kind) {
-          case TEMPLATE -> READER.readTemplateSchemaArtifact(node.deepCopy());
-          case ELEMENT -> READER.readElementSchemaArtifact(node.deepCopy());
-          case FIELD -> READER.readFieldSchemaArtifact(node.deepCopy());
+          case TEMPLATE -> reader.readTemplateSchemaArtifact(node.deepCopy());
+          case ELEMENT -> reader.readElementSchemaArtifact(node.deepCopy());
+          case FIELD -> reader.readFieldSchemaArtifact(node.deepCopy());
           case INSTANCE -> throw new IllegalStateException("unreachable");
         }
       } catch (RuntimeException refused) {
